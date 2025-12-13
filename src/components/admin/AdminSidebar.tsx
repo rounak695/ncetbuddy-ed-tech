@@ -1,0 +1,39 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import styles from "./AdminSidebar.module.css";
+
+export const AdminSidebar = () => {
+    const pathname = usePathname();
+
+    const navItems = [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Books / Notes", href: "/admin/books" },
+        { label: "Formula Cards", href: "/admin/formula-cards" },
+        { label: "Mock Tests", href: "/admin/tests" },
+        { label: "PYQs", href: "/admin/pyqs" },
+        { label: "Users", href: "/admin/users" },
+        { label: "Notifications", href: "/admin/notifications" },
+        { label: "Settings", href: "/admin/settings" },
+    ];
+
+    return (
+        <div className={styles.sidebar}>
+            <div className={styles.logo}>
+                NCET Admin
+            </div>
+            <nav className={styles.nav}>
+                {navItems.map((item) => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`${styles.navItem} ${pathname === item.href ? styles.active : ""}`}
+                    >
+                        {item.label}
+                    </Link>
+                ))}
+            </nav>
+        </div>
+    );
+};
