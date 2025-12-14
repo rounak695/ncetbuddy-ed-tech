@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { account, databases } from "@/lib/appwrite";
+import { useAuth } from "@/context/AuthContext";
 import { ID } from "appwrite";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -16,6 +17,13 @@ export default function SignupPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { user, loading: authLoading } = useAuth();
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            router.push("/dashboard");
+        }
+    }, [user, authLoading, router]);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
