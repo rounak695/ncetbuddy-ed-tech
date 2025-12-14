@@ -32,7 +32,12 @@ export default function LoginPage() {
             await account.createEmailPasswordSession(email, password);
             router.push("/dashboard");
         } catch (err: any) {
-            setError(err.message);
+            // If session already exists, redirect to dashboard
+            if (err.message?.includes("session is active") || err.code === 401) {
+                router.push("/dashboard");
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
