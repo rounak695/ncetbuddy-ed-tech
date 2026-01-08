@@ -1,34 +1,40 @@
 import Link from "next/link";
-import styles from "./Footer.module.css";
 
 export const Footer = () => {
     return (
-        <footer className={styles.footer}>
-            <div className="container">
-                <div className={styles.content}>
-                    <div className={styles.section}>
-                        <h3 className={styles.logo}>NCET Buddy</h3>
-                        <p className={styles.description}>
+        <footer className="bg-black border-t border-white/10 py-12">
+            <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    <div className="col-span-1 md:col-span-2">
+                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text mb-4">
+                            NCET Buddy
+                        </h3>
+                        <p className="text-gray-400 text-sm max-w-sm">
                             Your one-stop destination for NCET exam preparation.
+                            We provide the best resources to help you crack the exam with flying colors.
                         </p>
                     </div>
-                    <div className={styles.section}>
-                        <h4 className={styles.heading}>Quick Links</h4>
-                        <ul className={styles.links}>
-                            <li><Link href="/login">Login</Link></li>
-                            <li><Link href="/signup">Sign Up</Link></li>
-                            <li><Link href="/#features">Features</Link></li>
+
+                    <div>
+                        <h4 className="font-semibold mb-4 text-white">Quick Links</h4>
+                        <ul className="space-y-2 text-sm text-gray-400">
+                            <li><Link href="/login" className="hover:text-white transition-colors">Login</Link></li>
+                            <li><Link href="/signup" className="hover:text-white transition-colors">Sign Up</Link></li>
+                            <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
                         </ul>
                     </div>
-                    <div className={styles.section}>
-                        <h4 className={styles.heading}>Legal</h4>
-                        <ul className={styles.links}>
-                            <li><Link href="/privacy">Privacy Policy</Link></li>
-                            <li><Link href="/terms">Terms of Service</Link></li>
+
+                    <div>
+                        <h4 className="font-semibold mb-4 text-white">Legal</h4>
+                        <ul className="space-y-2 text-sm text-gray-400">
+                            <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
                         </ul>
                     </div>
                 </div>
-                <div className={styles.copyright}>
+
+                <div className="border-t border-white/10 pt-8 text-center text-sm text-gray-500">
                     &copy; {new Date().getFullYear()} NCET Buddy. All rights reserved.
                 </div>
             </div>

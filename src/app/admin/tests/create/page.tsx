@@ -92,7 +92,68 @@ export default function CreateTestPage() {
                 />
             </Card>
 
-            <h3 style={{ marginBottom: "1rem" }}>Questions</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <h3 style={{ marginBottom: 0 }}>Questions</h3>
+                <div style={{ display: "flex", gap: "1rem" }}>
+                    <Button variant="outline" onClick={() => {
+                        const template = [
+                            {
+                                text: "Sample Question?",
+                                options: ["Option A", "Option B", "Option C", "Option D"],
+                                correctAnswer: 0
+                            }
+                        ];
+                        const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "questions_template.json";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }}>
+                        Download Template
+                    </Button>
+                    <div style={{ position: "relative" }}>
+                        <Button variant="secondary" onClick={() => document.getElementById("json-upload")?.click()}>
+                            Import JSON
+                        </Button>
+                        <input
+                            id="json-upload"
+                            type="file"
+                            accept=".json"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                    try {
+                                        const json = JSON.parse(event.target?.result as string);
+                                        if (Array.isArray(json)) {
+                                            // Validate basic structure
+                                            const isValid = json.every(q => q.text && Array.isArray(q.options) && typeof q.correctAnswer === 'number');
+                                            if (isValid) {
+                                                setQuestions(json);
+                                                alert(`Successfully loaded ${json.length} questions!`);
+                                            } else {
+                                                alert("Invalid JSON format. Please use the template.");
+                                            }
+                                        } else {
+                                            alert("JSON must be an array of questions.");
+                                        }
+                                    } catch (err) {
+                                        alert("Error parsing JSON file.");
+                                    }
+                                };
+                                reader.readAsText(file);
+                                // Reset value so same file can be selected again
+                                e.target.value = '';
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
             {questions.map((q, qIndex) => (
                 <Card key={qIndex} style={{ marginBottom: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
