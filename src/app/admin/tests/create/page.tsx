@@ -15,6 +15,7 @@ export default function CreateTestPage() {
         title: "",
         description: "",
         duration: 60,
+        subject: "General",
         questions: []
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
@@ -54,12 +55,10 @@ export default function CreateTestPage() {
         setLoading(true);
         const testId = await createTest({
             title: testData.title,
-            description: testData.description || "",
+            subject: testData.subject || "General",
             duration: testData.duration || 60,
-            questions: questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })),
-            createdBy: "admin", // TODO: Get actual user ID
-            createdAt: Date.now(),
-            isVisible: true
+            questions: JSON.stringify(questions.map((q, i) => ({ ...q, id: `q-${i + 1}` }))),
+            createdAt: Math.floor(Date.now() / 1000)
         } as any);
 
         if (testId) {
@@ -90,6 +89,28 @@ export default function CreateTestPage() {
                     value={testData.duration}
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                 />
+                <div style={{ marginTop: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject</label>
+                    <select
+                        value={testData.subject || "General"}
+                        onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            fontSize: "1rem"
+                        }}
+                    >
+                        <option value="General">General</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Maths">Mathematics</option>
+                        <option value="Full Mock">Full Mock Test</option>
+                    </select>
+                </div>
             </Card>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { account, databases } from "@/lib/appwrite";
+import { account, databases, isAppwriteConfigured } from "@/lib/appwrite";
 import { useAuth } from "@/context/AuthContext";
 import { ID, OAuthProvider } from "appwrite";
 import Link from "next/link";
@@ -43,6 +43,18 @@ export default function SignupPage() {
         setLoading(true);
         setError("");
 
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters long");
+            setLoading(false);
+            return;
+        }
+
+        if (!isAppwriteConfigured()) {
+            setError("Appwrite is not configured. Please check your environment variables.");
+            setLoading(false);
+            return;
+        }
+
         try {
             // 1. Create Account
             const userId = ID.unique();
@@ -52,41 +64,58 @@ export default function SignupPage() {
             await account.createEmailPasswordSession(email, password);
 
             // 3. Create User Document in Database
-            await databases.createDocument(
-                process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db',
-                'users',
-                userId, // Use same ID as Auth Account
-                {
-                    userId: userId,
-                    email: email,
-                    displayName: name,
-                    role: 'user',
-                    createdAt: Date.now()
-                }
-            );
+            const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
+            const collectionId = 'users';
+
+            try {
+                await databases.createDocument(
+                    dbId,
+                    collectionId,
+                    userId, // Use same ID as Auth Account
+                    {
+                        userId: userId,
+                        email: email,
+                        displayName: name,
+                        role: 'user',
+                        createdAt: Math.floor(Date.now() / 1000)
+                    }
+                );
+            } catch (dbError: any) {
+                console.warn("Database document creation failed:", dbError);
+                // Continue even if DB fails, as Auth is successful. 
+                // In a production app, you might want to rollback or queue this.
+            }
 
             router.push("/dashboard");
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Signup failed");
+            if (err.code === 409) {
+                setError("User with this email already exists. Try logging in.");
+            } else {
+                setError(err.message || "Signup failed. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-            <Card style={{ width: "100%", maxWidth: "400px" }}>
-                <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem", textAlign: "center" }}>Create Account</h1>
-                <p style={{ color: "var(--text-secondary)", marginBottom: "2rem", textAlign: "center" }}>Join NCET Buddy today</p>
+        <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+            <Card className="w-full max-w-md bg-neutral-900 border-white/10 p-8">
+                <h1 className="text-2xl font-bold mb-2 text-center text-white">Create Account</h1>
+                <p className="text-gray-400 mb-8 text-center">Join NCET Buddy today</p>
 
-                {error && <div style={{ color: "var(--error)", marginBottom: "1rem", fontSize: "0.9rem", textAlign: "center" }}>{error}</div>}
+                {error && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm mb-6 text-center">
+                        {error}
+                    </div>
+                )}
 
                 <div className="mb-6">
                     <Button
                         onClick={handleGoogleLogin}
                         variant="outline"
-                        className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-gray-100 border-none font-semibold"
+                        className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-gray-100 border-none font-semibold h-12"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -116,49 +145,47 @@ export default function SignupPage() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSignup}>
-                    <div style={{ marginBottom: "1rem" }}>
-                        <Input
-                            label="Full Name"
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            placeholder="Enter your full name"
-                        />
-                    </div>
+                <form onSubmit={handleSignup} className="space-y-4">
+                    <Input
+                        label="Full Name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        placeholder="Enter your full name"
+                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                    />
 
-                    <div style={{ marginBottom: "1rem" }}>
-                        <Input
-                            label="Email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder="Enter your email"
-                        />
-                    </div>
+                    <Input
+                        label="Email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="Enter your email"
+                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                    />
 
-                    <div style={{ marginBottom: "1.5rem" }}>
-                        <Input
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            placeholder="Create a password"
-                        />
-                    </div>
+                    <Input
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        placeholder="Create a password (min 8 chars)"
+                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                    />
 
-                    <Button type="submit" isLoading={loading} style={{ width: "100%" }}>
+                    <Button type="submit" isLoading={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 mt-2">
                         Sign Up
                     </Button>
                 </form>
 
-                <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                    <p>Already have an account? <Link href="/login" style={{ color: "var(--primary)" }}>Login</Link></p>
+                <div className="mt-6 text-center text-sm text-gray-400">
+                    <p>Already have an account? <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">Login</Link></p>
                 </div>
             </Card>
         </div>
     );
 }
+

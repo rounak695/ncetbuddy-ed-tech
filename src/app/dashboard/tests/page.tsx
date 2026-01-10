@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { getTests } from "@/lib/appwrite-db";
+import { isAppwriteConfigured } from "@/lib/appwrite";
 import { Test } from "@/types";
 
 export default function TestsPage() {
@@ -84,8 +85,14 @@ export default function TestsPage() {
             {tests.length === 0 && (
                 <div className="text-center py-12 bg-neutral-900/50 rounded-2xl border border-white/10">
                     <div className="text-4xl mb-4">📝</div>
-                    <h3 className="text-xl font-semibold text-white mb-2">No Tests Available</h3>
-                    <p className="text-gray-400">Check back later for new mock tests.</p>
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                        {isAppwriteConfigured() ? "No Tests Available" : "Appwrite Not Configured"}
+                    </h3>
+                    <p className="text-gray-400">
+                        {isAppwriteConfigured()
+                            ? "Check back later for new mock tests."
+                            : "Please set up your .env.local file with NEXT_PUBLIC_APPWRITE_PROJECT_ID."}
+                    </p>
                 </div>
             )}
         </div>

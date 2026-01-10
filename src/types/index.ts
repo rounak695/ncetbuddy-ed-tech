@@ -9,6 +9,7 @@ export interface Test {
     id: string;
     title: string;
     description?: string;
+    subject?: string;
     duration: number; // in minutes
     questions: Question[];
     createdBy: string;
@@ -61,6 +62,7 @@ export interface UserProfile {
         booksViewed: number;
         streak: number;
     };
+    totalScore?: number;
     createdAt?: number;
 }
 
@@ -86,4 +88,17 @@ export interface SiteSettings {
     primaryColor: string;
     contactEmail: string;
     showBanner: boolean;
+}
+
+export interface VideoClass {
+    id?: string;
+    videoId?: string;
+    title: string;
+    description?: string;
+    url: string;  // YouTube URL
+    duration?: number;
+    authorId?: string;
+    subject?: string;
+    thumbnailUrl?: string;
+    createdAt?: string | number;  // datetime or timestamp
 }

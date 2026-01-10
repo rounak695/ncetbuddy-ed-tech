@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { account } from "@/lib/appwrite";
+import { account, isAppwriteConfigured } from "@/lib/appwrite";
 import { useAuth } from "@/context/AuthContext";
 import { OAuthProvider } from "appwrite";
 import Link from "next/link";
@@ -42,14 +42,23 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
 
+        if (!isAppwriteConfigured()) {
+            setError("Appwrite is not configured. Please check your environment variables.");
+            setLoading(false);
+            return;
+        }
+
         try {
             await account.createEmailPasswordSession(email, password);
             router.push("/dashboard");
         } catch (err: any) {
-            if (err.message?.includes("session is active") || err.code === 401) {
+            // Appwrite throws an error if a session is already active. 
+            // We should treat this as a success and redirect.
+            if (err.message?.includes("session is active") || err.code === 409) {
                 router.push("/dashboard");
             } else {
-                setError(err.message);
+                // 401 (Invalid Credentials) should fall through here
+                setError(err.message || "Login failed");
             }
         } finally {
             setLoading(false);

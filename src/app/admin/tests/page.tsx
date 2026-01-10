@@ -62,7 +62,9 @@ export default function AdminTestsPage() {
                                 </p>
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem" }}>
-                                <Button variant="outline">Edit</Button>
+                                <Link href={`/admin/tests/edit/${test.id}`}>
+                                    <Button variant="outline">Edit</Button>
+                                </Link>
                                 <Button variant="secondary" style={{ backgroundColor: "var(--error)" }} onClick={() => test.id && handleDelete(test.id)}>Delete</Button>
                             </div>
                         </Card>

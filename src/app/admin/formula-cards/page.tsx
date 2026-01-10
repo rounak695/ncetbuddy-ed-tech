@@ -48,7 +48,7 @@ export default function FormulaCardsManagerPage() {
                 content,
                 imageUrl,
                 isVisible: true,
-                createdAt: Date.now()
+                createdAt: Math.floor(Date.now() / 1000)
             });
             alert("Formula Card created successfully!");
             setShowForm(false);

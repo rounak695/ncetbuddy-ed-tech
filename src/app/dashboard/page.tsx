@@ -4,28 +4,36 @@ import React from 'react';
 import Header from '@/components/dashboard/Header';
 import Section from '@/components/dashboard/Section';
 import { FormulaCard, BookCard, TestCard } from '@/components/dashboard/Cards';
+import { useEffect, useState } from 'react';
+import { getBooks, getFormulaCards, getTests } from '@/lib/appwrite-db';
+import { Book, FormulaCard as FormulaCardType, Test } from '@/types';
 
 export default function DashboardPage() {
-    const formulaCards = [
-        { title: 'Current Electricity', items: '12 Formulas', color: '#FFD02F' },
-        { title: 'Semiconductors', items: '8 Formulas', color: '#A0E7E5' },
-        { title: 'Ray Optics', items: '15 Formulas', color: '#FFAEBC' },
-        { title: 'Thermodynamics', items: '10 Formulas', color: '#B4F8C8' },
-    ];
+    const [formulaCards, setFormulaCards] = useState<FormulaCardType[]>([]);
+    const [books, setBooks] = useState<Book[]>([]);
+    const [tests, setTests] = useState<Test[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const books = [
-        { title: 'Physics Concepts', subtitle: 'Vol 1 & 2' },
-        { title: 'PYQ 2024', subtitle: 'Last 10 Years' },
-        { title: 'Formula Handbook', subtitle: 'Quick Revision' },
-        { title: 'NCERT Solutions', subtitle: 'Class 12' },
-        { title: 'Mind Maps', subtitle: 'All Chapters' },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [fetchedCards, fetchedBooks, fetchedTests] = await Promise.all([
+                    getFormulaCards(),
+                    getBooks(),
+                    getTests()
+                ]);
+                setFormulaCards(fetchedCards);
+                setBooks(fetchedBooks);
+                setTests(fetchedTests);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const tests = [
-        { title: 'PYQ Mock Test 1', tag: 'Full Syllabus • 3 hrs', isNew: true },
-        { title: 'Chapter Test: Optics', tag: '30 Questions • 45 mins', isNew: false },
-        { title: 'Create Your Own', tag: 'Custom Test • Flexible', isNew: false },
-    ];
+        fetchData();
+    }, []);
 
     return (
         <div className="pb-24 min-h-full">
@@ -34,25 +42,57 @@ export default function DashboardPage() {
             <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
                 <Section title="Quick Revision Formula Sheets">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                        {formulaCards.map((card, index) => (
-                            <FormulaCard key={index} {...card} />
-                        ))}
+                        {loading ? (
+                            <p className="text-gray-400 col-span-full">Loading...</p>
+                        ) : formulaCards.length === 0 ? (
+                            <p className="text-gray-400 col-span-full">No formula cards available.</p>
+                        ) : (
+                            formulaCards.map((card, index) => (
+                                <FormulaCard
+                                    key={index}
+                                    title={card.title}
+                                    items="View Details"
+                                    color="#A0E7E5"
+                                />
+                            ))
+                        )}
                     </div>
                 </Section>
 
                 <Section title="Important Digital Books">
                     <div className="flex overflow-x-auto pb-4 gap-4 md:gap-6 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5 md:overflow-visible snap-x snap-mandatory">
-                        {books.map((book, index) => (
-                            <BookCard key={index} {...book} />
-                        ))}
+                        {loading ? (
+                            <p className="text-gray-400 col-span-full">Loading...</p>
+                        ) : books.length === 0 ? (
+                            <p className="text-gray-400 col-span-full">No books available.</p>
+                        ) : (
+                            books.map((book, index) => (
+                                <BookCard
+                                    key={index}
+                                    title={book.title}
+                                    subtitle={book.subject}
+                                />
+                            ))
+                        )}
                     </div>
                 </Section>
 
                 <Section title="Mock Tests & Practice">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                        {tests.map((test, index) => (
-                            <TestCard key={index} {...test} />
-                        ))}
+                        {loading ? (
+                            <p className="text-gray-400 col-span-full">Loading...</p>
+                        ) : tests.length === 0 ? (
+                            <p className="text-gray-400 col-span-full">No tests available.</p>
+                        ) : (
+                            tests.slice(0, 3).map((test, index) => (
+                                <TestCard
+                                    key={index}
+                                    title={test.title}
+                                    tag={`${test.questions.length} Questions • ${test.duration} mins`}
+                                    isNew={index === 0}
+                                />
+                            ))
+                        )}
                     </div>
                 </Section>
 

@@ -45,7 +45,7 @@ export default function PYQManagerPage() {
                 subject,
                 year: Number(year),
                 url,
-                createdAt: Date.now()
+                createdAt: Math.floor(Date.now() / 1000)
             });
             alert("PYQ uploaded successfully!");
             setShowForm(false);

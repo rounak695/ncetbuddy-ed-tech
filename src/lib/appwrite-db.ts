@@ -1,11 +1,12 @@
-import { databases } from "./appwrite";
+import { databases, isAppwriteConfigured } from "./appwrite";
 import { ID, Query } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
 // --- Tests ---
 export const getTests = async (): Promise<Test[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'tests', [
             Query.orderDesc('createdAt')
@@ -22,6 +23,7 @@ export const getTests = async (): Promise<Test[]> => {
 };
 
 export const getTestById = async (id: string): Promise<Test | null> => {
+    if (!isAppwriteConfigured()) return null;
     try {
         const doc = await databases.getDocument(
             DB_ID,
@@ -40,11 +42,12 @@ export const getTestById = async (id: string): Promise<Test | null> => {
 };
 
 export const createTest = async (test: Omit<Test, "id">): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
     try {
         const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), {
             ...test,
             questions: JSON.stringify(test.questions),
-            createdAt: Date.now()
+            createdAt: Math.floor(Date.now() / 1000)
         });
         return response.$id;
     } catch (error) {
@@ -65,6 +68,7 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
 
 export const saveTestResult = async (result: any) => {
     try {
+        // 1. Save the individual test result
         await databases.createDocument(
             DB_ID,
             'test-results',
@@ -74,14 +78,72 @@ export const saveTestResult = async (result: any) => {
                 answers: JSON.stringify(result.answers)
             }
         );
+
+        // 2. Update User Profile (Total Score & Tests Attempted)
+        // We catch errors here so that if profile update fails, the test result implies success.
+        try {
+            const userDocs = await databases.listDocuments(DB_ID, 'users', [
+                Query.equal('uid', result.userId)
+            ]);
+
+            if (userDocs.documents.length > 0) {
+                const userDoc = userDocs.documents[0];
+                const currentScore = userDoc.totalScore || 0;
+                const currentTests = userDoc.stats?.testsAttempted || 0;
+
+                await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
+                    totalScore: currentScore + result.score,
+                    stats: {
+                        ...userDoc.stats,
+                        testsAttempted: currentTests + 1
+                    }
+                });
+            }
+        } catch (profileError) {
+            console.error("Failed to update user profile stats:", profileError);
+        }
+
     } catch (error) {
         console.error("Error saving test result:", error);
         throw error;
     }
 };
 
+export const getLeaderboard = async (limit: number = 10): Promise<UserProfile[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'users', [
+            Query.orderDesc('totalScore'),
+            Query.limit(limit)
+        ]);
+        return response.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+    } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        return [];
+    }
+};
+
+export const getUserTestResults = async (userId: string): Promise<TestResult[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.equal('userId', userId),
+            Query.orderDesc('completedAt')
+        ]);
+        return response.documents.map(doc => ({
+            id: doc.$id,
+            ...doc,
+            answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers
+        })) as unknown as TestResult[];
+    } catch (error) {
+        console.error("Error fetching user test results:", error);
+        return [];
+    }
+};
+
 // --- Books / Notes ---
 export const getBooks = async (): Promise<Book[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'books', [
             Query.orderDesc('createdAt')
@@ -122,6 +184,7 @@ export const updateBook = async (id: string, data: Partial<Book>) => {
 
 // --- Formula Cards ---
 export const getFormulaCards = async (): Promise<FormulaCard[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'formula_cards', [
             Query.orderDesc('createdAt')
@@ -162,6 +225,7 @@ export const updateFormulaCard = async (id: string, data: Partial<FormulaCard>) 
 
 // --- PYQs ---
 export const getPYQs = async (): Promise<PYQ[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'pyqs', [
             Query.orderDesc('year')
@@ -193,6 +257,7 @@ export const deletePYQ = async (id: string) => {
 
 // --- Users ---
 export const getUsers = async (): Promise<UserProfile[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'users');
         return response.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
@@ -213,6 +278,7 @@ export const updateUser = async (uid: string, data: any) => {
 
 // --- Notifications ---
 export const getNotifications = async (): Promise<Notification[]> => {
+    if (!isAppwriteConfigured()) return [];
     try {
         const response = await databases.listDocuments(DB_ID, 'notifications', [
             Query.orderDesc('createdAt')
@@ -235,6 +301,7 @@ export const createNotification = async (notification: Omit<Notification, "id">)
 
 // --- Settings ---
 export const getSettings = async (): Promise<SiteSettings | null> => {
+    if (!isAppwriteConfigured()) return null;
     try {
         const doc = await databases.getDocument(
             DB_ID,
@@ -266,6 +333,38 @@ export const saveSettings = async (settings: SiteSettings) => {
         }
     } catch (error) {
         console.error("Error saving settings:", error);
+        throw error;
+    }
+};
+
+// --- Video Classes ---
+export const getVideoClasses = async (): Promise<VideoClass[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'videos', [
+            Query.orderDesc('createdAt')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as VideoClass[];
+    } catch (error) {
+        console.error("Error fetching video classes:", error);
+        return [];
+    }
+};
+
+export const createVideoClass = async (video: Omit<VideoClass, "id">) => {
+    try {
+        await databases.createDocument(DB_ID, 'videos', ID.unique(), video);
+    } catch (error) {
+        console.error("Error creating video class:", error);
+        throw error;
+    }
+};
+
+export const deleteVideoClass = async (videoId: string) => {
+    try {
+        await databases.deleteDocument(DB_ID, 'videos', videoId);
+    } catch (error) {
+        console.error("Error deleting video class:", error);
         throw error;
     }
 };

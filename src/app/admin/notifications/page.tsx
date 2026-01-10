@@ -40,7 +40,7 @@ export default function NotificationsManagerPage() {
                 title,
                 message,
                 type,
-                createdAt: Date.now()
+                createdAt: Math.floor(Date.now() / 1000)
             });
             alert("Notification sent successfully!");
             setTitle("");

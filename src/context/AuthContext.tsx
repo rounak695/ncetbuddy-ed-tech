@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { account, databases } from "@/lib/appwrite";
+import { account, databases, isAppwriteConfigured } from "@/lib/appwrite";
 import { Models } from "appwrite";
 import { useRouter } from "next/navigation";
 
@@ -30,6 +30,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const checkSession = async () => {
+            if (!isAppwriteConfigured()) {
+                setLoading(false);
+                return;
+            }
+
             try {
                 const session = await account.get();
                 setUser(session);
@@ -44,8 +49,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     );
                     setRole(userDoc.role as "user" | "admin");
                 } catch (error) {
-                    console.warn("User document not found, defaulting to user role.");
-                    setRole("user");
+                    console.warn("User document not found. Attempting to heal (recreate)...");
+                    // SELF-HEALING: If doc is missing (likely due to previous bug), recreate it.
+                    try {
+                        await databases.createDocument(
+                            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db',
+                            'users',
+                            session.$id,
+                            {
+                                userId: session.$id,
+                                email: session.email,
+                                displayName: session.name,
+                                role: 'user',
+                                createdAt: Math.floor(Date.now() / 1000)
+                            }
+                        );
+                        console.log("User document healed successfully.");
+                        setRole("user");
+                    } catch (healError) {
+                        console.error("Failed to heal user document:", healError);
+                        // If healing fields, we MUST logout to prevent "bypass" / ghost state.
+                        await account.deleteSession('current');
+                        setUser(null);
+                        setRole(null);
+                        router.push("/login?error=account_sync_failed");
+                        return;
+                    }
                 }
 
             } catch (error) {

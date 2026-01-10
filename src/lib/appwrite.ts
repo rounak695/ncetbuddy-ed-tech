@@ -9,6 +9,14 @@ client
     .setEndpoint(endpoint)
     .setProject(projectId);
 
+if (!projectId) {
+    console.error("Appwrite Project ID is missing. Please check your .env.local file.");
+}
+
+export const isAppwriteConfigured = () => {
+    return !!projectId && !!endpoint;
+}
+
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);

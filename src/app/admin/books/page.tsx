@@ -48,7 +48,7 @@ export default function BooksManagerPage() {
                 url,
                 thumbnailColor,
                 isVisible: true,
-                createdAt: Date.now()
+                createdAt: Math.floor(Date.now() / 1000)
             });
             alert("Book uploaded successfully!");
             setShowForm(false);
