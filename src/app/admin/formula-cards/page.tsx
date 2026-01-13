@@ -18,6 +18,7 @@ export default function FormulaCardsManagerPage() {
     const [chapter, setChapter] = useState("");
     const [content, setContent] = useState("");
     const [imageUrl, setImageUrl] = useState("");
+    const [url, setUrl] = useState("");
 
     useEffect(() => {
         fetchCards();
@@ -47,6 +48,7 @@ export default function FormulaCardsManagerPage() {
                 chapter,
                 content,
                 imageUrl,
+                url,
                 isVisible: true,
                 createdAt: Math.floor(Date.now() / 1000)
             });
@@ -59,6 +61,7 @@ export default function FormulaCardsManagerPage() {
             setChapter("");
             setContent("");
             setImageUrl("");
+            setUrl("");
         } catch (error) {
             console.error("Error creating card:", error);
             alert("Failed to create card.");
@@ -105,6 +108,7 @@ export default function FormulaCardsManagerPage() {
                         <Input label="Subject" placeholder="e.g. Physics" value={subject} onChange={(e) => setSubject(e.target.value)} />
                         <Input label="Chapter (Optional)" placeholder="e.g. Mechanics" value={chapter} onChange={(e) => setChapter(e.target.value)} />
                         <Input label="Image URL (Optional)" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                        <Input label="External URL (Optional)" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
                     </div>
 
                     <div style={{ marginTop: "1rem" }}>
@@ -157,6 +161,12 @@ export default function FormulaCardsManagerPage() {
                                     {card.content}
                                 </p>
                             )}
+
+                            {card.url && (
+                                <p style={{ fontSize: "0.8rem", color: "var(--primary)", marginTop: "0.5rem" }}>
+                                    Link: <a href={card.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{card.url}</a>
+                                </p>
+                            )}
                         </div>
 
                         <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
@@ -171,11 +181,13 @@ export default function FormulaCardsManagerPage() {
                 ))}
             </div>
 
-            {!loading && cards.length === 0 && (
-                <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>
-                    No formula cards found. Create one to get started.
-                </div>
-            )}
-        </div>
+            {
+                !loading && cards.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>
+                        No formula cards found. Create one to get started.
+                    </div>
+                )
+            }
+        </div >
     );
 }

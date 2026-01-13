@@ -92,129 +92,155 @@ export default function AnalyticsPage() {
     ];
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-10 animate-in fade-in duration-500 pb-10">
             <div>
-                <h1 className="text-2xl font-bold text-white">Performance Analytics</h1>
-                <p className="text-gray-400 mt-1">Track your growth and identify weak areas</p>
+                <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Performance Analytics</h1>
+                <p className="text-black font-bold opacity-60">Deep dive into your strengths and weaknesses</p>
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat, idx) => (
-                    <Card key={idx} className="p-6 border-white/5 bg-neutral-900/50 hover:bg-neutral-900 transition-colors">
-                        <div className="text-sm text-gray-400 mb-1">{stat.label}</div>
-                        <div className="text-2xl font-bold text-white mb-2">{stat.value}</div>
-                        <div className={`text-xs font-medium ${stat.positive ? 'text-green-400' : 'text-red-400'}`}>
+                    <Card key={idx} className="p-8 border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] transition-all transform hover:-translate-y-1">
+                        <div className="text-xs font-black text-black mb-3 uppercase tracking-widest opacity-40">{stat.label}</div>
+                        <div className="text-4xl font-black text-black mb-4 uppercase italic">{stat.value}</div>
+                        <div className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-2 border-black inline-block ${stat.positive ? 'bg-primary text-black' : 'bg-black text-white'}`}>
                             {stat.trend}
                         </div>
                     </Card>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Main Graph Area */}
-                <div className="lg:col-span-2 space-y-6">
-                    <Section title="Subject Performance">
-                        <Card className="p-6 min-h-[300px] flex items-end justify-between gap-4 border-white/5 bg-neutral-900/50 overflow-x-auto">
+                <div className="lg:col-span-2 space-y-10">
+                    <section>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-8 w-2 bg-primary rounded-full"></div>
+                            <h2 className="text-xl font-black text-black uppercase tracking-widest italic">Subject Tracking</h2>
+                        </div>
+                        <Card className="p-10 min-h-[400px] flex items-end justify-between gap-6 border-4 border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-x-auto">
                             {recentPerformance.length === 0 ? (
-                                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                    No test data available so far.
+                                <div className="w-full h-full flex flex-col items-center justify-center text-black/20 font-black uppercase tracking-widest py-20 italic">
+                                    <div className="text-6xl mb-4 opacity-10">📈</div>
+                                    No data points yet
                                 </div>
                             ) : (
                                 recentPerformance.map((data, idx) => (
-                                    <div key={idx} className="w-full flex flex-col items-center gap-2 group min-w-[60px]">
-                                        <div className="relative w-full bg-neutral-800 rounded-t-xl overflow-hidden h-48 md:h-64 flex items-end">
+                                    <div key={idx} className="w-full flex flex-col items-center gap-4 group min-w-[80px]">
+                                        <div className="relative w-full bg-black/5 rounded-t-2xl overflow-hidden h-64 flex items-end border-2 border-black/5 group-hover:bg-primary/5 transition-colors">
                                             <div
-                                                className={`w-full bg-blue-500 opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-t-xl relative`}
+                                                className="w-full bg-black group-hover:bg-primary transition-all duration-700 rounded-t-xl relative border-t-2 border-black"
                                                 style={{ height: `${(data.score / data.total) * 100}%` }}
                                             >
-                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-primary text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-xl whitespace-nowrap border border-black z-20">
                                                     {data.score} / {data.total}
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="text-xs md:text-sm font-medium text-gray-400 truncate w-full text-center" title={data.title}>
-                                            {data.title.substring(0, 10)}{data.title.length > 10 ? '...' : ''}
+                                        <span className="text-[10px] font-black text-black uppercase tracking-tighter truncate w-full text-center italic" title={data.title}>
+                                            {data.title.substring(0, 15)}
                                         </span>
                                     </div>
                                 ))
                             )}
                         </Card>
-                    </Section>
+                    </section>
 
-                    <Section title="Recent Activity">
-                        <div className="space-y-3">
-                            {results.slice(0, 3).map((res, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-neutral-900/50 border border-white/5 hover:border-white/10 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 text-lg">
-                                            📝
+                    <section>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-8 w-2 bg-black rounded-full"></div>
+                            <h2 className="text-xl font-black text-black uppercase tracking-widest italic">Recent Logs</h2>
+                        </div>
+                        <div className="space-y-4">
+                            {results.slice(0, 5).map((res, i) => (
+                                <div key={i} className="flex items-center justify-between p-6 rounded-3xl bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group">
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center text-primary text-2xl border-2 border-black group-hover:bg-primary group-hover:text-black transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                            📊
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-white text-sm">Test Attempt</h4>
-                                            <p className="text-xs text-gray-500">
-                                                Completed on {new Date(res.completedAt).toLocaleDateString()} • Scored {res.score}
+                                            <h4 className="font-black text-black text-lg uppercase italic tracking-tight">Test Attempt</h4>
+                                            <p className="text-xs text-black font-bold uppercase tracking-widest opacity-40">
+                                                {new Date(res.completedAt).toLocaleDateString()} • Scored {res.score}/{res.totalQuestions * 4}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <button className="text-xs text-blue-400 hover:text-blue-300 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors">
-                                            View Analysis
-                                        </button>
-                                    </div>
+                                    <button className="text-[10px] font-black uppercase tracking-widest text-black border-2 border-black px-6 py-2.5 rounded-xl hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                        ANALYSIS
+                                    </button>
                                 </div>
                             ))}
-                            {results.length === 0 && <p className="text-gray-500 text-sm">No recent activity.</p>}
+                            {results.length === 0 && (
+                                <div className="p-10 text-center border-4 border-dashed border-black rounded-3xl text-black font-black uppercase opacity-20 italic">
+                                    No logs recorded
+                                </div>
+                            )}
                         </div>
-                    </Section>
+                    </section>
                 </div>
 
                 {/* Sidebar Widgets */}
-                <div className="space-y-6">
-                    <Section title="Strong & Weak Areas">
-                        <Card className="p-0 overflow-hidden border-white/5 bg-neutral-900/50">
-                            <div className="p-4 border-b border-white/5">
-                                <h4 className="font-semibold text-green-400 text-sm mb-2">💪 Strongest Topics</h4>
-                                <div className="space-y-2">
-                                    {['Electrostatics', 'Calculus', 'Organic Chem'].map(t => (
-                                        <div key={t} className="flex justify-between text-xs items-center">
-                                            <span className="text-gray-300">{t}</span>
-                                            <div className="w-16 h-1 bg-neutral-800 rounded-full overflow-hidden">
-                                                <div className="h-full bg-green-500 w-[85%]"></div>
+                <div className="space-y-10">
+                    <section>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-8 w-2 bg-black rounded-full"></div>
+                            <h2 className="text-xl font-black text-black uppercase tracking-widest italic">Insights</h2>
+                        </div>
+                        <Card className="p-0 overflow-hidden border-4 border-black bg-white rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="p-6 border-b-4 border-black bg-primary/10">
+                                <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+                                    <span className="text-lg">🔥</span> Strongest Topics
+                                </h4>
+                                <div className="space-y-4">
+                                    {['Calculus', 'Electromagnetism', 'Mechanics'].map(t => (
+                                        <div key={t} className="space-y-2">
+                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                <span className="text-black">{t}</span>
+                                                <span className="text-black">92%</span>
+                                            </div>
+                                            <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
+                                                <div className="h-full bg-black w-[92%] rounded-full"></div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="p-4">
-                                <h4 className="font-semibold text-red-400 text-sm mb-2">⚠️ Needs Improvement</h4>
-                                <div className="space-y-2">
-                                    {['Wave Optics', 'Probability', 'Solutions'].map(t => (
-                                        <div key={t} className="flex justify-between text-xs items-center">
-                                            <span className="text-gray-300">{t}</span>
-                                            <div className="w-16 h-1 bg-neutral-800 rounded-full overflow-hidden">
-                                                <div className="h-full bg-red-500 w-[45%]"></div>
+                            <div className="p-6 bg-white">
+                                <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+                                    <span className="text-lg">⚡</span> Focus Needed
+                                </h4>
+                                <div className="space-y-4">
+                                    {['Optics', 'Thermodynamics', 'Probability'].map(t => (
+                                        <div key={t} className="space-y-2">
+                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                <span className="text-black">{t}</span>
+                                                <span className="text-black">45%</span>
+                                            </div>
+                                            <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
+                                                <div className="h-full bg-primary w-[45%] rounded-full border-r border-black"></div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </Card>
-                    </Section>
+                    </section>
 
-                    <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 border border-purple-500/20 text-center">
-                        <h3 className="font-bold text-white mb-2">Goal Tracker</h3>
-                        <div className="relative w-32 h-32 mx-auto my-4 flex items-center justify-center">
+                    <div className="p-8 rounded-3xl bg-primary border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-center relative overflow-hidden group">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                        <h3 className="font-black text-black text-xl uppercase tracking-tighter italic mb-6">Goal Achievement</h3>
+                        <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
                             <svg className="w-full h-full transform -rotate-90">
-                                <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
-                                <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-purple-500" strokeDasharray="351.86" strokeDashoffset="100" />
+                                <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-black/5" />
+                                <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-black" strokeDasharray="402.12" strokeDashoffset="120" strokeLinecap="round" />
                             </svg>
                             <div className="absolute flex flex-col items-center">
-                                <span className="text-2xl font-bold text-white">72%</span>
-                                <span className="text-[10px] text-purple-200">Target Reached</span>
+                                <span className="text-4xl font-black text-black">72%</span>
+                                <span className="text-[10px] uppercase font-black tracking-widest text-black opacity-40">TARGET</span>
                             </div>
                         </div>
-                        <p className="text-xs text-purple-200/80">Keep going! You are on track to hit your weekly goal.</p>
+                        <p className="text-xs text-black font-black uppercase tracking-widest opacity-60 leading-relaxed italic">You are in the top 5% of students this week!</p>
                     </div>
                 </div>
             </div>

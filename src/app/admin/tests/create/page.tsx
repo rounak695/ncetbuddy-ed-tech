@@ -57,7 +57,7 @@ export default function CreateTestPage() {
             title: testData.title,
             subject: testData.subject || "General",
             duration: testData.duration || 60,
-            questions: JSON.stringify(questions.map((q, i) => ({ ...q, id: `q-${i + 1}` }))),
+            questions: questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })),
             createdAt: Math.floor(Date.now() / 1000)
         } as any);
 

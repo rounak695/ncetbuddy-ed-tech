@@ -11,11 +11,22 @@ export const getTests = async (): Promise<Test[]> => {
         const response = await databases.listDocuments(DB_ID, 'tests', [
             Query.orderDesc('createdAt')
         ]);
-        return response.documents.map(doc => ({
-            id: doc.$id,
-            ...doc,
-            questions: typeof doc.questions === 'string' ? JSON.parse(doc.questions) : doc.questions
-        })) as unknown as Test[];
+        return response.documents.map(doc => {
+            let questions = doc.questions;
+            try {
+                while (typeof questions === 'string') {
+                    questions = JSON.parse(questions);
+                }
+            } catch (e) {
+                console.error("Error parsing questions for test:", doc.$id, e);
+                questions = [];
+            }
+            return {
+                id: doc.$id,
+                ...doc,
+                questions: Array.isArray(questions) ? questions : []
+            };
+        }) as unknown as Test[];
     } catch (error) {
         console.error("Error fetching tests:", error);
         return [];
@@ -30,10 +41,19 @@ export const getTestById = async (id: string): Promise<Test | null> => {
             'tests',
             id
         );
+        let questions = doc.questions;
+        try {
+            while (typeof questions === 'string') {
+                questions = JSON.parse(questions);
+            }
+        } catch (e) {
+            console.error("Error parsing questions for test:", doc.$id, e);
+            questions = [];
+        }
         return {
             id: doc.$id,
             ...doc,
-            questions: typeof doc.questions === 'string' ? JSON.parse(doc.questions) : doc.questions
+            questions: Array.isArray(questions) ? questions : []
         } as unknown as Test;
     } catch (error) {
         console.error("Error fetching test:", error);
@@ -69,35 +89,31 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
 export const saveTestResult = async (result: any) => {
     try {
         // 1. Save the individual test result
+        const { correctCount, incorrectCount, ...dataToSave } = result; // Omit these two fields
         await databases.createDocument(
             DB_ID,
             'test-results',
             ID.unique(),
             {
-                ...result,
-                answers: JSON.stringify(result.answers)
+                ...dataToSave,
+                answers: JSON.stringify(dataToSave.answers)
             }
         );
 
         // 2. Update User Profile (Total Score & Tests Attempted)
         // We catch errors here so that if profile update fails, the test result implies success.
         try {
-            const userDocs = await databases.listDocuments(DB_ID, 'users', [
-                Query.equal('uid', result.userId)
-            ]);
+            const userDoc = await databases.getDocument(DB_ID, 'users', result.userId);
 
-            if (userDocs.documents.length > 0) {
-                const userDoc = userDocs.documents[0];
+            if (userDoc) {
                 const currentScore = userDoc.totalScore || 0;
-                const currentTests = userDoc.stats?.testsAttempted || 0;
+                const currentTests = userDoc.testsAttempted || 0;
 
-                await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
-                    totalScore: currentScore + result.score,
-                    stats: {
-                        ...userDoc.stats,
-                        testsAttempted: currentTests + 1
-                    }
-                });
+                // Schema update required: totalScore and testsAttempted must be added to Appwrite console
+                // await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
+                //     totalScore: currentScore + result.score,
+                //     testsAttempted: currentTests + 1
+                // });
             }
         } catch (profileError) {
             console.error("Failed to update user profile stats:", profileError);

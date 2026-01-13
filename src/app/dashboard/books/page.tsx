@@ -27,19 +27,24 @@ export default function BooksPage() {
     ];
 
     return (
-        <div>
-            <h1 style={{ marginBottom: "2rem" }}>Recommended Books</h1>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "2rem" }}>
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <div>
+                <h1 className="text-3xl font-black text-black">Recommended Books</h1>
+                <p className="text-black font-bold opacity-60">Handpicked resources for your preparation</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {books.map((book) => (
-                    <Card key={book.id} style={{ padding: "0", overflow: "hidden" }}>
-                        <div style={{ height: "200px", background: "#333" }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={book.image} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <Card key={book.id} className="p-0 overflow-hidden border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] group hover:-translate-y-2 transition-all">
+                        <div className="height-[200px] bg-primary flex items-center justify-center p-8 border-b-4 border-black group-hover:bg-black transition-colors">
+                            <div className="text-6xl group-hover:scale-110 transition-transform">📚</div>
                         </div>
-                        <div style={{ padding: "1rem" }}>
-                            <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>{book.title}</h3>
-                            <a href={book.url} target="_blank" rel="noopener noreferrer" style={{ width: "100%" }}>
-                                <Button style={{ width: "100%" }}>Read Now</Button>
+                        <div className="p-6">
+                            <h3 className="text-xl font-black text-black mb-6 leading-tight">{book.title}</h3>
+                            <a href={book.url} target="_blank" rel="noopener noreferrer" className="block">
+                                <Button className="w-full bg-black text-white hover:bg-primary hover:text-black font-black py-4 border-2 border-black transition-all">
+                                    READ NOW
+                                </Button>
                             </a>
                         </div>
                     </Card>

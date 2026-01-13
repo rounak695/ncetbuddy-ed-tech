@@ -43,23 +43,23 @@ export const Features = () => {
     ];
 
     return (
-        <section id="features" className="py-20 bg-neutral-900/50">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4">Why Choose NCET Buddy?</h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto">
-                        Everything you need to excel in your NCET preparation journey, all in one place.
+        <section id="features" className="py-24 bg-white relative">
+            <div className="container mx-auto px-4 relative z-10">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl md:text-6xl font-black mb-6 text-black uppercase tracking-tighter italic">Why NCET Buddy?</h2>
+                    <p className="text-black font-bold opacity-60 max-w-2xl mx-auto uppercase tracking-widest text-xs">
+                        Everything you need to excel in your NCET preparation journey
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                     {features.map((feature, index) => (
-                        <div key={index} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${feature.color}`}>
+                        <div key={index} className="bg-white border-4 border-black rounded-3xl p-8 hover:shadow-[12px_12px_0px_0px_rgba(255,208,47,1)] transition-all duration-300 hover:-translate-y-2 group">
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 bg-black text-primary border-2 border-black group-hover:bg-primary group-hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                 {feature.icon}
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+                            <h3 className="text-2xl font-black mb-4 text-black uppercase italic leading-none">{feature.title}</h3>
+                            <p className="text-black font-bold opacity-60 text-sm leading-relaxed">{feature.description}</p>
                         </div>
                     ))}
                 </div>

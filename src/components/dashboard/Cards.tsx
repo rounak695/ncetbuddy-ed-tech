@@ -1,117 +1,182 @@
-// Utility for gradients
+import Link from "next/link";
+
+// Utility for gradients (Updated for light theme)
 const gradients = {
-    yellow: "from-yellow-400/20 via-orange-400/20 to-red-400/20",
-    cyan: "from-cyan-400/20 via-blue-400/20 to-indigo-400/20",
-    pink: "from-pink-400/20 via-purple-400/20 to-rose-400/20",
-    green: "from-green-400/20 via-emerald-400/20 to-teal-400/20",
+    yellow: "from-yellow-100/50 via-primary/10 to-transparent",
+    cyan: "from-cyan-100/50 via-blue-100/30 to-transparent",
+    pink: "from-pink-100/50 via-purple-100/30 to-transparent",
+    green: "from-green-100/50 via-emerald-100/30 to-transparent",
 };
 
-export function FormulaCard({ title, items, color }: { title: string, items: string, color: string }) {
-    // Basic mapping for demo purposes. In a real app, pass a 'variant' prop instead of raw color code.
+export function FormulaCard({ title, items, color, href }: { title: string, items: string, color: string, href?: string }) {
     let gradient = gradients.yellow;
     if (color === '#A0E7E5') gradient = gradients.cyan;
     if (color === '#FFAEBC') gradient = gradients.pink;
     if (color === '#B4F8C8') gradient = gradients.green;
 
-    return (
-        <div
-            className={`
-                group relative h-28 md:h-32 rounded-3xl p-4 md:p-5 overflow-hidden cursor-pointer
-                bg-gradient-to-br ${gradient}
-                border border-white/5 hover:border-white/10 transition-all duration-300
-                hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1
-                w-full
-            `}
-        >
-            <div className="absolute inset-0 bg-white/5 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    const Content = () => (
+        <>
+            <div className="absolute inset-0 bg-white/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10 flex flex-col justify-between h-full">
                 <div className="flex justify-between items-start">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white/10 flex items-center justify-center text-lg md:text-xl backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white border border-border flex items-center justify-center text-lg md:text-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
                         ⚡
                     </div>
                 </div>
 
                 <div>
-                    <div className="text-[10px] md:text-xs text-secondary-foreground/60 font-medium mb-1 tracking-wide uppercase opacity-70">Formula Sheet</div>
-                    <div className="font-bold text-white text-base md:text-lg leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all truncate">
+                    <div className="text-[10px] md:text-xs text-secondary font-bold mb-1 tracking-wide uppercase">Formula Sheet</div>
+                    <div className="font-bold text-foreground text-base md:text-lg leading-tight truncate">
                         {title}
                     </div>
-                    <div className="text-[10px] md:text-xs text-white/50 mt-0.5">{items}</div>
+                    <div className="text-[10px] md:text-xs text-secondary font-medium mt-0.5">{items}</div>
                 </div>
             </div>
 
             {/* Decorative Elements */}
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-300" />
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors duration-300" />
+        </>
+    );
+
+    const className = `
+        group relative h-28 md:h-32 rounded-3xl p-4 md:p-5 overflow-hidden cursor-pointer
+        bg-gradient-to-br ${gradient}
+        border border-border hover:border-primary/30 transition-all duration-300
+        hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1
+        w-full block
+    `;
+
+    if (href) {
+        const isExternal = href.startsWith('http');
+        if (isExternal) {
+            return (
+                <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+                    <Content />
+                </a>
+            );
+        }
+        return (
+            <Link href={href} className={className}>
+                <Content />
+            </Link>
+        );
+    }
+
+    return (
+        <div className={className}>
+            <Content />
         </div>
     );
 }
 
-export function BookCard({ title, subtitle, image }: { title: string, subtitle: string, image?: string }) {
-    return (
-        <div className="group flex flex-col gap-3 md:gap-4 cursor-pointer min-w-[130px] md:w-[160px] snap-center">
-            <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-xl shadow-black/40 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-blue-500/10 group-hover:-translate-y-2">
-                {/* Card Background / Cover */}
-                <div className="absolute inset-0 bg-neutral-900 border border-white/10 group-hover:border-white/20 transition-colors">
-                    {/* Decorative Spine Effect */}
-                    <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-white/5 h-full" />
+export function BookCard({ title, subtitle, image, href }: { title: string, subtitle: string, image?: string, href?: string }) {
+    const Content = () => (
+        <>
+            <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-lg shadow-black/5 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/10 group-hover:-translate-y-2">
+                <div className="absolute inset-0 bg-white border border-border group-hover:border-primary transition-colors">
+                    <div className="absolute left-2 top-0 bottom-0 w-[2px] bg-black/5 h-full" />
                 </div>
 
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-4xl md:text-5xl drop-shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-4xl md:text-5xl drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
                         {image ? '🖼️' : '📚'}
                     </span>
                 </div>
 
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-primary/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </div>
 
             <div className="space-y-1">
-                <h3 className="font-bold text-gray-200 text-xs md:text-sm truncate group-hover:text-blue-400 transition-colors leading-tight">
+                <h3 className="font-bold text-foreground text-xs md:text-sm truncate group-hover:text-primary transition-colors leading-tight">
                     {title}
                 </h3>
-                <p className="text-[10px] md:text-xs text-gray-500 font-medium">{subtitle}</p>
+                <p className="text-[10px] md:text-xs text-secondary font-bold">{subtitle}</p>
             </div>
+        </>
+    );
+
+    const className = "group flex flex-col gap-3 md:gap-4 cursor-pointer min-w-[130px] md:w-[160px] snap-center block";
+
+    if (href) {
+        const isExternal = href.startsWith('http');
+        if (isExternal) {
+            return (
+                <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+                    <Content />
+                </a>
+            );
+        }
+        return (
+            <Link href={href} className={className}>
+                <Content />
+            </Link>
+        );
+    }
+
+    return (
+        <div className={className}>
+            <Content />
         </div>
     );
 }
 
-export function TestCard({ title, tag, isNew }: { title: string, tag?: string, isNew?: boolean }) {
-    return (
-        <div className="group relative min-w-[260px] p-1 rounded-3xl bg-gradient-to-b from-white/10 to-transparent hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300">
-            <div className="relative h-full bg-neutral-900/90 backdrop-blur-xl rounded-[20px] p-5 border border-white/5 flex flex-col justify-between hover:bg-neutral-900 transition-colors">
-                {/* Badge */}
-                {isNew && (
-                    <div className="absolute top-4 right-4">
-                        <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                        </span>
-                    </div>
-                )}
-
-                <div className="flex gap-4 items-start mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center text-2xl group-hover:from-blue-500/20 group-hover:to-purple-500/20 border border-white/5 transition-all duration-300">
-                        📝
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-gray-100 text-[15px] leading-snug group-hover:text-blue-400 transition-colors">
-                            {title}
-                        </h3>
-                        {tag && <p className="text-xs text-gray-500 mt-1 font-medium">{tag}</p>}
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-2 pt-4 border-t border-white/5">
-                    <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-300 transition-colors">
-                        Start Test
+export function TestCard({ title, tag, isNew, href }: { title: string, tag?: string, isNew?: boolean, href?: string }) {
+    const Content = () => (
+        <div className="relative h-full bg-card rounded-[20px] p-5 border border-border flex flex-col justify-between hover:border-primary/30 transition-all">
+            {isNew && (
+                <div className="absolute top-4 right-4">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                     </span>
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 transform group-hover:rotate-45">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </div>
+                </div>
+            )}
+
+            <div className="flex gap-4 items-start mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl group-hover:bg-primary transition-all duration-300 border border-border group-hover:border-primary">
+                    📝
+                </div>
+                <div>
+                    <h3 className="font-bold text-foreground text-[15px] leading-snug group-hover:text-black transition-colors">
+                        {title}
+                    </h3>
+                    {tag && <p className="text-xs text-secondary mt-1 font-bold">{tag}</p>}
                 </div>
             </div>
+
+            <div className="flex items-center justify-between mt-2 pt-4 border-t border-border">
+                <span className="text-xs font-bold text-secondary group-hover:text-foreground transition-colors">
+                    Start Test
+                </span>
+                <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-secondary group-hover:bg-black group-hover:text-white transition-all duration-300 transform group-hover:rotate-45">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+            </div>
+        </div>
+    );
+
+    const className = "group relative min-w-[260px] p-1 rounded-3xl bg-gray-100 hover:bg-primary/10 transition-all duration-300 block";
+
+    if (href) {
+        const isExternal = href.startsWith('http');
+        if (isExternal) {
+            return (
+                <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+                    <Content />
+                </a>
+            );
+        }
+        return (
+            <Link href={href} className={className}>
+                <Content />
+            </Link>
+        );
+    }
+
+    return (
+        <div className={className}>
+            <Content />
         </div>
     );
 }

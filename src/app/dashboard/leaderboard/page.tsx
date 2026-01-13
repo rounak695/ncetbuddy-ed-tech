@@ -29,31 +29,31 @@ export default function LeaderboardPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
-                <p className="text-gray-400 mt-1">Top performers across the platform</p>
+                <h1 className="text-3xl font-bold text-foreground">Leaderboard</h1>
+                <p className="text-foreground mt-1 font-medium">Top performers across the platform</p>
             </div>
 
-            <Card className="overflow-hidden border-white/5 bg-neutral-900/50">
+            <Card className="overflow-hidden border-2 border-black bg-white shadow-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-white/5 bg-white/5">
-                                <th className="p-4 text-sm font-medium text-gray-400">Rank</th>
-                                <th className="p-4 text-sm font-medium text-gray-400">Student</th>
-                                <th className="p-4 text-sm font-medium text-gray-400">Total Score (XP)</th>
-                                <th className="p-4 text-sm font-medium text-gray-400 hidden md:table-cell">Tests Attempted</th>
+                            <tr className="border-b-2 border-black bg-primary">
+                                <th className="p-4 text-sm font-bold text-black uppercase tracking-wider">Rank</th>
+                                <th className="p-4 text-sm font-bold text-black uppercase tracking-wider">Student</th>
+                                <th className="p-4 text-sm font-bold text-black uppercase tracking-wider">Total Score (XP)</th>
+                                <th className="p-4 text-sm font-bold text-black uppercase tracking-wider hidden md:table-cell">Tests Attempted</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                                    <td colSpan={4} className="p-8 text-center text-foreground font-bold">
                                         Loading leaderboard...
                                     </td>
                                 </tr>
                             ) : leaderboard.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                                    <td colSpan={4} className="p-8 text-center text-foreground font-bold">
                                         No data available yet. Be the first to take a test!
                                     </td>
                                 </tr>
@@ -61,28 +61,30 @@ export default function LeaderboardPage() {
                                 leaderboard.map((profile, index) => {
                                     const isCurrentUser = user?.$id === profile.uid;
                                     const rank = index + 1;
-                                    let rankColor = "text-gray-300";
-                                    if (rank === 1) rankColor = "text-yellow-400";
-                                    else if (rank === 2) rankColor = "text-gray-300";
-                                    else if (rank === 3) rankColor = "text-amber-600";
+                                    let rankBadge = "text-foreground";
+                                    if (rank === 1) rankBadge = "bg-primary text-black";
+                                    else if (rank === 2) rankBadge = "bg-black text-white";
+                                    else if (rank === 3) rankBadge = "bg-yellow-100 text-black";
 
                                     return (
                                         <tr
                                             key={profile.uid}
-                                            className={`border-b border-white/5 hover:bg-white/5 transition-colors ${isCurrentUser ? 'bg-blue-500/10' : ''}`}
+                                            className={`border-b border-border hover:bg-primary/5 transition-colors ${isCurrentUser ? 'bg-primary/20 shadow-inner' : ''}`}
                                         >
-                                            <td className={`p-4 font-bold ${rankColor}`}>
-                                                #{rank}
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-black ${rankBadge}`}>
+                                                    {rank}
+                                                </span>
                                             </td>
-                                            <td className="p-4 text-white font-medium">
+                                            <td className="p-4 text-foreground font-black">
                                                 {profile.displayName || "Anonymous User"}
-                                                {isCurrentUser && <span className="ml-2 text-xs text-blue-400">(You)</span>}
+                                                {isCurrentUser && <span className="ml-2 text-xs bg-black text-white px-2 py-0.5 rounded-full">(You)</span>}
                                             </td>
-                                            <td className="p-4 text-white font-bold">
+                                            <td className="p-4 text-foreground font-black">
                                                 {profile.totalScore?.toLocaleString() || 0}
                                             </td>
-                                            <td className="p-4 text-gray-400 hidden md:table-cell">
-                                                {profile.stats?.testsAttempted || 0}
+                                            <td className="p-4 text-foreground font-bold hidden md:table-cell">
+                                                {profile.testsAttempted || 0}
                                             </td>
                                         </tr>
                                     );

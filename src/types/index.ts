@@ -46,6 +46,7 @@ export interface FormulaCard {
     chapter?: string;
     content?: string; // Text content
     imageUrl?: string; // Image URL
+    url?: string; // External link
     isVisible: boolean;
     createdAt?: number;
 }
@@ -57,12 +58,13 @@ export interface UserProfile {
     role: 'user' | 'admin';
     premiumStatus: boolean;
     isBanned?: boolean;
+    totalScore?: number;
+    testsAttempted?: number;
     stats?: {
         testsAttempted: number;
         booksViewed: number;
         streak: number;
     };
-    totalScore?: number;
     createdAt?: number;
 }
 

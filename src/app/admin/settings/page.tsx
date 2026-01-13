@@ -11,7 +11,7 @@ export default function SettingsPage() {
     const [settings, setSettings] = useState<SiteSettings>({
         bannerText: "Welcome to NCET Buddy!",
         primaryColor: "#fbbf24",
-        contactEmail: "support@ncetbuddy.com",
+        contactEmail: "ncetbuddy@gmail.com",
         showBanner: true
     });
     const [loading, setLoading] = useState(true);

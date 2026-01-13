@@ -3,14 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --background: #0D0D0D;
-  --foreground: #ffffff;
+  --background: #FFFFFF;
+  --foreground: #000000;
   --primary: #FFD02F;
-  --primary-hover: #FF8A00;
-  --card-bg: #1A1A1A;
-  --text-secondary: #A0A0A0;
-  --error: #ff4d4f;
-  --success: #52c41a;
+  --primary-hover: #E5BB2A;
+  --card-bg: #FFFFFF;
+  --text-secondary: #000000;
+  --error: #EF4444;
+  --success: #10B981;
+  --border: #000000;
 }
 
 body {
@@ -40,11 +41,11 @@ body {
 
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
 
   .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

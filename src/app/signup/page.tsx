@@ -100,13 +100,13 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-black">
-            <Card className="w-full max-w-md bg-neutral-900 border-white/10 p-8">
-                <h1 className="text-2xl font-bold mb-2 text-center text-white">Create Account</h1>
-                <p className="text-gray-400 mb-8 text-center">Join NCET Buddy today</p>
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+            <Card className="w-full max-w-md bg-card border-border p-8 shadow-2xl">
+                <h1 className="text-3xl font-bold mb-2 text-center text-foreground">Create Account</h1>
+                <p className="text-secondary mb-8 text-center">Join NCET Buddy today</p>
 
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm mb-6 text-center">
+                    <div className="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-xl text-sm mb-6 text-center">
                         {error}
                     </div>
                 )}
@@ -115,7 +115,7 @@ export default function SignupPage() {
                     <Button
                         onClick={handleGoogleLogin}
                         variant="outline"
-                        className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-gray-100 border-none font-semibold h-12"
+                        className="w-full flex items-center justify-center gap-2 bg-background text-foreground hover:bg-black/5 border-border font-semibold h-12 rounded-xl"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -139,9 +139,9 @@ export default function SignupPage() {
                     </Button>
                     <div className="relative my-6 text-center">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-white/10"></div>
+                            <div className="w-full border-t border-border"></div>
                         </div>
-                        <div className="relative z-10 inline-block px-4 bg-neutral-900 text-xs text-gray-500 uppercase">Or continue with email</div>
+                        <div className="relative z-10 inline-block px-4 bg-card text-xs text-secondary font-medium uppercase tracking-wider">Or continue with email</div>
                     </div>
                 </div>
 
@@ -153,7 +153,7 @@ export default function SignupPage() {
                         onChange={(e) => setName(e.target.value)}
                         required
                         placeholder="Enter your full name"
-                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                        className="bg-background border-border text-foreground placeholder-gray-400 focus:ring-primary/20 focus:border-primary h-12 rounded-xl"
                     />
 
                     <Input
@@ -163,7 +163,7 @@ export default function SignupPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         placeholder="Enter your email"
-                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                        className="bg-background border-border text-foreground placeholder-gray-400 focus:ring-primary/20 focus:border-primary h-12 rounded-xl"
                     />
 
                     <Input
@@ -173,16 +173,19 @@ export default function SignupPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         placeholder="Create a password (min 8 chars)"
-                        className="bg-neutral-800 border-white/10 text-white placeholder-gray-500 focus:border-blue-500"
+                        className="bg-background border-border text-foreground placeholder-gray-400 focus:ring-primary/20 focus:border-primary h-12 rounded-xl"
                     />
 
-                    <Button type="submit" isLoading={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 mt-2">
+                    <Button type="submit" isLoading={loading} className="w-full bg-primary hover:bg-primary-hover text-black font-bold h-12 rounded-xl shadow-lg shadow-primary/20 mt-2">
                         Sign Up
                     </Button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-gray-400">
-                    <p>Already have an account? <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">Login</Link></p>
+                <div className="mt-6 text-center text-sm text-secondary space-y-3">
+                    <p className="px-6 text-[11px] leading-relaxed">
+                        By signing up, you agree to our <Link href="/terms" className="text-foreground hover:underline font-bold">Terms of Service</Link> and <Link href="/privacy" className="text-foreground hover:underline font-bold">Privacy Policy</Link>.
+                    </p>
+                    <p>Already have an account? <Link href="/login" className="text-primary hover:underline font-bold">Login</Link></p>
                 </div>
             </Card>
         </div>

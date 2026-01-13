@@ -89,12 +89,16 @@ export default function TestRunnerPage() {
         if (!test || !user) return;
         setIsSubmitModalOpen(false);
 
-        // Calculate score
+        // Calculate metrics
         let score = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
         test.questions.forEach((q, index) => {
             if (answers[index] === q.correctAnswer) {
+                correctCount++;
                 score += 4;
             } else if (answers[index] !== undefined) {
+                incorrectCount++;
                 score -= 1; // Negative marking
             }
         });
@@ -104,6 +108,8 @@ export default function TestRunnerPage() {
                 userId: user.$id,
                 testId: testId,
                 score: score,
+                correctCount: correctCount,
+                incorrectCount: incorrectCount,
                 totalQuestions: test.questions.length,
                 answers: answers,
                 completedAt: Math.floor(Date.now() / 1000)
@@ -112,21 +118,24 @@ export default function TestRunnerPage() {
             console.error("Error saving result:", error);
         }
 
-        router.push(`/dashboard/tests/result?testId=${testId}&score=${score}&total=${test.questions.length}`);
+        router.push(`/dashboard/tests/result?testId=${testId}&score=${score}&total=${test.questions.length}&correct=${correctCount}&incorrect=${incorrectCount}`);
     };
 
     if (loading) {
         return (
-            <div className="fixed inset-0 bg-neutral-950 z-50 flex items-center justify-center">
-                <div className="text-white text-xl">Loading test...</div>
+            <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 border-4 border-black border-t-primary rounded-full animate-spin mb-4"></div>
+                <div className="text-black text-2xl font-black uppercase tracking-widest animate-pulse">Loading Test...</div>
             </div>
         );
     }
 
-    if (!test || !test.questions || test.questions.length === 0) {
+    if (!test || !Array.isArray(test.questions) || test.questions.length === 0) {
         return (
-            <div className="fixed inset-0 bg-neutral-950 z-50 flex items-center justify-center">
-                <div className="text-white text-xl">No questions found in this test</div>
+            <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
+                <div className="text-black text-xl font-black uppercase border-4 border-black p-8 bg-primary shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center max-w-md">
+                    Test not found or has invalid data. Please contact support.
+                </div>
             </div>
         );
     }
@@ -134,61 +143,61 @@ export default function TestRunnerPage() {
     const currentQuestion = test.questions[currentQuestionIndex];
 
     return (
-        <div className="fixed inset-0 bg-neutral-950 z-50 flex flex-col">
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
             {/* Header */}
-            <header className="h-16 border-b border-white/10 bg-neutral-900 px-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="font-bold text-lg text-white">{test.title}</div>
-                    <div className="px-3 py-1 bg-white/5 rounded-full text-xs text-gray-400">
+            <header className="h-auto md:h-24 border-b-4 border-black bg-white px-4 md:px-8 py-3 md:py-0 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl relative z-20">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="font-black text-lg md:text-2xl text-black uppercase tracking-tighter italic truncate">{test.title}</div>
+                    <div className="hidden sm:block px-3 md:px-4 py-1.5 bg-black text-primary rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border-2 border-black shadow-[2px_2px_0px_0px_rgba(255,208,47,1)]">
                         {test.subject || "General"}
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className={`text-xl font-mono font-bold ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-blue-400'}`}>
+                <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 w-full md:w-auto">
+                    <div className={`text-xl md:text-3xl font-black font-mono px-3 md:px-6 py-1.5 md:py-2 border-2 md:border-4 border-black rounded-xl md:rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${timeLeft < 300 ? 'bg-red-500 text-white animate-pulse' : 'bg-primary text-black'}`}>
                         {formatTime(timeLeft)}
                     </div>
-                    <Button onClick={() => setIsSubmitModalOpen(true)} className="bg-red-500 hover:bg-red-600 text-white px-6">
-                        Submit Test
+                    <Button onClick={() => setIsSubmitModalOpen(true)} className="bg-black hover:bg-primary hover:text-black text-white px-4 md:px-8 py-2 md:py-4 h-auto text-[10px] md:text-sm font-black uppercase tracking-widest shadow-lg md:shadow-xl border-2 border-black transition-all transform hover:-translate-y-1 active:translate-y-0">
+                        Submit
                     </Button>
                 </div>
             </header>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Main Content - Question Area */}
-                <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-                    <Card className="max-w-4xl mx-auto min-h-[500px] flex flex-col bg-neutral-900 border-white/10">
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white">Question {currentQuestionIndex + 1}</h2>
-                            <div className="flex gap-2">
-                                <span className="text-xs font-bold text-gray-500">
+                <main className="flex-1 p-4 md:p-10 overflow-y-auto bg-white">
+                    <Card className="max-w-4xl mx-auto min-h-[400px] md:min-h-[500px] flex flex-col bg-white border-4 border-black rounded-2xl md:rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                        <div className="p-4 md:p-8 border-b-4 border-black flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-primary/5">
+                            <h2 className="text-xl md:text-2xl font-black text-black uppercase tracking-tight italic">Question {currentQuestionIndex + 1}</h2>
+                            <div className="flex gap-2 md:gap-3">
+                                <span className={`text-[10px] md:text-xs font-black uppercase tracking-widest px-3 md:px-4 py-1.5 rounded-full border-2 border-black ${answers[currentQuestionIndex] !== undefined ? 'bg-black text-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white text-black'}`}>
                                     {answers[currentQuestionIndex] !== undefined ? 'Attempted' : 'Not Attempted'}
                                 </span>
                                 {markedForReview.includes(currentQuestionIndex) && (
-                                    <span className="text-xs font-bold text-purple-400">Review</span>
+                                    <span className="text-[10px] md:text-xs font-black uppercase tracking-widest px-3 md:px-4 py-1.5 rounded-full bg-yellow-400 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Review</span>
                                 )}
                             </div>
                         </div>
 
-                        <div className="flex-1 p-8">
-                            <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-8">
+                        <div className="flex-1 p-6 md:p-10">
+                            <p className="text-lg md:text-2xl text-black font-black leading-snug mb-8 md:mb-10 selection:bg-primary">
                                 {currentQuestion.text}
                             </p>
 
-                            <div className="space-y-4">
+                            <div className="space-y-4 md:space-y-6">
                                 {currentQuestion.options && currentQuestion.options.map((opt, i) => (
                                     <label
                                         key={i}
                                         className={`
-                                            flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all
+                                            flex items-center gap-4 md:gap-6 p-4 md:p-6 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all
                                             ${answers[currentQuestionIndex] === i
-                                                ? 'bg-blue-600/20 border-blue-500 text-white'
-                                                : 'bg-neutral-800 border-white/5 text-gray-400 hover:bg-neutral-800/80 hover:border-white/10'
+                                                ? 'bg-primary border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
+                                                : 'bg-white border-black/10 text-black hover:border-black hover:bg-primary/5'
                                             }
                                         `}
                                     >
                                         <div className={`
-                                            w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold
-                                            ${answers[currentQuestionIndex] === i ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-600'}
+                                            w-6 h-6 md:w-8 md:h-8 rounded-full border-2 md:border-4 flex items-center justify-center text-[10px] md:text-sm font-black flex-shrink-0
+                                            ${answers[currentQuestionIndex] === i ? 'bg-black border-black text-primary' : 'border-black/10 text-black/30'}
                                         `}>
                                             {String.fromCharCode(65 + i)}
                                         </div>
@@ -199,20 +208,19 @@ export default function TestRunnerPage() {
                                             checked={answers[currentQuestionIndex] === i}
                                             onChange={() => handleAnswer(i)}
                                         />
-                                        <span className="text-base">{opt}</span>
+                                        <span className="text-base md:text-lg font-bold">{opt}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 flex justify-between items-center bg-neutral-900/50">
-                            <div className="flex gap-4">
+                        <div className="p-4 md:p-8 border-t-4 border-black flex flex-col md:flex-row gap-6 md:justify-between md:items-center bg-primary/5">
+                            <div className="flex gap-2 md:gap-4">
                                 <Button
                                     onClick={toggleMarkForReview}
-                                    variant="outline"
-                                    className={`border-purple-500/50 text-purple-400 hover:bg-purple-500/10 ${markedForReview.includes(currentQuestionIndex) ? 'bg-purple-500/20' : ''}`}
+                                    className={`flex-1 md:flex-none bg-white border-2 border-black text-black hover:bg-primary font-black px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${markedForReview.includes(currentQuestionIndex) ? 'bg-primary' : ''}`}
                                 >
-                                    {markedForReview.includes(currentQuestionIndex) ? 'Unmark Review' : 'Mark for Review'}
+                                    {markedForReview.includes(currentQuestionIndex) ? 'UNMARK' : 'REVIEW'}
                                 </Button>
                                 <Button
                                     onClick={() => setAnswers(prev => {
@@ -221,66 +229,59 @@ export default function TestRunnerPage() {
                                         return next;
                                     })}
                                     variant="outline"
-                                    className="border-gray-700 text-gray-400 hover:text-white"
+                                    className="flex-1 md:flex-none border-2 border-black text-black hover:bg-black hover:text-white font-black px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                                 >
-                                    Clear Response
+                                    CLEAR
                                 </Button>
                             </div>
 
-                            <div className="flex gap-4">
+                            <div className="flex gap-2 md:gap-4">
                                 <Button
                                     onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
                                     disabled={currentQuestionIndex === 0}
-                                    variant="outline"
-                                    className="border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
+                                    className="flex-1 md:flex-none bg-white border-2 border-black text-black hover:bg-black hover:text-white disabled:opacity-30 font-black px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                                 >
-                                    Previous
+                                    PREV
                                 </Button>
                                 <Button
                                     onClick={() => setCurrentQuestionIndex(prev => Math.min(test.questions.length - 1, prev + 1))}
-                                    className="bg-blue-600 hover:bg-blue-500 text-white px-8"
+                                    className="flex-[2] md:flex-none bg-black hover:bg-primary hover:text-black text-white px-6 md:px-10 py-2 md:py-3 font-black shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] border-2 border-black uppercase tracking-widest text-xs md:text-sm transition-all"
                                 >
-                                    {currentQuestionIndex === test.questions.length - 1 ? 'Finish Section' : 'Next'}
+                                    {currentQuestionIndex === test.questions.length - 1 ? 'Finish' : 'Next'}
                                 </Button>
                             </div>
                         </div>
                     </Card>
                 </main>
 
-                {/* Sidebar - Question Palette */}
-                <aside className="w-80 bg-neutral-900 border-l border-white/10 flex flex-col">
-                    <div className="p-6 border-b border-white/5">
-                        <h3 className="font-bold text-white mb-4">Question Palette</h3>
-                        <div className="grid grid-cols-2 gap-4 text-xs text-gray-400">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div> Attempted
+                {/* Sidebar - Question Palette - Responsive behavior */}
+                <aside className="w-full md:w-80 bg-white border-t-4 md:border-t-0 md:border-l-4 border-black flex flex-col shadow-2xl relative z-10 max-h-[30vh] md:max-h-none">
+                    <div className="p-4 md:p-8 border-b-2 md:border-b-4 border-black bg-primary sticky top-0 md:relative">
+                        <h3 className="font-black text-black uppercase tracking-widest mb-3 md:mb-6 italic text-sm md:text-lg">Question Palette</h3>
+                        <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4 text-[8px] md:text-[10px] font-black uppercase tracking-tighter">
+                            <div className="flex items-center gap-2 text-black">
+                                <div className="w-3 h-3 md:w-4 md:h-4 rounded bg-black border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"></div> Answered
                             </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-purple-500 border border-purple-400"></div> Reviewed
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-neutral-700"></div> Unvisited
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-white/10 border border-gray-600"></div> Skipped
+                            <div className="flex items-center gap-2 text-black">
+                                <div className="w-3 h-3 md:w-4 md:h-4 rounded bg-yellow-400 border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"></div> Review
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <div className="grid grid-cols-5 gap-3">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white">
+                        <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                             {test.questions.map((q, i) => {
-                                let statusClass = "bg-neutral-800 text-gray-400 border-transparent hover:border-gray-500"; // Unvisited
-                                if (currentQuestionIndex === i) statusClass = "ring-2 ring-blue-500 ring-offset-2 ring-offset-neutral-900 bg-neutral-700 text-white";
-                                else if (markedForReview.includes(i)) statusClass = "bg-purple-500/20 text-purple-400 border border-purple-500/50";
-                                else if (answers[i] !== undefined) statusClass = "bg-green-500 text-black font-bold";
-                                else if (i < currentQuestionIndex) statusClass = "bg-white/5 text-red-400 border border-red-500/20"; // Skipped assumption
+                                let statusClass = "bg-white text-black/20 border-black/10 hover:border-black hover:text-black";
+                                if (currentQuestionIndex === i) statusClass = "ring-2 md:ring-4 ring-black ring-offset-1 md:ring-offset-2 bg-primary text-black font-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
+                                else if (markedForReview.includes(i)) statusClass = "bg-yellow-400 text-black border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
+                                else if (answers[i] !== undefined) statusClass = "bg-black text-primary font-black border-black shadow-[2px_2px_0px_0px_rgba(255,208,47,1)] md:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)]";
+                                else if (i < currentQuestionIndex) statusClass = "bg-white text-red-500 border-red-500 font-bold opacity-50";
 
                                 return (
                                     <button
                                         key={i}
                                         onClick={() => setCurrentQuestionIndex(i)}
-                                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm transition-all border ${statusClass}`}
+                                        className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center text-xs md:text-sm transition-all border-2 ${statusClass} transform hover:-translate-y-1 active:translate-y-0`}
                                     >
                                         {i + 1}
                                     </button>
@@ -293,22 +294,22 @@ export default function TestRunnerPage() {
 
             {/* Submit Confirmation Modal */}
             {isSubmitModalOpen && (
-                <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <Card className="w-full max-w-md bg-neutral-900 border-white/10 p-8 text-center animate-in zoom-in-95 duration-200">
-                        <div className="w-16 h-16 rounded-full bg-yellow-500/10 text-yellow-500 flex items-center justify-center text-3xl mx-auto mb-4">
-                            ⚠️
+                <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                    <Card className="w-full max-w-md bg-white border-4 border-black p-10 text-center animate-in zoom-in-95 duration-200 shadow-[16px_16px_0px_0px_rgba(255,208,47,1)] rounded-3xl">
+                        <div className="w-20 h-20 rounded-full bg-primary text-black flex items-center justify-center text-4xl mx-auto mb-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                            ⚡
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Submit Test?</h2>
-                        <p className="text-gray-400 mb-6">
-                            You have attempted <span className="text-white font-bold">{Object.keys(answers).length}</span> out of <span className="text-white font-bold">{test.questions.length}</span> questions.
-                            <br />Are you sure you want to finish?
+                        <h2 className="text-3xl font-black text-black mb-4 uppercase italic">Submit Test?</h2>
+                        <p className="text-black font-bold mb-8 leading-relaxed">
+                            You have attempted <span className="bg-primary px-2 py-0.5 rounded border border-black">{Object.keys(answers).length}</span> out of <span className="underline decoration-primary decoration-4">{test.questions.length}</span> questions.
+                            <br /><span className="text-xs uppercase tracking-widest opacity-60">Ready to see your results?</span>
                         </p>
                         <div className="flex gap-4">
-                            <Button variant="outline" onClick={() => setIsSubmitModalOpen(false)} className="flex-1 border-white/10 text-white hover:bg-white/5">
-                                Continue Test
+                            <Button variant="outline" onClick={() => setIsSubmitModalOpen(false)} className="flex-1 border-2 border-black text-black hover:bg-black hover:text-white font-black py-4 h-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl transition-all">
+                                GO BACK
                             </Button>
-                            <Button onClick={handleSubmit} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white">
-                                Submit
+                            <Button onClick={handleSubmit} className="flex-1 bg-black hover:bg-primary hover:text-black text-white font-black py-4 h-auto shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] border-2 border-black rounded-xl transition-all">
+                                SUBMIT
                             </Button>
                         </div>
                     </Card>
