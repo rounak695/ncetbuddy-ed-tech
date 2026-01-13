@@ -107,7 +107,7 @@ export default function TestRunnerPage() {
             await saveTestResult({
                 userId: user.$id,
                 testId: testId,
-                score: score,
+                score: Math.max(0, score),
                 correctCount: correctCount,
                 incorrectCount: incorrectCount,
                 totalQuestions: test.questions.length,

@@ -5,32 +5,79 @@ import { useEffect, useState } from "react";
 import { getLeaderboard } from "@/lib/appwrite-db";
 import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/Button";
+
+import client from "@/lib/appwrite"; // Import the client instance
 
 export default function LeaderboardPage() {
     const { user } = useAuth();
     const [leaderboard, setLeaderboard] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchLeaderboard = async () => {
+        try {
+            setLoading(true);
+            const data = await getLeaderboard(50); // Fetch top 50
+            setLeaderboard(data);
+        } catch (error) {
+            console.error("Failed to fetch leaderboard:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchLeaderboard = async () => {
-            try {
-                const data = await getLeaderboard(50); // Fetch top 50
-                setLeaderboard(data);
-            } catch (error) {
-                console.error("Failed to fetch leaderboard:", error);
-            } finally {
-                setLoading(false);
+        fetchLeaderboard();
+
+        // Subscribe to realtime updates for the users collection
+        let unsubscribe: (() => void) | undefined;
+        try {
+            // Subscribe to any changes in the 'users' collection
+            const channel = `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db'}.collections.users.documents`;
+            console.log("Subscribing to Leaderboard updates on channel:", channel);
+
+            unsubscribe = client.subscribe(channel, (response) => {
+                // Log payload for debugging
+                console.log("Leaderboard Realtime Event:", response);
+
+                // Refresh if any action happens on users collection
+                const eventType = response.events[0];
+                if (eventType.includes('.create') || eventType.includes('.update') || eventType.includes('.delete')) {
+                    console.log("Refreshing leaderboard due to realtime update...");
+                    fetchLeaderboard();
+                }
+            });
+        } catch (error) {
+            console.error("Failed to subscribe to leaderboard updates:", error);
+        }
+
+        return () => {
+            if (unsubscribe) {
+                try {
+                    unsubscribe();
+                } catch (error) {
+                    // Suppress WebSocket closing errors during unmount as they are often harmless noise
+                    console.debug("Error during leaderboard unsubscribe:", error);
+                }
             }
         };
-
-        fetchLeaderboard();
     }, []);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h1 className="text-3xl font-bold text-foreground">Leaderboard</h1>
-                <p className="text-foreground mt-1 font-medium">Top performers across the platform</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Leaderboard</h1>
+                    <p className="text-foreground mt-1 font-medium">Top performers across the platform</p>
+                </div>
+                <Button
+                    onClick={fetchLeaderboard}
+                    variant="outline"
+                    className="border-2 border-black text-black hover:bg-black hover:text-white transition-all font-black text-xs uppercase tracking-widest"
+                    disabled={loading}
+                >
+                    {loading ? "Syncing..." : "Refresh Rank"}
+                </Button>
             </div>
 
             <Card className="overflow-hidden border-2 border-black bg-white shadow-xl">
@@ -45,7 +92,7 @@ export default function LeaderboardPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? (
+                            {loading && leaderboard.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="p-8 text-center text-foreground font-bold">
                                         Loading leaderboard...

@@ -8,7 +8,12 @@ export default function TermsOfService() {
         <main className="min-h-screen bg-white">
             {/* Header / Nav Placeholder */}
             <div className="border-b-4 border-black p-6 flex justify-between items-center bg-primary">
-                <Link href="/" className="text-2xl font-black text-black uppercase italic tracking-tighter">NCET Buddy</Link>
+                <Link href="/" className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-black bg-white">
+                        <img src="/logo.png" alt="NCET Buddy" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-2xl font-black text-black uppercase italic tracking-tighter">NCET Buddy</span>
+                </Link>
                 <Link href="/">
                     <Button variant="secondary" className="bg-black text-white hover:bg-white hover:text-black transition-all">Go Home</Button>
                 </Link>
@@ -18,7 +23,7 @@ export default function TermsOfService() {
                 <div className="mb-16">
                     <h1 className="text-6xl font-black text-black uppercase tracking-tighter italic mb-4">Terms of Service</h1>
                     <div className="h-4 w-40 bg-primary border-2 border-black"></div>
-                    <p className="mt-8 text-black font-bold opacity-60 uppercase tracking-widest text-xs">Last Updated: January 2024</p>
+                    <p className="mt-8 text-black font-bold opacity-60 uppercase tracking-widest text-xs">Last Updated: JANUARY 2026</p>
                 </div>
 
                 <div className="space-y-12 text-black font-medium leading-relaxed">

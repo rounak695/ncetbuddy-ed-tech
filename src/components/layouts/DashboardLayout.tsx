@@ -59,10 +59,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <aside className="hidden md:flex w-72 flex-col border-r-2 border-black bg-white backdrop-blur-xl h-screen sticky top-0 z-40 shadow-2xl">
                 <div className="p-8 pb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center font-black text-primary border-2 border-black shadow-[4px_4px_0px_0px_rgba(255,208,47,1)]">
-                            NB
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] bg-white">
+                            <img src="/logo.png" alt="NCET Buddy" className="w-full h-full object-cover" />
                         </div>
-                        <div className="text-xl font-black text-black">
+                        <div className="text-xl font-black text-black uppercase tracking-tighter">
                             NCET Buddy
                         </div>
                     </div>
@@ -104,9 +104,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="relative z-10">
                             <h4 className="font-black text-primary mb-1 uppercase tracking-tighter italic text-lg">Go Pro</h4>
                             <p className="text-xs text-white/70 mb-4 font-bold">Access all tests & notes</p>
-                            <button className="w-full py-3 bg-primary text-black font-black rounded-xl text-xs hover:bg-white transition-all shadow-xl hover:-translate-y-1">
-                                UPGRADE NOW
-                            </button>
+                            <Link href="/" className="w-full block">
+                                <button className="w-full py-3 bg-primary text-black font-black rounded-xl text-xs hover:bg-white transition-all shadow-xl hover:-translate-y-1">
+                                    UPGRADE NOW
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -117,10 +119,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Mobile Header */}
                 <header className="md:hidden sticky top-0 z-50 bg-white border-b-2 border-black p-4 flex justify-between items-center shadow-lg">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center font-black text-primary text-xs border border-black">
-                            NB
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-black bg-white">
+                            <img src="/logo.png" alt="NCET Buddy" className="w-full h-full object-cover" />
                         </div>
-                        <div className="font-black text-lg text-black uppercase">NCET Buddy</div>
+                        <div className="font-black text-lg text-black uppercase tracking-tighter">NCET Buddy</div>
                     </div>
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

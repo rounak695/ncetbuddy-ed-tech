@@ -77,6 +77,8 @@ export default function SignupPage() {
                         email: email,
                         displayName: name,
                         role: 'user',
+                        totalScore: 0,
+                        testsAttempted: 0,
                         createdAt: Math.floor(Date.now() / 1000)
                     }
                 );
@@ -102,8 +104,13 @@ export default function SignupPage() {
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
             <Card className="w-full max-w-md bg-card border-border p-8 shadow-2xl">
-                <h1 className="text-3xl font-bold mb-2 text-center text-foreground">Create Account</h1>
-                <p className="text-secondary mb-8 text-center">Join NCET Buddy today</p>
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-black shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] mb-4 bg-white">
+                        <img src="/logo.png" alt="NCET Buddy" className="w-full h-full object-cover" />
+                    </div>
+                    <h1 className="text-3xl font-black text-black uppercase tracking-tighter italic">Create Account</h1>
+                    <p className="text-black font-bold opacity-60 uppercase tracking-widest text-[10px] mt-1">Join NCET Buddy today</p>
+                </div>
 
                 {error && (
                     <div className="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-xl text-sm mb-6 text-center">

@@ -110,10 +110,10 @@ export const saveTestResult = async (result: any) => {
                 const currentTests = userDoc.testsAttempted || 0;
 
                 // Schema update required: totalScore and testsAttempted must be added to Appwrite console
-                // await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
-                //     totalScore: currentScore + result.score,
-                //     testsAttempted: currentTests + 1
-                // });
+                await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
+                    totalScore: Number(currentScore || 0) + Number(result.score || 0),
+                    testsAttempted: Number(currentTests || 0) + 1
+                });
             }
         } catch (profileError) {
             console.error("Failed to update user profile stats:", profileError);

@@ -3,19 +3,19 @@ export const Mentors = () => {
     const mentors = [
         {
             name: "GAURAV ARYA",
-            role: "Lead Mentor",
+            role: "DHSGU",
             image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Oliver",
             quote: "Success is not final, failure is not fatal: it is the courage to continue that counts."
         },
         {
             name: "KOPAL KATARIA",
-            role: "Mathematics Expert",
+            role: "RIE BBSR",
             image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Kopal",
             quote: "Mathematics is not about numbers, equations, computations, or algorithms: it is about understanding."
         },
         {
             name: "SUSHANT PATEL",
-            role: "Physics Specialist",
+            role: "Gautam Buddha University",
             image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Sushant",
             quote: "Physics is the most fundamental of all sciences, it describes how the universe works."
         }

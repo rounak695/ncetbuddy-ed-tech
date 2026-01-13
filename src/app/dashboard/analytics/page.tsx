@@ -11,14 +11,18 @@ export default function AnalyticsPage() {
     const { user } = useAuth();
     const [results, setResults] = useState<TestResult[]>([]);
     const [stats, setStats] = useState({
-        avgScore: 0,
+        totalScore: 0,
         testsTaken: 0,
         accuracy: 0,
-        trend: "0%", // Simplification for now
+        trend: "0%",
         isPositive: true
     });
     const [recentPerformance, setRecentPerformance] = useState<{ title: string; score: number; total: number }[]>([]);
     const [loading, setLoading] = useState(true);
+    const [subjectInsights, setSubjectInsights] = useState<{
+        strongest: { subject: string; accuracy: number }[];
+        weakest: { subject: string; accuracy: number }[];
+    }>({ strongest: [], weakest: [] });
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -32,47 +36,82 @@ export default function AnalyticsPage() {
                 const totalTests = userResults.length;
                 if (totalTests > 0) {
                     const totalScore = userResults.reduce((acc, curr) => acc + curr.score, 0);
-                    const avgScore = totalScore / totalTests;
 
-                    // Calculate Accuracy (Total Correct / Total Questions across all tests)
-                    // Note: Ideally we store correct count, but we can infer or store differently. 
-                    // For now, let's approximate Accuracy as (Total Score / Total Possible Score) if max score was known.
-                    // Assuming each question is 4 marks (standard) -> Total Questions * 4 = Max Score.
-                    // Let's rely on percentage: (Sum of Percentages / Count)
-
+                    // Calculate Global Accuracy
                     const totalPercentage = userResults.reduce((acc, curr) => {
-                        // Avoid division by zero
                         const maxScore = curr.totalQuestions * 4;
                         return acc + ((curr.score / maxScore) * 100);
                     }, 0);
                     const accuracy = totalPercentage / totalTests;
 
                     setStats({
-                        avgScore: Math.round(avgScore),
+                        totalScore: totalScore,
                         testsTaken: totalTests,
                         accuracy: Math.round(accuracy),
-                        trend: "+5%", // Placeholder logic
+                        trend: "+5%",
                         isPositive: true
                     });
 
-                    // Prepare Graph Data (Last 5 tests)
-                    // We need test titles. This requires fetching test details or hoping we stored title in result.
-                    // Since TestResult doesn't have title, we might need to fetch test info or just show "Test 1", "Test 2".
-                    // Let's fetch test details for the last 5 results.
-                    const recentResults = userResults.slice(0, 5);
-                    const graphData = await Promise.all(recentResults.map(async (res, index) => {
+                    // --- Insights Calculation ---
+                    // 1. Get Unique Test IDs
+                    const uniqueTestIds = Array.from(new Set(userResults.map(r => r.testId)));
+
+                    // 2. Fetch Test Details (specifically for Subject)
+                    const testDetailsMap = new Map<string, Test>();
+                    await Promise.all(uniqueTestIds.map(async (tid) => {
                         try {
-                            const test = await getTestById(res.testId);
-                            return {
-                                title: test?.title || `Test ${index + 1}`,
-                                score: res.score,
-                                total: res.totalQuestions * 4
-                            };
-                        } catch {
-                            return { title: `Test ${index + 1}`, score: res.score, total: 100 };
+                            const t = await getTestById(tid);
+                            if (t) testDetailsMap.set(tid, t);
+                        } catch (e) {
+                            console.error(`Failed to fetch test ${tid}`, e);
                         }
                     }));
-                    setRecentPerformance(graphData.reverse()); // Show oldest to newest
+
+                    // 3. Aggregate Scores by Subject
+                    const subjectStats = new Map<string, { totalScore: number; maxScore: number }>();
+
+                    userResults.forEach(res => {
+                        const test = testDetailsMap.get(res.testId);
+                        const subject = test?.subject || "General";
+
+                        const current = subjectStats.get(subject) || { totalScore: 0, maxScore: 0 };
+                        current.totalScore += res.score;
+                        current.maxScore += (res.totalQuestions * 4); // Assuming 4 marks per q
+                        subjectStats.set(subject, current);
+                    });
+
+                    // 4. Calculate Accuracy per Subject
+                    const subjectAccuracy = Array.from(subjectStats.entries()).map(([sub, data]) => ({
+                        subject: sub,
+                        accuracy: Math.round((data.totalScore / data.maxScore) * 100)
+                    }));
+
+                    // 5. Sort
+                    subjectAccuracy.sort((a, b) => b.accuracy - a.accuracy);
+
+                    // 6. Split into Strongest / Weakest
+                    // If less than 3 subjects, show them in strongest.
+                    // Weakest are those below 60% or just the bottom list if enough data.
+                    const strongest = subjectAccuracy.slice(0, 3);
+                    const weakest = subjectAccuracy.length > 3 ? subjectAccuracy.slice(-3).reverse() : [];
+
+                    // If we have few subjects but low scores, put them in weakest? 
+                    // For UI simplicity: Just Top 3 and Bottom 3 (if distinct).
+
+                    setSubjectInsights({ strongest, weakest });
+
+
+                    // Prepare Graph Data
+                    const recentResults = userResults.slice(0, 5);
+                    const graphData = recentResults.map(res => {
+                        const test = testDetailsMap.get(res.testId);
+                        return {
+                            title: test?.title || `Test`,
+                            score: res.score,
+                            total: res.totalQuestions * 4
+                        };
+                    });
+                    setRecentPerformance(graphData.reverse());
                 }
             } catch (error) {
                 console.error("Error fetching analytics:", error);
@@ -85,11 +124,16 @@ export default function AnalyticsPage() {
     }, [user]);
 
     const statCards = [
-        { label: "Avg. Score", value: `${stats.avgScore}`, trend: stats.trend, positive: stats.isPositive },
+        { label: "Total Score", value: `${stats.totalScore}`, trend: stats.trend, positive: stats.isPositive },
         { label: "Tests Taken", value: `${stats.testsTaken}`, trend: "Lifetime", positive: true },
-        { label: "Class Rank", value: "N/A", trend: "Coming Soon", positive: true }, // Placeholder
+        { label: "Class Rank", value: "N/A", trend: "Coming Soon", positive: true },
         { label: "Accuracy", value: `${stats.accuracy}%`, trend: "Global Avg", positive: true },
     ];
+
+    const radius = 64;
+    const circumference = 2 * Math.PI * radius;
+    const goalPercentage = Math.min(100, Math.max(0, stats.accuracy));
+    const strokeDashoffset = circumference - (goalPercentage / 100) * circumference;
 
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-10">
@@ -180,7 +224,6 @@ export default function AnalyticsPage() {
                     </section>
                 </div>
 
-                {/* Sidebar Widgets */}
                 <div className="space-y-10">
                     <section>
                         <div className="flex items-center gap-3 mb-6">
@@ -192,37 +235,45 @@ export default function AnalyticsPage() {
                                 <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
                                     <span className="text-lg">🔥</span> Strongest Topics
                                 </h4>
-                                <div className="space-y-4">
-                                    {['Calculus', 'Electromagnetism', 'Mechanics'].map(t => (
-                                        <div key={t} className="space-y-2">
-                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                                <span className="text-black">{t}</span>
-                                                <span className="text-black">92%</span>
+                                {subjectInsights.strongest.length === 0 ? (
+                                    <div className="text-xs font-bold text-black/40 uppercase tracking-widest text-center py-4">Not enough data</div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {subjectInsights.strongest.map(t => (
+                                            <div key={t.subject} className="space-y-2">
+                                                <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                    <span className="text-black">{t.subject}</span>
+                                                    <span className="text-black">{t.accuracy}%</span>
+                                                </div>
+                                                <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
+                                                    <div className="h-full bg-black rounded-full transition-all duration-1000" style={{ width: `${t.accuracy}%` }}></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
-                                                <div className="h-full bg-black w-[92%] rounded-full"></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="p-6 bg-white">
                                 <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
                                     <span className="text-lg">⚡</span> Focus Needed
                                 </h4>
-                                <div className="space-y-4">
-                                    {['Optics', 'Thermodynamics', 'Probability'].map(t => (
-                                        <div key={t} className="space-y-2">
-                                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                                <span className="text-black">{t}</span>
-                                                <span className="text-black">45%</span>
+                                {subjectInsights.weakest.length === 0 ? (
+                                    <div className="text-xs font-bold text-black/40 uppercase tracking-widest text-center py-4">Keep practicing!</div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {subjectInsights.weakest.map(t => (
+                                            <div key={t.subject} className="space-y-2">
+                                                <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                    <span className="text-black">{t.subject}</span>
+                                                    <span className="text-black">{t.accuracy}%</span>
+                                                </div>
+                                                <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
+                                                    <div className="h-full bg-primary rounded-full border-r border-black transition-all duration-1000" style={{ width: `${t.accuracy}%` }}></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full h-3 bg-black/5 rounded-full overflow-hidden border border-black/10">
-                                                <div className="h-full bg-primary w-[45%] rounded-full border-r border-black"></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     </section>
@@ -232,15 +283,28 @@ export default function AnalyticsPage() {
                         <h3 className="font-black text-black text-xl uppercase tracking-tighter italic mb-6">Goal Achievement</h3>
                         <div className="relative w-36 h-36 mx-auto mb-6 flex items-center justify-center">
                             <svg className="w-full h-full transform -rotate-90">
-                                <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-black/5" />
-                                <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-black" strokeDasharray="402.12" strokeDashoffset="120" strokeLinecap="round" />
+                                <circle cx="72" cy="72" r={radius} stroke="currentColor" strokeWidth="12" fill="transparent" className="text-black/5" />
+                                <circle
+                                    cx="72"
+                                    cy="72"
+                                    r={radius}
+                                    stroke="currentColor"
+                                    strokeWidth="12"
+                                    fill="transparent"
+                                    className="text-black transition-all duration-1000 ease-out"
+                                    strokeDasharray={circumference}
+                                    strokeDashoffset={strokeDashoffset}
+                                    strokeLinecap="round"
+                                />
                             </svg>
                             <div className="absolute flex flex-col items-center">
-                                <span className="text-4xl font-black text-black">72%</span>
-                                <span className="text-[10px] uppercase font-black tracking-widest text-black opacity-40">TARGET</span>
+                                <span className="text-4xl font-black text-black">{stats.accuracy}%</span>
+                                <span className="text-[10px] uppercase font-black tracking-widest text-black opacity-40">ACCURACY</span>
                             </div>
                         </div>
-                        <p className="text-xs text-black font-black uppercase tracking-widest opacity-60 leading-relaxed italic">You are in the top 5% of students this week!</p>
+                        <p className="text-xs text-black font-black uppercase tracking-widest opacity-60 leading-relaxed italic">
+                            {stats.accuracy > 70 ? "Excellent work! Keep it up." : "Consistency is key. Keep pushing!"}
+                        </p>
                     </div>
                 </div>
             </div>
