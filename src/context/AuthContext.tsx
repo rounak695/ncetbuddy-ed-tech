@@ -62,8 +62,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             email: session.email,
                             displayName: session.name,
                             role: 'user',
-                            totalScore: 0,
-                            testsAttempted: 0,
                             createdAt: Math.floor(Date.now() / 1000)
                         }
                     );
