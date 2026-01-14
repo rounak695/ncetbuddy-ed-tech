@@ -16,7 +16,7 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, checkSession } = useAuth();
 
     useEffect(() => {
         if (!authLoading && user) {
@@ -50,12 +50,12 @@ export default function LoginPage() {
 
         try {
             await account.createEmailPasswordSession(email, password);
-            router.push("/dashboard");
+            await checkSession(); // Force context update
         } catch (err: any) {
             // Appwrite throws an error if a session is already active. 
-            // We should treat this as a success and redirect.
+            // We should treat this as a success and refresh session.
             if (err.message?.includes("session is active") || err.code === 409) {
-                router.push("/dashboard");
+                await checkSession();
             } else {
                 // 401 (Invalid Credentials) should fall through here
                 setError(err.message || "Login failed");

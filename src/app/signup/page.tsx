@@ -17,7 +17,7 @@ export default function SignupPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, checkSession } = useAuth();
 
     useEffect(() => {
         if (!authLoading && user) {
@@ -88,7 +88,7 @@ export default function SignupPage() {
                 // In a production app, you might want to rollback or queue this.
             }
 
-            router.push("/dashboard");
+            await checkSession(); // Force context update
         } catch (err: any) {
             console.error(err);
             if (err.code === 409) {

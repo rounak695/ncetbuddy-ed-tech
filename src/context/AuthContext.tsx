@@ -11,6 +11,7 @@ interface AuthContextType {
     role: "user" | "admin" | null;
     loading: boolean;
     logout: () => Promise<void>;
+    checkSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
     role: null,
     loading: true,
     logout: async () => { },
+    checkSession: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -28,66 +30,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    useEffect(() => {
-        const checkSession = async () => {
-            if (!isAppwriteConfigured()) {
-                setLoading(false);
-                return;
-            }
+    const checkSession = async () => {
+        if (!isAppwriteConfigured()) {
+            setLoading(false);
+            return;
+        }
 
+        try {
+            const session = await account.get();
+            setUser(session);
+
+            // Fetch User Role from Database (collection 'users')
+            // Assuming we store role in a 'users' collection with document ID = user ID
             try {
-                const session = await account.get();
-                setUser(session);
-
-                // Fetch User Role from Database (collection 'users')
-                // Assuming we store role in a 'users' collection with document ID = user ID
+                const userDoc = await databases.getDocument(
+                    process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db',
+                    'users',
+                    session.$id
+                );
+                setRole(userDoc.role as "user" | "admin");
+            } catch (error) {
+                console.warn("User document not found. Attempting to heal (recreate)...");
+                // SELF-HEALING: If doc is missing (likely due to previous bug), recreate it.
                 try {
-                    const userDoc = await databases.getDocument(
+                    await databases.createDocument(
                         process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db',
                         'users',
-                        session.$id
+                        session.$id,
+                        {
+                            userId: session.$id,
+                            email: session.email,
+                            displayName: session.name,
+                            role: 'user',
+                            totalScore: 0,
+                            testsAttempted: 0,
+                            createdAt: Math.floor(Date.now() / 1000)
+                        }
                     );
-                    setRole(userDoc.role as "user" | "admin");
-                } catch (error) {
-                    console.warn("User document not found. Attempting to heal (recreate)...");
-                    // SELF-HEALING: If doc is missing (likely due to previous bug), recreate it.
-                    try {
-                        await databases.createDocument(
-                            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db',
-                            'users',
-                            session.$id,
-                            {
-                                userId: session.$id,
-                                email: session.email,
-                                displayName: session.name,
-                                role: 'user',
-                                totalScore: 0,
-                                testsAttempted: 0,
-                                createdAt: Math.floor(Date.now() / 1000)
-                            }
-                        );
-                        console.log("User document healed successfully.");
-                        setRole("user");
-                    } catch (healError) {
-                        console.error("Failed to heal user document:", healError);
-                        // If healing fields, we MUST logout to prevent "bypass" / ghost state.
-                        await account.deleteSession('current');
-                        setUser(null);
-                        setRole(null);
-                        router.push("/login?error=account_sync_failed");
-                        return;
-                    }
+                    console.log("User document healed successfully.");
+                    setRole("user");
+                } catch (healError) {
+                    console.error("Failed to heal user document:", healError);
+                    // If healing fields, we MUST logout to prevent "bypass" / ghost state.
+                    await account.deleteSession('current');
+                    setUser(null);
+                    setRole(null);
+                    router.push("/login?error=account_sync_failed");
+                    return;
                 }
-
-            } catch (error) {
-                // No session
-                setUser(null);
-                setRole(null);
-            } finally {
-                setLoading(false);
             }
-        };
 
+        } catch (error) {
+            // No session
+            setUser(null);
+            setRole(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         checkSession();
     }, []);
 
@@ -103,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, role, loading, logout }}>
+        <AuthContext.Provider value={{ user, role, loading, logout, checkSession }}>
             {children}
         </AuthContext.Provider>
     );

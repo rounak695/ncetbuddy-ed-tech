@@ -14,15 +14,15 @@ export default function LeaderboardPage() {
     const [leaderboard, setLeaderboard] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboard = async (isBackground = false) => {
         try {
-            setLoading(true);
+            if (!isBackground) setLoading(true);
             const data = await getLeaderboard(50); // Fetch top 50
             setLeaderboard(data);
         } catch (error) {
             console.error("Failed to fetch leaderboard:", error);
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
@@ -44,7 +44,7 @@ export default function LeaderboardPage() {
                 const eventType = response.events[0];
                 if (eventType.includes('.create') || eventType.includes('.update') || eventType.includes('.delete')) {
                     console.log("Refreshing leaderboard due to realtime update...");
-                    fetchLeaderboard();
+                    fetchLeaderboard(true); // Background update
                 }
             });
         } catch (error) {
@@ -71,7 +71,7 @@ export default function LeaderboardPage() {
                     <p className="text-foreground mt-1 font-medium">Top performers across the platform</p>
                 </div>
                 <Button
-                    onClick={fetchLeaderboard}
+                    onClick={() => fetchLeaderboard(false)}
                     variant="outline"
                     className="border-2 border-black text-black hover:bg-black hover:text-white transition-all font-black text-xs uppercase tracking-widest"
                     disabled={loading}
