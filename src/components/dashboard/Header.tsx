@@ -17,7 +17,7 @@ export default function Header() {
                 </Link>
                 <div>
                     <h2 className="text-base md:text-lg font-bold text-foreground leading-tight">
-                        Welcome back, {user?.displayName?.split(' ')[0] || "Student"}! 👋
+                        Welcome back, {user?.name?.split(' ')[0] || "Student"}! 👋
                     </h2>
                     <p className="text-xs md:text-sm text-secondary font-medium">Let's continue your learning journey.</p>
                 </div>
