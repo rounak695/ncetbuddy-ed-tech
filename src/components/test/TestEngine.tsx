@@ -36,6 +36,34 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         fetchTest();
     }, [testId]);
 
+    const handleSubmit = async () => {
+        if (!test || !user) return;
+
+        // Calculate score
+        let score = 0;
+        test.questions.forEach((q, index) => {
+            if (answers[index] === q.correctAnswer) {
+                score += 4;
+            } else if (answers[index] !== undefined) {
+                score -= 1; // Negative marking
+            }
+        });
+
+        const result = {
+            userId: user.$id,
+            testId: testId,
+            score: score,
+            totalQuestions: test.questions.length,
+            answers: answers,
+            completedAt: Date.now()
+        };
+
+        await saveTestResult(result);
+
+        alert(`Test Submitted! Your Score: ${score}/${test.questions.length * 4}`);
+        router.push("/dashboard/leaderboard");
+    };
+
     useEffect(() => {
         if (!test || timeLeft <= 0) return;
 
@@ -65,47 +93,6 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             setCurrentQuestionIndex(nextIndex);
             setVisited((prev) => new Set(prev).add(nextIndex));
         }
-    };
-
-    const handlePrev = () => {
-        if (currentQuestionIndex > 0) {
-            const prevIndex = currentQuestionIndex - 1;
-            setCurrentQuestionIndex(prevIndex);
-            setVisited((prev) => new Set(prev).add(prevIndex));
-        }
-    };
-
-    const jumpToQuestion = (index: number) => {
-        setCurrentQuestionIndex(index);
-        setVisited((prev) => new Set(prev).add(index));
-    };
-
-    const handleSubmit = async () => {
-        if (!test || !user) return;
-
-        // Calculate score
-        let score = 0;
-        test.questions.forEach((q, index) => {
-            if (answers[index] === q.correctAnswer) {
-                score += 4;
-            } else if (answers[index] !== undefined) {
-                score -= 1; // Negative marking
-            }
-        });
-
-        const result = {
-            userId: user.$id,
-            testId: testId,
-            score: score,
-            totalQuestions: test.questions.length,
-            answers: answers,
-            completedAt: Date.now()
-        };
-
-        await saveTestResult(result);
-
-        alert(`Test Submitted! Your Score: ${score}/${test.questions.length * 4}`);
-        router.push("/dashboard/leaderboard");
     };
 
     const formatTime = (seconds: number) => {
