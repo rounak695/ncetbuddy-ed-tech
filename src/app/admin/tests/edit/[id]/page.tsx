@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LatexRenderer } from "@/components/ui/LatexRenderer";
 import { useState, useEffect } from "react";
 import { getTestById } from "@/lib/appwrite-db";
 import { useRouter, useParams } from "next/navigation";
@@ -145,14 +146,28 @@ export default function EditTestPage() {
                         value={q.text}
                         onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
                     />
+                    {q.text && (
+                        <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+                            <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                            <LatexRenderer>{q.text}</LatexRenderer>
+                        </div>
+                    )}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                         {q.options.map((opt, oIndex) => (
-                            <Input
-                                key={oIndex}
-                                label={`Option ${String.fromCharCode(65 + oIndex)}`}
-                                value={opt}
-                                onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                            />
+                            <div key={oIndex}>
+                                <Input
+                                    label={`Option ${String.fromCharCode(65 + oIndex)}`}
+                                    value={opt}
+                                    onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                    placeholder={`Option ${String.fromCharCode(65 + oIndex)} (supports LaTeX)`}
+                                />
+                                {opt && (
+                                    <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+                                        <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                                        <LatexRenderer>{opt}</LatexRenderer>
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
                     <div style={{ marginTop: "1rem" }}>
