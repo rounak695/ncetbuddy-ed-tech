@@ -11,14 +11,20 @@ interface LatexRendererProps {
 }
 
 export const LatexRenderer: React.FC<LatexRendererProps> = ({ children }) => {
+    // Preprocess: ensure no escaped dollar signs prevent rendering
+    const content = React.useMemo(() => {
+        if (!children) return "";
+        return children.replace(/\\\$/g, '$');
+    }, [children]);
+
     return (
-        <div className="latex-rendered" data-version="v4.0-markdown">
-            {/* Magenta dot to confirm Markdown Renderer is active */}
+        <div className="latex-rendered" data-version="v5.0-markdown">
+            {/* Green dot to confirm v5 Update is Active */}
             <span
-                title="LatexRenderer v4 (Markdown) Active"
+                title="LatexRenderer v5 (Markdown) Active"
                 style={{
                     fontSize: '0.6em',
-                    color: 'magenta',
+                    color: '#00ff00', // Green for v5
                     verticalAlign: 'super',
                     marginRight: '5px',
                     display: 'inline-block'
@@ -31,7 +37,7 @@ export const LatexRenderer: React.FC<LatexRendererProps> = ({ children }) => {
                     remarkPlugins={[remarkMath]}
                     rehypePlugins={[rehypeKatex]}
                 >
-                    {children}
+                    {content}
                 </ReactMarkdown>
             </div>
         </div>
