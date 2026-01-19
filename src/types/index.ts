@@ -1,6 +1,7 @@
 export interface Question {
     id: string;
     text: string;
+    imageUrl?: string;
     options: string[];
     correctAnswer: number;
 }

@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { getTestById, saveTestResult } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { Test, Question } from "@/types";
+import "katex/dist/katex.min.css";
+import Latex from "react-latex-next";
 
 interface TestEngineProps {
     testId: string;
@@ -115,7 +117,19 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                     <span>+4 / -1 Marks</span>
                 </div>
 
-                <p className={styles.questionText}>{currentQuestion.text}</p>
+                <div className={styles.questionText}>
+                    <Latex>{currentQuestion.text}</Latex>
+                    {currentQuestion.imageUrl && (
+                        <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={currentQuestion.imageUrl}
+                                alt="Question detailed view"
+                                style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "8px" }}
+                            />
+                        </div>
+                    )}
+                </div>
 
                 <div className={styles.options}>
                     {currentQuestion.options.map((option, index) => (
@@ -124,7 +138,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                             className={`${styles.option} ${answers[currentQuestionIndex] === index ? styles.selected : ''}`}
                             onClick={() => handleOptionSelect(index)}
                         >
-                            {String.fromCharCode(65 + index)}. {option}
+                            <Latex>{`${String.fromCharCode(65 + index)}. ${option}`}</Latex>
                         </div>
                     ))}
                 </div>

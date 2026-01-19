@@ -119,7 +119,8 @@ export default function CreateTestPage() {
                     <Button variant="outline" onClick={() => {
                         const template = [
                             {
-                                text: "Sample Question?",
+                                text: "Sample Question? (Supports LaTeX: $E=mc^2$)",
+                                imageUrl: "https://example.com/image.png",
                                 options: ["Option A", "Option B", "Option C", "Option D"],
                                 correctAnswer: 0
                             }
@@ -190,9 +191,16 @@ export default function CreateTestPage() {
 
                     <Input
                         label="Question Text"
-                        placeholder="Enter question here"
+                        placeholder="Enter question here (supports LaTeX e.g., $E=mc^2$)"
                         value={q.text}
                         onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
+                    />
+
+                    <Input
+                        label="Image URL (Optional)"
+                        placeholder="https://example.com/image.png"
+                        value={q.imageUrl || ""}
+                        onChange={(e) => updateQuestion(qIndex, "imageUrl", e.target.value)}
                     />
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
