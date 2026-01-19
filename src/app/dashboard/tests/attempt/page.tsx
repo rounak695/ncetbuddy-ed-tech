@@ -22,6 +22,7 @@ export default function TestRunnerPage() {
     const [markedForReview, setMarkedForReview] = useState<number[]>([]);
     const [timeLeft, setTimeLeft] = useState(0);
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState(false);
 
     // Fetch test data
     useEffect(() => {
@@ -160,10 +161,20 @@ export default function TestRunnerPage() {
                     <Button onClick={() => setIsSubmitModalOpen(true)} className="bg-black hover:bg-primary hover:text-black text-white px-4 md:px-8 py-2 md:py-4 h-auto text-[10px] md:text-sm font-black uppercase tracking-widest shadow-lg md:shadow-xl border-2 border-black transition-all transform hover:-translate-y-1 active:translate-y-0">
                         Submit
                     </Button>
+                    <button
+                        onClick={() => setIsMobilePaletteOpen(true)}
+                        className="md:hidden p-2 bg-white text-black border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-row overflow-hidden relative">
                 {/* Main Content - Question Area */}
                 <main className="flex-1 p-4 md:p-10 overflow-y-auto bg-white">
                     <Card className="max-w-4xl mx-auto min-h-[400px] md:min-h-[500px] flex flex-col bg-white border-4 border-black rounded-2xl md:rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
@@ -268,9 +279,29 @@ export default function TestRunnerPage() {
                 </main>
 
                 {/* Sidebar - Question Palette - Responsive behavior */}
-                <aside className="w-full md:w-80 bg-white border-t-4 md:border-t-0 md:border-l-4 border-black flex flex-col shadow-2xl relative z-10 max-h-[30vh] md:max-h-none">
-                    <div className="p-4 md:p-8 border-b-2 md:border-b-4 border-black bg-primary sticky top-0 md:relative">
-                        <h3 className="font-black text-black uppercase tracking-widest mb-3 md:mb-6 italic text-sm md:text-lg">Question Palette</h3>
+                {/* Sidebar - Question Palette - Responsive behavior */}
+                {isMobilePaletteOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm animate-in fade-in duration-200"
+                        onClick={() => setIsMobilePaletteOpen(false)}
+                    />
+                )}
+
+                <aside className={`
+                    fixed inset-y-0 right-0 w-80 bg-white border-l-4 border-black flex flex-col shadow-2xl z-50 
+                    transition-transform duration-300 ease-in-out md:static md:transform-none
+                    ${isMobilePaletteOpen ? 'translate-x-0' : 'translate-x-full'}
+                `}>
+                    <div className="p-4 md:p-8 border-b-4 border-black bg-primary">
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
+                            <h3 className="font-black text-black uppercase tracking-widest italic text-sm md:text-lg m-0">Question Palette</h3>
+                            <button
+                                onClick={() => setIsMobilePaletteOpen(false)}
+                                className="md:hidden p-2 -mr-2 text-black hover:bg-black/10 rounded-full transition-colors"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4 text-[8px] md:text-[10px] font-black uppercase tracking-tighter">
                             <div className="flex items-center gap-2 text-black">
                                 <div className="w-3 h-3 md:w-4 md:h-4 rounded bg-black border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"></div> Answered
@@ -282,7 +313,7 @@ export default function TestRunnerPage() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white">
-                        <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+                        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                             {test.questions.map((q, i) => {
                                 let statusClass = "bg-white text-black/20 border-black/10 hover:border-black hover:text-black";
                                 if (currentQuestionIndex === i) statusClass = "ring-2 md:ring-4 ring-black ring-offset-1 md:ring-offset-2 bg-primary text-black font-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
@@ -293,7 +324,10 @@ export default function TestRunnerPage() {
                                 return (
                                     <button
                                         key={i}
-                                        onClick={() => setCurrentQuestionIndex(i)}
+                                        onClick={() => {
+                                            setCurrentQuestionIndex(i);
+                                            setIsMobilePaletteOpen(false);
+                                        }}
                                         className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center text-xs md:text-sm transition-all border-2 ${statusClass} transform hover:-translate-y-1 active:translate-y-0`}
                                     >
                                         {i + 1}
