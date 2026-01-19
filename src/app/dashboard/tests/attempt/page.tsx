@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getTestById, saveTestResult } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { Test, Question } from "@/types";
+import { LatexRenderer } from "@/components/ui/LatexRenderer";
 
 export default function TestRunnerPage() {
     const router = useRouter();
@@ -179,9 +180,19 @@ export default function TestRunnerPage() {
                         </div>
 
                         <div className="flex-1 p-6 md:p-10">
-                            <p className="text-lg md:text-2xl text-black font-black leading-snug mb-8 md:mb-10 selection:bg-primary">
-                                {currentQuestion.text}
-                            </p>
+                            <div className="text-lg md:text-2xl text-black font-black leading-snug mb-8 md:mb-10 selection:bg-primary">
+                                <LatexRenderer>{currentQuestion.text}</LatexRenderer>
+                                {currentQuestion.imageUrl && (
+                                    <div className="mt-4 mb-4">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={currentQuestion.imageUrl}
+                                            alt="Question detailed view"
+                                            className="max-w-full max-h-[400px] rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="space-y-4 md:space-y-6">
                                 {currentQuestion.options && currentQuestion.options.map((opt, i) => (
@@ -208,7 +219,9 @@ export default function TestRunnerPage() {
                                             checked={answers[currentQuestionIndex] === i}
                                             onChange={() => handleAnswer(i)}
                                         />
-                                        <span className="text-base md:text-lg font-bold">{opt}</span>
+                                        <span className="text-base md:text-lg font-bold">
+                                            <LatexRenderer>{opt}</LatexRenderer>
+                                        </span>
                                     </label>
                                 ))}
                             </div>
