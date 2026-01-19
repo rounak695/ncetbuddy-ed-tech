@@ -8,8 +8,7 @@ import { useRouter } from "next/navigation";
 import { getTestById, saveTestResult } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { Test, Question } from "@/types";
-import "katex/dist/katex.min.css";
-import Latex from "react-latex-next";
+import { LatexRenderer } from "@/components/ui/LatexRenderer";
 
 interface TestEngineProps {
     testId: string;
@@ -129,7 +128,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                 </div>
 
                 <div className={styles.questionText}>
-                    <Latex>{currentQuestion.text}</Latex>
+                    <LatexRenderer>{currentQuestion.text}</LatexRenderer>
                     {currentQuestion.imageUrl && (
                         <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -149,7 +148,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                             className={`${styles.option} ${answers[currentQuestionIndex] === index ? styles.selected : ''}`}
                             onClick={() => handleOptionSelect(index)}
                         >
-                            <Latex>{`${String.fromCharCode(65 + index)}. ${option}`}</Latex>
+                            <LatexRenderer>{`${String.fromCharCode(65 + index)}. ${option}`}</LatexRenderer>
                         </div>
                     ))}
                 </div>
