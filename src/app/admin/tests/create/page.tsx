@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LatexRenderer } from "@/components/ui/LatexRenderer";
 import { useState } from "react";
 import { createTest } from "@/lib/appwrite-db";
 import { useRouter } from "next/navigation";
@@ -189,12 +190,20 @@ export default function CreateTestPage() {
                         </Button>
                     </div>
 
-                    <Input
-                        label="Question Text"
-                        placeholder="Enter question here (supports LaTeX e.g., $E=mc^2$)"
-                        value={q.text}
-                        onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
-                    />
+                    <div style={{ marginBottom: "1rem" }}>
+                        <Input
+                            label="Question Text"
+                            placeholder="Enter question here (supports LaTeX e.g., $E=mc^2$)"
+                            value={q.text}
+                            onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
+                        />
+                        {q.text && (
+                            <div style={{ marginTop: "0.5rem", padding: "0.75rem", background: "var(--bg-secondary)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Preview:</p>
+                                <LatexRenderer>{q.text}</LatexRenderer>
+                            </div>
+                        )}
+                    </div>
 
                     <Input
                         label="Image URL (Optional)"
@@ -205,13 +214,20 @@ export default function CreateTestPage() {
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                         {q.options.map((opt, oIndex) => (
-                            <Input
-                                key={oIndex}
-                                label={`Option ${String.fromCharCode(65 + oIndex)}`}
-                                placeholder={`Option ${oIndex + 1}`}
-                                value={opt}
-                                onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                            />
+                            <div key={oIndex}>
+                                <Input
+                                    label={`Option ${String.fromCharCode(65 + oIndex)}`}
+                                    placeholder={`Option ${oIndex + 1}`}
+                                    value={opt}
+                                    onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                />
+                                {opt && (
+                                    <div style={{ marginTop: "0.25rem", padding: "0.5rem", background: "var(--bg-secondary)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                                        <p style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: "0.1rem" }}>Preview:</p>
+                                        <LatexRenderer>{opt}</LatexRenderer>
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
 
