@@ -70,5 +70,11 @@ export const LatexRenderer: React.FC<LatexRendererProps> = ({ children }) => {
         });
     }, [children]);
 
-    return <>{renderedContent}</>;
+    return (
+        <span className="latex-rendered" data-version="v2.1">
+            {/* Debug Marker: Small blue dot to confirm code is active */}
+            <span style={{ fontSize: '0.6em', color: 'blue', verticalAlign: 'super', marginRight: '2px' }}>•</span>
+            {renderedContent}
+        </span>
+    );
 };
