@@ -89,6 +89,17 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         }));
     };
 
+    const handlePrev = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex((prev) => prev - 1);
+        }
+    };
+
+    const jumpToQuestion = (index: number) => {
+        setCurrentQuestionIndex(index);
+        setVisited((prev) => new Set(prev).add(index));
+    };
+
     const handleNext = () => {
         if (test && currentQuestionIndex < test.questions.length - 1) {
             const nextIndex = currentQuestionIndex + 1;
