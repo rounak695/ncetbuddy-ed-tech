@@ -12,68 +12,73 @@ export const LatexRenderer: React.FC<LatexRendererProps> = ({ children }) => {
     const renderedContent = useMemo(() => {
         if (!children) return null;
 
-        // Split by $$...$$ (display) or $...$ (inline)
-        // Regex explanation:
-        // (\$\$[\s\S]+?\$\$) -> Capture display math
-        // (\$[^\$]+?\$) -> Capture inline math
-        const regex = /(\$\$[\s\S]+?\$\$)|(\$[^\$]+?\$)/g;
+        const results = [];
+        let lastIndex = 0;
+        const regex = /(\$\$[\s\S]+?\$\$)|(\$[^$]+?\$)/g;
 
-        const parts = children.split(regex);
-
-        return parts.map((part, index) => {
-            if (!part) return null;
-
-            if (part.startsWith('$$') && part.endsWith('$$')) {
-                // Display Mode
-                try {
-                    const latex = part.slice(2, -2);
-                    const html = katex.renderToString(latex, {
-                        throwOnError: false,
-                        displayMode: true,
-                    });
-                    return (
-                        <span
-                            key={index}
-                            dangerouslySetInnerHTML={{ __html: html }}
-                        />
-                    );
-                } catch (error) {
-                    console.error("KaTeX Display Error:", error);
-                    return <span key={index} style={{ color: 'red' }}>Error: {part}</span>;
-                }
-            } else if (part.startsWith('$') && part.endsWith('$')) {
-                // Inline Mode
-                try {
-                    const latex = part.slice(1, -1);
-                    const html = katex.renderToString(latex, {
-                        throwOnError: false,
-                        displayMode: false,
-                    });
-                    return (
-                        <span
-                            key={index}
-                            dangerouslySetInnerHTML={{ __html: html }}
-                        />
-                    );
-                } catch (error) {
-                    console.error("KaTeX Inline Error:", error);
-                    // Render the original part but maybe with a warning style if needed
-                    // For now, let's just return key+part helps react reconciliation
-                    return <span key={index} style={{ color: 'red', fontSize: '0.8em' }}>[LaTeX Error: {part}]</span>;
-                }
-            } else {
-                // Regular text
-                // Check if it is a capture group artifact (undefined)
-                if (part === undefined) return null;
-                return <span key={index}>{part}</span>;
+        let match;
+        while ((match = regex.exec(children)) !== null) {
+            // Push text before the match
+            if (match.index > lastIndex) {
+                results.push(<span key={`text-${lastIndex}`}>{children.slice(lastIndex, match.index)}</span>);
             }
-        });
+
+            const fullMatch = match[0];
+            const isBlock = fullMatch.startsWith('$$');
+            const latex = isBlock ? fullMatch.slice(2, -2) : fullMatch.slice(1, -1);
+
+            try {
+                const html = katex.renderToString(latex, {
+                    throwOnError: false,
+                    displayMode: isBlock,
+                });
+                results.push(
+                    <span
+                        key={`math-${match.index}`}
+                        dangerouslySetInnerHTML={{ __html: html }}
+                        className="latex-math"
+                    />
+                );
+            } catch (error) {
+                console.error("KaTeX Error:", error);
+                results.push(
+                    <span key={`error-${match.index}`} style={{ color: 'red', fontWeight: 'bold' }}>
+                        [Error: {latex}]
+                    </span>
+                );
+            }
+
+            lastIndex = regex.lastIndex;
+        }
+
+        // Push remaining text
+        if (lastIndex < children.length) {
+            results.push(<span key={`text-${lastIndex}`}>{children.slice(lastIndex)}</span>);
+        }
+
+        return results;
     }, [children]);
 
+    const hasMath = children && children.includes('$');
+    // Check if we actually rendered any math components
+    // This is a rough check. If we found NO matches but there ARE '$' signs, we suspect a regex failure.
+    const debugRegex = /(\$\$[\s\S]+?\$\$)|(\$[^$]+?\$)/g;
+    const matchCount = (children.match(debugRegex) || []).length;
+    const suspicious = hasMath && matchCount === 0;
+
     return (
-        <span className="latex-rendered" data-version="v2.1">
-            {/* Debug Marker: Small blue dot to confirm code is active */}
-            <span style={{ fontSize: '0.6em', color: 'blue', verticalAlign: 'super', marginRight: '2px' }}>•</span>
+        <span className="latex-rendered">
+            {/* Blue dot to confirm component is active */}
+            <span title="LatexRenderer v3 Active" style={{ fontSize: '0.6em', color: 'blue', verticalAlign: 'super', marginRight: '2px' }}>•</span>
+
+            {suspicious && (
+                <div style={{ border: '1px solid orange', padding: '5px', margin: '5px 0', fontSize: '0.8em', backgroundColor: '#fff3cd' }}>
+                    <strong>Debug Warning:</strong> Found '$' characters but failed to identify LaTeX blocks.<br />
+                    Raw Length: {children.length} | First char code: {children.charCodeAt(0)}<br />
+                    Sample: {children.slice(0, 50)}...
+                </div>
+            )}
+
             {renderedContent}
         </span>
     );
