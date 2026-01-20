@@ -63,9 +63,19 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             answers: answers,
             completedAt: Math.floor(Date.now() / 1000)
         };
-        await saveTestResult(result);
-        alert(`Test Submitted! Your Score: ${score}/${test.questions.length * 4}`);
-        router.push("/dashboard/leaderboard");
+
+        try {
+            await saveTestResult(result);
+
+            // Store answers in sessionStorage for review page
+            sessionStorage.setItem(`test_answers_${testId}`, JSON.stringify(answers));
+
+            // Redirect to review page with score info
+            router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${test.questions.length}`);
+        } catch (error) {
+            console.error("Error submitting test:", error);
+            alert("Error submitting test. Please try again.");
+        }
     };
 
     // Strict Mode Logic

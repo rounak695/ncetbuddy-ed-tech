@@ -206,7 +206,7 @@ export default function AnalyticsPage() {
                                         <div>
                                             <h4 className="font-black text-black text-lg uppercase italic tracking-tight">Test Attempt</h4>
                                             <p className="text-xs text-black font-bold uppercase tracking-widest opacity-40">
-                                                {new Date(res.completedAt).toLocaleDateString()} • Scored {res.score}/{res.totalQuestions * 4}
+                                                {new Date(res.completedAt * 1000).toLocaleDateString()} • Scored {res.score}/{res.totalQuestions * 4}
                                             </p>
                                         </div>
                                     </div>
