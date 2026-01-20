@@ -31,6 +31,8 @@ export default function LeaderboardPage() {
 
         // Subscribe to realtime updates for the users collection
         let unsubscribe: (() => void) | undefined;
+        let isSubscribed = true;
+
         try {
             // Subscribe to any changes in the 'users' collection
             const channel = `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db'}.collections.users.documents`;
@@ -52,12 +54,13 @@ export default function LeaderboardPage() {
         }
 
         return () => {
+            isSubscribed = false;
             if (unsubscribe) {
                 try {
                     unsubscribe();
                 } catch (error) {
-                    // Suppress WebSocket closing errors during unmount as they are often harmless noise
-                    console.debug("Error during leaderboard unsubscribe:", error);
+                    // Completely suppress WebSocket closing errors - they're harmless during cleanup
+                    // These occur when the connection is already closed, which is normal behavior
                 }
             }
         };
