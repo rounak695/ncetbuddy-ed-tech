@@ -25,6 +25,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const [visited, setVisited] = useState<Set<number>>(new Set([0]));
     const [timeLeft, setTimeLeft] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
+    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
     useEffect(() => {
         const fetchTest = async () => {
@@ -268,6 +269,16 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                     {test.title}
                 </div>
                 <div className={styles.headerRight}>
+                    {/* Hamburger Menu for Mobile */}
+                    <button
+                        className={styles.hamburgerBtn}
+                        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                        aria-label="Toggle Question Palette"
+                    >
+                        <div className={styles.hamburgerLine}></div>
+                        <div className={styles.hamburgerLine}></div>
+                        <div className={styles.hamburgerLine}></div>
+                    </button>
                     <div className={styles.candidateInfo}>
                         <div className={styles.candidateImg}></div>
                         <span>{user?.name || "Candidate Name"}</span>
@@ -347,69 +358,71 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                     </div>
                 </div>
 
-                {/* Sidebar (Palette) */}
-                <div className={styles.sidebar}>
-                    <div className={styles.timerBox}>
-                        Time Left: <span className={styles.timerText}>{formatTime(timeLeft)}</span>
-                    </div>
+                {/* Sidebar (Palette) - Collapsible */}
+                {isSidebarVisible && (
+                    <div className={styles.sidebar}>
+                        <div className={styles.timerBox}>
+                            Time Left: <span className={styles.timerText}>{formatTime(timeLeft)}</span>
+                        </div>
 
-                    <div className={styles.userProfile} style={{ padding: '1rem', borderBottom: '1px solid #ccc', backgroundColor: '#fff' }}>
-                        <div className={styles.userAvatar}>{user?.name?.[0] || "U"}</div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{user?.name || "Candidate"}</span>
-                            <span style={{ fontSize: '0.8rem', color: '#666' }}>{user?.email}</span>
-                        </div>
-                    </div>
-
-                    <div className={styles.legend}>
-                        <div className={styles.legendItem}>
-                            <div className={`${styles.legendIcon} ${styles.statusNotVisited}`} style={{ border: '1px solid #ccc' }}></div>
-                            <span>Not Visited</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                            <div className={`${styles.legendIcon} ${styles.statusNotAnswered}`}>0</div>
-                            <span>Not Answered</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                            <div className={`${styles.legendIcon} ${styles.answered}`}>0</div>
-                            <span>Answered</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                            <div className={`${styles.legendIcon} ${styles.marked}`}>0</div>
-                            <span>Marked for Review</span>
-                        </div>
-                        <div className={styles.legendItem} style={{ gridColumn: '1 / -1' }}>
-                            <div className={`${styles.legendIcon} ${styles.markedAnswered}`} style={{ position: 'relative' }}>
-                                0<span style={{ position: 'absolute', bottom: '-2px', right: '-2px', background: '#5cb85c', width: '8px', height: '8px', borderRadius: '50%' }}></span>
+                        <div className={styles.userProfile} style={{ padding: '1rem', borderBottom: '1px solid #ccc', backgroundColor: '#fff' }}>
+                            <div className={styles.userAvatar}>{user?.name?.[0] || "U"}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{user?.name || "Candidate"}</span>
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>{user?.email}</span>
                             </div>
-                            <span>Ans & Marked for Review</span>
+                        </div>
+
+                        <div className={styles.legend}>
+                            <div className={styles.legendItem}>
+                                <div className={`${styles.legendIcon} ${styles.statusNotVisited}`} style={{ border: '1px solid #ccc' }}></div>
+                                <span>Not Visited</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={`${styles.legendIcon} ${styles.statusNotAnswered}`}>0</div>
+                                <span>Not Answered</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={`${styles.legendIcon} ${styles.answered}`}>0</div>
+                                <span>Answered</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={`${styles.legendIcon} ${styles.marked}`}>0</div>
+                                <span>Marked for Review</span>
+                            </div>
+                            <div className={styles.legendItem} style={{ gridColumn: '1 / -1' }}>
+                                <div className={`${styles.legendIcon} ${styles.markedAnswered}`} style={{ position: 'relative' }}>
+                                    0<span style={{ position: 'absolute', bottom: '-2px', right: '-2px', background: '#5cb85c', width: '8px', height: '8px', borderRadius: '50%' }}></span>
+                                </div>
+                                <span>Ans & Marked for Review</span>
+                            </div>
+                        </div>
+
+                        <div className={styles.paletteHeader}>
+                            Question Palette
+                        </div>
+
+                        <div className={styles.paletteArea}>
+                            <div className={styles.paletteGrid}>
+                                {test.questions.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        className={`${styles.pBtn} ${getPaletteClass(index)}`}
+                                        onClick={() => jumpToQuestion(index)}
+                                    >
+                                        {index + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={styles.submitBtnContainer}>
+                            <button className={styles.fullSubmitBtn} onClick={handleSubmit}>
+                                Submit Test
+                            </button>
                         </div>
                     </div>
-
-                    <div className={styles.paletteHeader}>
-                        Question Palette
-                    </div>
-
-                    <div className={styles.paletteArea}>
-                        <div className={styles.paletteGrid}>
-                            {test.questions.map((_, index) => (
-                                <button
-                                    key={index}
-                                    className={`${styles.pBtn} ${getPaletteClass(index)}`}
-                                    onClick={() => jumpToQuestion(index)}
-                                >
-                                    {index + 1}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className={styles.submitBtnContainer}>
-                        <button className={styles.fullSubmitBtn} onClick={handleSubmit}>
-                            Submit Test
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );
