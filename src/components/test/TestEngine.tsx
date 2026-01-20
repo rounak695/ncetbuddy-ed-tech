@@ -58,7 +58,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         const result = {
             userId: user.$id,
             testId: testId,
-            score: Math.max(0, score), // Ensure score is non-negative
+            score: score,
             totalQuestions: test.questions.length,
             answers: answers,
             completedAt: Math.floor(Date.now() / 1000)
