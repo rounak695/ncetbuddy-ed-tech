@@ -61,7 +61,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             score: score,
             totalQuestions: test.questions.length,
             answers: answers,
-            completedAt: Date.now()
+            completedAt: Math.floor(Date.now() / 1000)
         };
         await saveTestResult(result);
         alert(`Test Submitted! Your Score: ${score}/${test.questions.length * 4}`);
