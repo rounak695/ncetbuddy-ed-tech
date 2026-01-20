@@ -155,19 +155,19 @@
 }
 
 .btnReview {
-    background-color: #5bc0de;
-    color: white;
-    border-color: #46b8da;
+    background-color: #FFD02F;
+    color: black;
+    border-color: #e6bb2a;
 }
 
 .btnReview:hover {
-    background-color: #39b3d7;
+    background-color: #e6bb2a;
 }
 
 .sidebar {
     width: 320px;
-    background-color: #e5f6fd;
-    /* Light blueish tint often seen in NTA mocks */
+    background-color: #fff9e6;
+    /* Light yellow tint */
     border-left: 1px solid #ccc;
     display: flex;
     flex-direction: column;
@@ -368,8 +368,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #007bff;
-    color: white;
+    background-color: #FFD02F;
+    color: black;
     display: flex;
     align-items: center;
     justify-content: center;

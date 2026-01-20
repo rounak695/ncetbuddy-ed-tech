@@ -249,7 +249,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                         <li>Please ensure you have a stable internet connection.</li>
                     </ul>
                     <div className="flex justify-center">
-                        <Button variant="primary" style={{ backgroundColor: "#337ab7", fontSize: '1.2rem', padding: '10px 30px' }} onClick={startTest}>
+                        <Button variant="primary" style={{ backgroundColor: "#FFD02F", color: "black", fontSize: '1.2rem', padding: '10px 30px' }} onClick={startTest}>
                             I am ready to begin
                         </Button>
                     </div>
