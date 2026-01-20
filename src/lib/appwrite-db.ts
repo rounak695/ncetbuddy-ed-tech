@@ -101,7 +101,9 @@ export const saveTestResult = async (result: any) => {
         );
 
         // 2. Update User Profile (Total Score & Tests Attempted)
-        // We catch errors here so that if profile update fails, the test result implies success.
+        // DISABLED: These fields don't exist in the Appwrite users collection schema
+        // If you want to track user stats, add 'totalScore' and 'testsAttempted' attributes to the users collection
+        /*
         try {
             const userDoc = await databases.getDocument(DB_ID, 'users', result.userId);
 
@@ -109,7 +111,6 @@ export const saveTestResult = async (result: any) => {
                 const currentScore = userDoc.totalScore || 0;
                 const currentTests = userDoc.testsAttempted || 0;
 
-                // Schema update required: totalScore and testsAttempted must be added to Appwrite console
                 await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
                     totalScore: Number(currentScore || 0) + Number(result.score || 0),
                     testsAttempted: Number(currentTests || 0) + 1
@@ -118,6 +119,7 @@ export const saveTestResult = async (result: any) => {
         } catch (profileError) {
             console.error("Failed to update user profile stats:", profileError);
         }
+        */
 
     } catch (error) {
         console.error("Error saving test result:", error);
