@@ -55,8 +55,11 @@ export const getTestById = async (id: string): Promise<Test | null> => {
             ...doc,
             questions: Array.isArray(questions) ? questions : []
         } as unknown as Test;
-    } catch (error) {
-        console.error("Error fetching test:", error);
+    } catch (error: any) {
+        // Suppress 404 errors (document not found) to reduce console noise
+        if (error?.code !== 404 && error?.type !== 'document_not_found') {
+            console.error("Error fetching test:", error);
+        }
         return null;
     }
 };
