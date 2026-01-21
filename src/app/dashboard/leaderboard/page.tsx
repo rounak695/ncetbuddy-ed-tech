@@ -34,18 +34,18 @@ export default function LeaderboardPage() {
         let isSubscribed = true;
 
         try {
-            // Subscribe to any changes in the 'users' collection
-            const channel = `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db'}.collections.users.documents`;
+            // Subscribe to any changes in the 'test-results' collection
+            const channel = `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db'}.collections.test-results.documents`;
             console.log("Subscribing to Leaderboard updates on channel:", channel);
 
             unsubscribe = client.subscribe(channel, (response) => {
                 // Log payload for debugging
-                console.log("Leaderboard Realtime Event:", response);
+                console.log("Leaderboard Realtime Event (Test Result):", response);
 
-                // Refresh if any action happens on users collection
+                // Refresh if a new test result is created
                 const eventType = response.events[0];
-                if (eventType.includes('.create') || eventType.includes('.update') || eventType.includes('.delete')) {
-                    console.log("Refreshing leaderboard due to realtime update...");
+                if (eventType.includes('.create')) {
+                    console.log("Refreshing leaderboard due to new test result...");
                     fetchLeaderboard(true); // Background update
                 }
             });

@@ -55,11 +55,8 @@ export const getTestById = async (id: string): Promise<Test | null> => {
             ...doc,
             questions: Array.isArray(questions) ? questions : []
         } as unknown as Test;
-    } catch (error: any) {
-        // Suppress 404 errors (document not found) to reduce console noise
-        if (error?.code !== 404 && error?.type !== 'document_not_found') {
-            console.error("Error fetching test:", error);
-        }
+    } catch (error) {
+        console.error("Error fetching test:", error);
         return null;
     }
 };
@@ -102,28 +99,9 @@ export const saveTestResult = async (result: any) => {
                 answers: JSON.stringify(dataToSave.answers)
             }
         );
-
-        // 2. Update User Profile (Total Score & Tests Attempted)
-        // DISABLED: These fields don't exist in the Appwrite users collection schema
-        // If you want to track user stats, add 'totalScore' and 'testsAttempted' attributes to the users collection
-        /*
-        try {
-            const userDoc = await databases.getDocument(DB_ID, 'users', result.userId);
-
-            if (userDoc) {
-                const currentScore = userDoc.totalScore || 0;
-                const currentTests = userDoc.testsAttempted || 0;
-
-                await databases.updateDocument(DB_ID, 'users', userDoc.$id, {
-                    totalScore: Number(currentScore || 0) + Number(result.score || 0),
-                    testsAttempted: Number(currentTests || 0) + 1
-                });
-            }
-        } catch (profileError) {
-            console.error("Failed to update user profile stats:", profileError);
-        }
-        */
-
+        // Note: We are no longer updating the 'users' collection here because the 
+        // attributes 'totalScore' and 'testsAttempted' might be missing from the schema.
+        // The getLeaderboard function now calculates these values dynamically.
     } catch (error) {
         console.error("Error saving test result:", error);
         throw error;
@@ -133,11 +111,48 @@ export const saveTestResult = async (result: any) => {
 export const getLeaderboard = async (limit: number = 10): Promise<UserProfile[]> => {
     if (!isAppwriteConfigured()) return [];
     try {
-        const response = await databases.listDocuments(DB_ID, 'users', [
-            Query.orderDesc('totalScore'),
-            Query.limit(limit)
+        // 1. Fetch all users (needed for names)
+        // We fetch a larger limit to ensure we cover the active user base
+        const usersResponse = await databases.listDocuments(DB_ID, 'users', [
+            Query.limit(100)
         ]);
-        return response.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+        const users = usersResponse.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+
+        // 2. Fetch all test results
+        // We fetch a large number to ensure we have the full history for accurate scoring
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.limit(5000),
+            Query.select(['userId', 'score']) // Optimize fetch to only needed fields if possible
+        ]);
+
+        // 3. Aggregate scores in memory
+        const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
+
+        resultsResponse.documents.forEach((doc: any) => {
+            const uid = doc.userId;
+            const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
+            userStats.set(uid, {
+                totalScore: current.totalScore + (Number(doc.score) || 0),
+                testsAttempted: current.testsAttempted + 1
+            });
+        });
+
+        // 4. Merge stats into users and sort
+        const leaderboard = users.map(user => {
+            const stats = userStats.get(user.uid) || { totalScore: 0, testsAttempted: 0 };
+            return {
+                ...user,
+                totalScore: stats.totalScore,
+                testsAttempted: stats.testsAttempted
+            };
+        });
+
+        // 5. Sort by Total Score (Descending)
+        leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+
+        // 6. Return top N
+        return leaderboard.slice(0, limit);
+
     } catch (error) {
         console.error("Error fetching leaderboard:", error);
         return [];

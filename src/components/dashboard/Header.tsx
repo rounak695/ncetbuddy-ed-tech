@@ -7,16 +7,51 @@ import { Notification } from "@/types";
 export default function Header() {
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Helper to get read IDs from local storage
+    const getReadNotificationIds = (): string[] => {
+        try {
+            const stored = localStorage.getItem('read_notifications');
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            return [];
+        }
+    };
+
     useEffect(() => {
         const fetchNotifications = async () => {
-            const data = await getNotifications();
-            setNotifications(data);
+            const allNotifications = await getNotifications();
+            const readIds = getReadNotificationIds();
+
+            // Filter out read notifications locally since we don't have a backend 'read' status
+            // per user on specific notification documents
+            const unread = allNotifications.filter(n => n.id && !readIds.includes(n.id));
+
+            setNotifications(unread);
+            setUnreadCount(unread.length);
         };
         fetchNotifications();
     }, []);
+
+    const handleMarkAllAsRead = () => {
+        if (notifications.length === 0) return;
+
+        const readIds = getReadNotificationIds();
+        const newReadIds = notifications
+            .map(n => n.id)
+            .filter((id): id is string => !!id); // Ensure string IDs
+
+        const updatedReadIds = [...readIds, ...newReadIds];
+
+        localStorage.setItem('read_notifications', JSON.stringify(updatedReadIds));
+
+        setNotifications([]); // Clear list
+        setUnreadCount(0); // Reset count
+        setIsNotificationsOpen(false); // Close dropdown
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -59,9 +94,9 @@ export default function Header() {
                         className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl bg-white border border-border hover:bg-black/5 hover:border-black transition-all relative group shadow-sm active:scale-95"
                     >
                         <span className="text-xl md:text-2xl group-hover:scale-110 transition-transform">🔔</span>
-                        {notifications.length > 0 && (
+                        {unreadCount > 0 && (
                             <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                                {notifications.length}
+                                {unreadCount}
                             </span>
                         )}
                     </button>
@@ -71,7 +106,7 @@ export default function Header() {
                         <div className="absolute left-0 md:left-auto md:right-0 top-full mt-3 w-[85vw] sm:w-80 md:w-96 bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
                             <div className="p-4 bg-primary border-b-4 border-black flex justify-between items-center">
                                 <h3 className="font-black text-black uppercase tracking-wider italic text-sm md:text-base">Notifications</h3>
-                                <span className="text-[10px] md:text-xs font-bold text-black bg-white/20 px-2 py-1 rounded-lg border-2 border-black/10">{notifications.length} New</span>
+                                <span className="text-[10px] md:text-xs font-bold text-black bg-white/20 px-2 py-1 rounded-lg border-2 border-black/10">{unreadCount} New</span>
                             </div>
                             <div className="max-h-[60vh] md:max-h-[300px] overflow-y-auto p-2 space-y-2 bg-white scrollbar-thin scrollbar-thumb-black scrollbar-track-transparent">
                                 {notifications.length === 0 ? (
@@ -103,7 +138,10 @@ export default function Header() {
                             </div>
                             {notifications.length > 0 && (
                                 <div className="p-3 bg-gray-50 border-t-2 border-black text-center">
-                                    <button className="text-xs font-black uppercase tracking-widest text-black hover:text-primary transition-colors underline decoration-2 underline-offset-2">
+                                    <button
+                                        onClick={handleMarkAllAsRead}
+                                        className="text-xs font-black uppercase tracking-widest text-black hover:text-primary transition-colors underline decoration-2 underline-offset-2"
+                                    >
                                         Mark all as read
                                     </button>
                                 </div>
