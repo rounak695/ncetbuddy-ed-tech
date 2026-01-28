@@ -105,9 +105,7 @@ export const Proctoring = () => {
                         </p>
 
                         <div
-                            className={`rounded-3xl border-4 border-black overflow-hidden bg-gray-900 aspect-video relative group transition-all duration-300 ease-in-out cursor-pointer mx-auto
-                                ${isFocused ? 'scale-105 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] z-50 translate-y-[-10px]' : 'shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 z-10'}
-                            `}
+                            className={`rounded-3xl border-4 border-black overflow-hidden bg-gray-900 aspect-video relative group cursor-pointer mx-auto relative z-30 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]`}
                             onMouseEnter={() => setIsFocused(true)}
                             onMouseLeave={() => setIsFocused(false)}
                             onClick={() => setIsFocused(!isFocused)}
@@ -115,11 +113,11 @@ export const Proctoring = () => {
                             <img
                                 src="/mock_test_interface.png"
                                 alt="Secure Testing Interface"
-                                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                className={`w-[110%] h-full object-cover transition-transform duration-500 ease-in-out ${isFocused ? 'translate-x-[-15%]' : 'translate-x-[-5%]'} max-w-none`}
                             />
 
                             {/* Overlay Badge */}
-                            <div className="absolute top-6 right-6 px-4 py-2 bg-red-500 border-2 border-black text-white font-black text-xs uppercase tracking-widest rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+                            <div className="absolute top-6 right-6 px-4 py-2 bg-red-500 border-2 border-black text-white font-black text-xs uppercase tracking-widest rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 z-40">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                 Monitoring Active
                             </div>
