@@ -13,10 +13,17 @@ export const LandingCarousel = () => {
     const touchEndY = useRef(0);
 
     const slides = [
-        { component: <Hero isSlide={true} />, id: "hero" },
         {
             component: (
-                <div className="h-full flex items-center justify-center pt-32 md:pt-48">
+                <div className="w-full min-h-[100vh] flex-shrink-0 relative">
+                    <Hero isSlide={true} />
+                </div>
+            ),
+            id: "hero"
+        },
+        {
+            component: (
+                <div className="w-full min-h-[100vh] flex-shrink-0 relative flex flex-col items-center justify-start pt-[30vh]">
                     <Segmentation />
                 </div>
             ),
@@ -24,7 +31,7 @@ export const LandingCarousel = () => {
         },
         {
             component: (
-                <div className="h-full flex items-center justify-center pt-32 md:pt-48">
+                <div className="w-full min-h-[100vh] flex-shrink-0 relative flex flex-col items-center justify-start pt-[25vh]">
                     <Features />
                 </div>
             ),
@@ -36,11 +43,11 @@ export const LandingCarousel = () => {
         if (isPaused) return;
 
         const interval = setInterval(() => {
-            setActiveIndex((prev) => (prev + 1) % slides.length);
+            setActiveIndex((prev) => (prev + 1) % 3);
         }, 4500);
 
         return () => clearInterval(interval);
-    }, [isPaused, slides.length]);
+    }, [isPaused]);
 
     // Swipe handling
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -61,10 +68,10 @@ export const LandingCarousel = () => {
         if (Math.abs(distance) > threshold) {
             if (distance > 0) {
                 // Swipe Up -> Next Slide
-                setActiveIndex((prev) => (prev + 1) % slides.length);
+                setActiveIndex((prev) => (prev + 1) % 3);
             } else {
                 // Swipe Down -> Prev Slide
-                setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
+                setActiveIndex((prev) => (prev - 1 + 3) % 3);
             }
         }
     };
@@ -101,7 +108,7 @@ export const LandingCarousel = () => {
                     {slides.map((slide) => (
                         <div
                             key={slide.id}
-                            className="w-full min-h-[100vh] flex-shrink-0 relative"
+                            style={{ height: '100%' }}
                         >
                             {slide.component}
                         </div>
