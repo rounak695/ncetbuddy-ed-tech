@@ -56,8 +56,9 @@ A comprehensive web platform for NCET (National Common Entrance Test) exam prepa
   - Permissions & Security
 
 ### Hosting & Deployment
-- **Hosting**: Firebase Hosting
-- **Build**: Next.js static export
+- **Hosting**: Vercel (Frontend)
+- **Backend API**: Appwrite Cloud
+- **Build**: Next.js App Router
 
 ### Integrations
 - **Video**: YouTube XML Feed API
@@ -66,7 +67,8 @@ A comprehensive web platform for NCET (National Common Entrance Test) exam prepa
 
 - Node.js 20+ and npm
 - Appwrite account (Cloud or self-hosted instance)
-- Firebase account (for hosting)
+- Appwrite account (Cloud or self-hosted instance)
+- Vercel account (recommended for deployment)
 
 ## 🚀 Getting Started
 
@@ -284,13 +286,11 @@ Primary colors are defined in `src/app/globals.css`:
 npm run build
 ```
 
-### Deploy to Firebase
+### Deploy to Vercel
 
-```bash
-firebase deploy
-```
+The easiest way to deploy is to use the Vercel Platform from the creators of Next.js.
 
-The app is configured for static export to Firebase Hosting.
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 ## 🧪 Test Engine Features
 
