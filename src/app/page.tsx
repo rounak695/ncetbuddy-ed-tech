@@ -5,6 +5,8 @@ import { Footer } from "@/components/landing/Footer";
 import { Segmentation } from "@/components/landing/Segmentation";
 import { Proctoring } from "@/components/landing/Proctoring";
 
+import { Differentiation } from "@/components/landing/Differentiation";
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -12,6 +14,7 @@ export default function Home() {
       <Segmentation />
       <Features />
       <Proctoring />
+      <Differentiation />
       <Mentors />
       <Footer />
     </main>
