@@ -35,13 +35,13 @@ export function Hero() {
                         href="/partner"
                         className="px-10 py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                     >
-                        Partner with Exam Buddy
+                        Educator Login
                     </Link>
                     <Link
                         href="/login"
                         className="px-10 py-5 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                     >
-                        Take Mock Tests
+                        Student Login
                     </Link>
                 </div>
             </div>
