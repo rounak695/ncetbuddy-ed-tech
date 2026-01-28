@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 
 export const Proctoring = () => {
+    const [isFocused, setIsFocused] = useState(false);
     const features = [
         {
             title: "Tab Switch Detection",
@@ -85,16 +89,29 @@ export const Proctoring = () => {
                         </div>
                     </div>
 
-                    <div className="max-w-5xl mx-auto">
-                        <div className="mb-8 flex items-center justify-center gap-3">
+                    <div className="max-w-5xl mx-auto relative z-20">
+                        {/* Backdrop Blur Overlay */}
+                        <div
+                            className={`fixed inset-0 bg-white/10 backdrop-blur-sm z-40 transition-all duration-300 pointer-events-none ${isFocused ? 'opacity-100' : 'opacity-0'}`}
+                            aria-hidden="true"
+                        />
+
+                        <div className="mb-8 flex items-center justify-center gap-3 relative z-10">
                             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
                             <h3 className="text-sm font-black uppercase tracking-widest">Live Testing Interface (Strict Mode Enabled)</h3>
                         </div>
-                        <p className="text-center text-xs font-bold uppercase tracking-widest opacity-60 mb-6">
+                        <p className="text-center text-xs font-bold uppercase tracking-widest opacity-60 mb-6 relative z-10">
                             Real interface. Real pressure. Real exam discipline.
                         </p>
 
-                        <div className="rounded-3xl border-4 border-black overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-gray-900 aspect-video relative group">
+                        <div
+                            className={`rounded-3xl border-4 border-black overflow-hidden bg-gray-900 aspect-video relative group transition-all duration-300 ease-in-out cursor-pointer mx-auto
+                                ${isFocused ? 'scale-105 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] z-50 translate-y-[-10px]' : 'shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 z-10'}
+                            `}
+                            onMouseEnter={() => setIsFocused(true)}
+                            onMouseLeave={() => setIsFocused(false)}
+                            onClick={() => setIsFocused(!isFocused)}
+                        >
                             <img
                                 src="/mock_test_interface.png"
                                 alt="Secure Testing Interface"
@@ -107,6 +124,10 @@ export const Proctoring = () => {
                                 Monitoring Active
                             </div>
                         </div>
+
+                        <p className="text-center text-[10px] font-bold uppercase tracking-widest opacity-40 mt-6 animate-pulse">
+                            Hover or tap to view full exam interface
+                        </p>
                     </div>
                 </div>
             </div>
