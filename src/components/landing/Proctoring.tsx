@@ -90,6 +90,9 @@ export const Proctoring = () => {
                             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
                             <h3 className="text-sm font-black uppercase tracking-widest">Live Testing Interface (Strict Mode Enabled)</h3>
                         </div>
+                        <p className="text-center text-xs font-bold uppercase tracking-widest opacity-60 mb-6">
+                            Real interface. Real pressure. Real exam discipline.
+                        </p>
 
                         <div className="rounded-3xl border-4 border-black overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-gray-900 aspect-video relative group">
                             <img
