@@ -1,38 +1,79 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Hero } from "./Hero";
 import { Segmentation } from "./Segmentation";
 import { Features } from "./Features";
 import Link from "next/link";
 
 export const LandingCarousel = () => {
-    const [currentSlide, setCurrentSlide] = useState(0);
+    const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const touchStartY = useRef(0);
+    const touchEndY = useRef(0);
 
     const slides = [
-        { component: <Hero isSlide={true} />, id: "hero", extraClass: "" },
-        { component: <div className="pt-12"><Segmentation /></div>, id: "segmentation", extraClass: "" },
-        { component: <div className="pt-8"><Features /></div>, id: "features", extraClass: "" }
+        { component: <Hero isSlide={true} />, id: "hero" },
+        {
+            component: (
+                <div className="h-full flex items-center justify-center pt-32 md:pt-48">
+                    <Segmentation />
+                </div>
+            ),
+            id: "segmentation"
+        },
+        {
+            component: (
+                <div className="h-full flex items-center justify-center pt-32 md:pt-48">
+                    <Features />
+                </div>
+            ),
+            id: "features"
+        }
     ];
 
     useEffect(() => {
         if (isPaused) return;
 
         const interval = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
-        }, 5000);
+            setActiveIndex((prev) => (prev + 1) % slides.length);
+        }, 4500);
 
         return () => clearInterval(interval);
     }, [isPaused, slides.length]);
 
+    // Swipe handling
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setIsPaused(true);
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        setIsPaused(false);
+        touchEndY.current = e.changedTouches[0].clientY;
+        handleSwipe();
+    };
+
+    const handleSwipe = () => {
+        const distance = touchStartY.current - touchEndY.current;
+        const threshold = 50;
+
+        if (Math.abs(distance) > threshold) {
+            if (distance > 0) {
+                // Swipe Up -> Next Slide
+                setActiveIndex((prev) => (prev + 1) % slides.length);
+            } else {
+                // Swipe Down -> Prev Slide
+                setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
+            }
+        }
+    };
+
     return (
         <div
-            className="relative min-h-[100vh] overflow-hidden bg-white flex flex-col pt-32 md:pt-48 pb-20"
+            className="relative min-h-[100vh] bg-white flex flex-col overflow-hidden"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            onTouchStart={() => setIsPaused(true)}
-            onTouchEnd={() => setIsPaused(false)}
         >
             {/* Background gradients (Persistent) */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none z-0">
@@ -40,38 +81,27 @@ export const LandingCarousel = () => {
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
             </div>
 
-            {/* Fixed Logo (Top) relative to container usually, but here strict absolute placement to match Hero */}
+            {/* Fixed Logo (Outside Carousel) */}
             <div className="absolute top-32 md:top-48 left-0 right-0 z-50 flex justify-center pointer-events-none">
                 <div className="w-24 h-24 md:w-32 md:h-32 mb-8 rounded-3xl overflow-hidden border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] bg-white animate-in zoom-in duration-700 pointer-events-auto">
                     <img src="/logo.png" alt="NCET Buddy Logo" className="w-full h-full object-cover" />
                 </div>
             </div>
 
-            {/* Carousel Content Area */}
-            {/* We need enough height for the tallest content. Using flex-grow to push footer buttons down */}
-            <div className="relative z-10 w-full flex-grow flex items-center justify-center">
-                {/* 
-                   Wait, if we hide non-active slides, we lose the transition.
-                   We need them visible during transition.
-                   Also, `Segmentation` and `Features` contain their own <section> tags with padding.
-                   We might need to strip those or handle them. 
-                   They have `py-20` etc.
-                   
-                   Let's use a simpler approach for the MV: 
-                   Just one active component rendered, but with a key-based animation presence?
-                   React state transition.
-                   
-                   Better manual CSS transition:
-                   All rendered within a grid cell (stacking).
-                   Active one is z-10, Others z-0 opacity-0.
-                */}
-                <div className="relative w-full">
-                    {slides.map((slide, index) => (
+            {/* Carousel Wrapper */}
+            <div
+                className="relative z-10 w-full flex-grow overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
+                <div
+                    className="h-full flex flex-col transition-transform duration-700 ease-in-out"
+                    style={{ transform: `translateY(-${activeIndex * 100}%)`, height: '100%' }}
+                >
+                    {slides.map((slide) => (
                         <div
                             key={slide.id}
-                            className={`w-full transition-all duration-700 ease-in-out
-                            ${index === currentSlide ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 absolute top-0 left-0 -translate-y-[50px] z-0 pointer-events-none'}
-                            `}
+                            className="w-full min-h-[100vh] flex-shrink-0 relative"
                         >
                             {slide.component}
                         </div>
@@ -79,8 +109,8 @@ export const LandingCarousel = () => {
                 </div>
             </div>
 
-            {/* Persistent CTA Buttons */}
-            <div className="relative z-50 flex flex-col sm:flex-row gap-6 justify-center items-center mt-12 pb-10">
+            {/* Persistent CTA Buttons (Outside Carousel) */}
+            <div className="relative z-50 flex flex-col sm:flex-row gap-6 justify-center items-center pb-20 mt-8">
                 <Link
                     href="/partner"
                     className="px-10 py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
@@ -93,6 +123,11 @@ export const LandingCarousel = () => {
                 >
                     Student Login
                 </Link>
+            </div>
+
+            <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-primary border-2 border-black text-xs font-black uppercase tracking-widest text-black absolute top-[280px] md:top-[350px] left-1/2 -translate-x-1/2 z-40 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] pointer-events-none">
+                <span className="flex h-3 w-3 rounded-full bg-white border-2 border-black animate-pulse" />
+                NCET Buddy 2.0 is live
             </div>
         </div>
     );
