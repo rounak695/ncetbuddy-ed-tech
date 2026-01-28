@@ -2,22 +2,22 @@ export const Mentors = () => {
     // Placeholder data - eventually fetched from Firestore
     const mentors = [
         {
-            name: "GAURAV ARYA",
-            role: "DHSGU",
-            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Oliver",
-            quote: "Success is not final, failure is not fatal: it is the courage to continue that counts."
+            name: "Rahul Sharma",
+            role: "Mathematics Educator",
+            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Rahul",
+            quote: "Exam Buddy helped me launch my NCET test series without building any tech. The platform is seamless."
         },
         {
-            name: "KOPAL KATARIA",
-            role: "RIE BBSR",
-            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Kopal",
-            quote: "Mathematics is not about numbers, equations, computations, or algorithms: it is about understanding."
+            name: "Priya Singh",
+            role: "Physics Mentor",
+            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Priya",
+            quote: "The proctoring and analytics features are top-notch. My students love the real exam feel."
         },
         {
-            name: "SUSHANT PATEL",
-            role: "Gautam Buddha University",
-            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Sushant",
-            quote: "Physics is the most fundamental of all sciences, it describes how the universe works."
+            name: "Amit Patel",
+            role: "Chemistry HOD",
+            image: "https://api.dicebear.com/7.x/big-smile/svg?seed=Amit",
+            quote: "Zero downtime during our live scholarship test. Highly recommended for any coaching institute."
         }
     ];
 
@@ -29,9 +29,9 @@ export const Mentors = () => {
 
             <div className="container mx-auto px-4 relative z-10">
                 <div className="text-center mb-20">
-                    <h2 className="text-4xl md:text-6xl font-black mb-6 text-black uppercase tracking-tighter italic">Top Mentors</h2>
+                    <h2 className="text-4xl md:text-6xl font-black mb-6 text-black uppercase tracking-tighter italic">Partner Educators</h2>
                     <p className="text-black font-bold max-w-2xl mx-auto uppercase tracking-widest text-xs opacity-60">
-                        Guided by the best minds dedicated to your success
+                        Trusted by top educators and institutes across the country
                     </p>
                 </div>
 

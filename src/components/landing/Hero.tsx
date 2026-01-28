@@ -19,30 +19,29 @@ export function Hero() {
                     NCET Buddy 2.0 is live
                 </div>
 
-                <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-10 leading-[0.9]">
-                    MASTER YOUR <br />
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-10 leading-[0.9] text-black">
+                    LAUNCH YOUR <br />
                     <span className="bg-black text-primary px-4 py-2 italic transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                        JOURNEY
+                        TEST SERIES
                     </span>
                 </h1>
 
                 <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto mb-16 leading-tight opacity-70">
-                    The all-in-one platform for NCET aspirants. Access curated notes,
-                    mock tests, and expert mentorship to supercharge your success.
+                    Exam Buddy provides educators with a ready-to-use, NTA-style testing infrastructure — proctoring, scale, analytics, and monetization included.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                     <Link
-                        href="/login"
+                        href="/partner"
                         className="px-10 py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                     >
-                        GET STARTED
+                        Partner with Exam Buddy
                     </Link>
                     <Link
-                        href="#features"
+                        href="/login"
                         className="px-10 py-5 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                     >
-                        LEARN MORE
+                        Take Mock Tests
                     </Link>
                 </div>
             </div>
