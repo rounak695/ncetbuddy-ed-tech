@@ -93,7 +93,7 @@ export const Proctoring = () => {
 
                         <div className="rounded-3xl border-4 border-black overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-gray-900 aspect-video relative group">
                             <img
-                                src="/test_interface_preview.png"
+                                src="/mock_test_interface.png"
                                 alt="Secure Testing Interface"
                                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                             />
