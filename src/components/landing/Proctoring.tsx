@@ -90,11 +90,33 @@ export const Proctoring = () => {
                     </div>
 
                     <div className="max-w-5xl mx-auto relative z-20">
-                        {/* Backdrop Blur Overlay */}
+                        {/* Anti-Gravity Overlay (Fixed Layer) */}
                         <div
-                            className={`fixed inset-0 bg-white/10 backdrop-blur-sm z-40 transition-all duration-300 pointer-events-none ${isFocused ? 'opacity-100' : 'opacity-0'}`}
-                            aria-hidden="true"
-                        />
+                            className={`fixed inset-0 z-[100] flex items-center justify-center transition-all duration-500 ease-out ${isFocused ? 'bg-black/80 backdrop-blur-md opacity-100' : 'opacity-0 pointer-events-none'}`}
+                            onClick={() => setIsFocused(false)}
+                        >
+                            <div
+                                className={`relative w-[90vw] max-w-6xl aspect-video bg-gray-900 border-4 border-black rounded-xl shadow-2xl transition-all duration-700 cubic-bezier(0.34, 1.56, 0.64, 1) ${isFocused ? 'scale-100 translate-y-0 opacity-100 rotate-0' : 'scale-75 translate-y-[100px] opacity-0 rotate-x-12'}`}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <img
+                                    src="/mock_test_interface.png"
+                                    alt="Secure Testing Interface"
+                                    className="w-full h-full object-cover rounded-lg"
+                                />
+                                {/* Badge in Overlay */}
+                                <div className="absolute top-6 right-6 px-4 py-2 bg-red-500 border-2 border-black text-white font-black text-xs uppercase tracking-widest rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    Monitoring Active
+                                </div>
+                                <button
+                                    onClick={() => setIsFocused(false)}
+                                    className="absolute -top-12 right-0 text-white font-bold uppercase text-sm tracking-widest hover:text-primary transition-colors"
+                                >
+                                    Close Preview [ESC]
+                                </button>
+                            </div>
+                        </div>
 
                         <div className="mb-8 flex items-center justify-center gap-3 relative z-10">
                             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
@@ -104,16 +126,15 @@ export const Proctoring = () => {
                             Real interface. Real pressure. Real exam discipline.
                         </p>
 
+                        {/* Trigger Card (Original Position) */}
                         <div
-                            className={`rounded-3xl border-4 border-black overflow-hidden bg-gray-900 aspect-video relative group cursor-pointer mx-auto relative z-30 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]`}
-                            onMouseEnter={() => setIsFocused(true)}
-                            onMouseLeave={() => setIsFocused(false)}
-                            onClick={() => setIsFocused(!isFocused)}
+                            className={`rounded-3xl border-4 border-black overflow-hidden bg-gray-900 aspect-video relative group cursor-pointer mx-auto relative z-30 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)]`}
+                            onClick={() => setIsFocused(true)}
                         >
                             <img
                                 src="/mock_test_interface.png"
                                 alt="Secure Testing Interface"
-                                className={`w-[110%] h-full object-cover transition-transform duration-500 ease-in-out ${isFocused ? 'translate-x-[-15%]' : 'translate-x-[-5%]'} max-w-none`}
+                                className={`w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity`}
                             />
 
                             {/* Overlay Badge */}
@@ -121,10 +142,17 @@ export const Proctoring = () => {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                                 Monitoring Active
                             </div>
+
+                            {/* Hover Instruction Overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50">
+                                <span className="px-6 py-3 bg-white text-black font-black uppercase tracking-widest border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                    Click to Reveal
+                                </span>
+                            </div>
                         </div>
 
                         <p className="text-center text-[10px] font-bold uppercase tracking-widest opacity-40 mt-6 animate-pulse">
-                            Hover or tap to view full exam interface
+                            Click to experience full-screen focus mode
                         </p>
                     </div>
                 </div>
