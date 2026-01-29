@@ -133,7 +133,7 @@ export const LandingCarousel = () => {
                         href="/educator/login"
                         className="w-full sm:w-auto text-center px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none bg-[#FFD02F]"
                     >
-                        Teacher Login
+                        Educator Login
                     </Link>
                     <Link
                         href="/login"
@@ -142,13 +142,6 @@ export const LandingCarousel = () => {
                         Student Login
                     </Link>
                 </div>
-
-                <Link
-                    href="/creator/login"
-                    className="text-sm font-bold uppercase tracking-widest opacity-60 hover:opacity-100 hover:text-primary transition-colors border-b-2 border-transparent hover:border-black"
-                >
-                    Creator Login
-                </Link>
             </div>
 
             {/* Pagination Indicators (Optional but good for UX) */}
