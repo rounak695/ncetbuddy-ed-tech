@@ -127,18 +127,27 @@ export const LandingCarousel = () => {
             </div>
 
             {/* Persistent CTA Buttons (Bottom) */}
-            <div className="absolute bottom-12 left-0 right-0 z-50 flex flex-col sm:flex-row gap-6 justify-center items-center px-4">
+            <div className="absolute bottom-12 left-0 right-0 z-50 flex flex-col items-center gap-4 px-4">
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center w-full">
+                    <Link
+                        href="/educator/login"
+                        className="w-full sm:w-auto text-center px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none bg-[#FFD02F]"
+                    >
+                        Teacher Login
+                    </Link>
+                    <Link
+                        href="/login"
+                        className="w-full sm:w-auto text-center px-8 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
+                    >
+                        Student Login
+                    </Link>
+                </div>
+
                 <Link
-                    href="/partner"
-                    className="w-full sm:w-auto text-center px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
+                    href="/creator/login"
+                    className="text-sm font-bold uppercase tracking-widest opacity-60 hover:opacity-100 hover:text-primary transition-colors border-b-2 border-transparent hover:border-black"
                 >
-                    Educator Login
-                </Link>
-                <Link
-                    href="/login"
-                    className="w-full sm:w-auto text-center px-8 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
-                >
-                    Student Login
+                    Creator Login
                 </Link>
             </div>
 
