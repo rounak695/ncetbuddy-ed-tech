@@ -30,30 +30,142 @@ export const LandingCarousel = () => {
         {
             id: "trust",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
-                    <h1 className="text-5xl md:text-7xl lg:text-7xl font-black tracking-tighter mb-10 leading-[0.95] text-black uppercase">
-                        Built for <span className="underline decoration-8 decoration-primary underline-offset-4">Educators.</span><br />
-                        <span className="italic block mt-2">Trusted by Students.</span>
+                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-28 pb-40">
+                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-8 md:mb-12 text-center text-black uppercase italic leading-[0.9] max-w-6xl">
+                        Built for Educators. Trusted by Students.
                     </h1>
-                    <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
-                        Infrastructure that scales for real exams and delivers an authentic test experience.
-                    </p>
+
+                    <div className="flex flex-col md:flex-row gap-6 lg:gap-10 w-full max-w-5xl mx-auto items-stretch">
+                        {/* Educators Card */}
+                        <div className="flex-1 bg-primary border-4 border-black rounded-3xl p-6 md:p-8 flex flex-col justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300">
+                            <h3 className="text-2xl md:text-3xl font-black uppercase mb-6 text-black tracking-tight">For Educators</h3>
+                            <ul className="space-y-4 text-left">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Launch your own branded test series</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">No technical setup required</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Focus on teaching, we handle infrastructure</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Students Card */}
+                        <div className="flex-1 bg-white border-4 border-black rounded-3xl p-6 md:p-8 flex flex-col justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300">
+                            <h3 className="text-2xl md:text-3xl font-black uppercase mb-6 text-black tracking-tight">For Students</h3>
+                            <ul className="space-y-4 text-left">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">NCET-pattern mock tests</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Real exam-like environment</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Performance analytics</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             )
         },
         {
             id: "empower",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
-                        Empower <br />
-                        <span className="bg-primary text-black px-4 py-1 transform rotate-1 inline-block border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] mt-2">
-                            Your Teaching
-                        </span>
+                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-20 pb-40">
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-4 text-center text-black uppercase italic leading-[0.9]">
+                        Empower Your Teaching
                     </h1>
-                    <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
-                        Focus on teaching while we handle technology, scale, and performance insights.
+                    <p className="text-xs md:text-sm font-bold text-black opacity-60 uppercase tracking-[0.2em] mb-8 md:mb-12 text-center max-w-3xl">
+                        The complete infrastructure for launching your own test series
                     </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 w-full max-w-7xl mx-auto px-2">
+                        {/* Card 1: Proctoring & Scale */}
+                        <div className="bg-white border-4 border-black rounded-3xl p-6 flex flex-col items-start text-left hover:-translate-y-1 transition-transform duration-300 h-full">
+                            <div className="w-12 h-12 bg-black rounded-2xl mb-5 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg md:text-xl font-black uppercase italic mb-3 leading-none">Proctoring & Scale</h3>
+                            <p className="text-sm font-bold opacity-60 leading-relaxed">
+                                Plug-and-play NTA-style testing environment. Handle high traffic during live exams with zero downtime.
+                            </p>
+                        </div>
+
+                        {/* Card 2: Zero Tech Hassle */}
+                        <div className="bg-white border-4 border-black rounded-3xl p-6 flex flex-col items-start text-left hover:-translate-y-1 transition-transform duration-300 h-full">
+                            <div className="w-12 h-12 bg-black rounded-2xl mb-5 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg md:text-xl font-black uppercase italic mb-3 leading-none">Zero Tech Hassle</h3>
+                            <p className="text-sm font-bold opacity-60 leading-relaxed">
+                                No servers to manage, no code to write. We handle all infrastructure so you can focus purely on teaching.
+                            </p>
+                        </div>
+
+                        {/* Card 3: Monetization */}
+                        <div className="bg-white border-4 border-black rounded-3xl p-6 flex flex-col items-start text-left hover:-translate-y-1 transition-transform duration-300 h-full">
+                            <div className="w-12 h-12 bg-black rounded-2xl mb-5 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg md:text-xl font-black uppercase italic mb-3 leading-none">Monetization</h3>
+                            <p className="text-sm font-bold opacity-60 leading-relaxed">
+                                Built-in revenue sharing and performance dashboards. Track your test series sales and student engagement.
+                            </p>
+                        </div>
+
+                        {/* Card 4: For Students */}
+                        <div className="bg-white border-4 border-black rounded-3xl p-6 flex flex-col items-start text-left hover:-translate-y-1 transition-transform duration-300 h-full">
+                            <div className="w-12 h-12 bg-black rounded-2xl mb-5 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg md:text-xl font-black uppercase italic mb-3 leading-none">For Students</h3>
+                            <p className="text-sm font-bold opacity-60 leading-relaxed">
+                                Students get real exam experience, detailed analytics, and access to top-tier content from partner educators.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )
         }
