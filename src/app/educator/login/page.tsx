@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { account } from "@/lib/appwrite";
 import { ID, OAuthProvider } from "appwrite";
 import Link from "next/link";
@@ -13,8 +13,25 @@ export default function EducatorLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    const handleGoogleLogin = () => {
+    // Check for existing session on mount
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                await account.get();
+                // If get() succeeds, user is already logged in. Redirect to dashboard.
+                router.replace("/educator/dashboard");
+            } catch {
+                // No session, allow login.
+            }
+        };
+        checkSession();
+    }, [router]);
+
+    const handleGoogleLogin = async () => {
         try {
+            // Force logout if a stale session exists to prevent 401
+            await account.deleteSession("current").catch(() => { });
+
             account.createOAuth2Session(
                 OAuthProvider.Google,
                 `${window.location.origin}/educator/dashboard`,
@@ -32,6 +49,9 @@ export default function EducatorLogin() {
         setError("");
 
         try {
+            // Force logout if a stale session exists to prevent 401
+            await account.deleteSession("current").catch(() => { });
+
             await account.createEmailPasswordSession(email, password);
             // Tag user as educator via prefs
             try {
