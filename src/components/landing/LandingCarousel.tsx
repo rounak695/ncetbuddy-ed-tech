@@ -36,46 +36,12 @@ export const LandingCarousel = () => {
                     </h1>
 
                     <div className="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-5xl mx-auto items-stretch h-auto">
-                        {/* Educators Pannel - Professional Watermark Style */}
-                        <div className="flex-1 bg-primary border-4 border-black rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col justify-center relative overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
-                            {/* Watermark Avatar: Professional Teacher (Right side, subtle) */}
-                            <div className="absolute -right-8 -top-8 md:-right-4 md:-top-4 w-32 h-32 md:w-56 md:h-56 opacity-10 pointer-events-none mix-blend-multiply filter grayscale">
-                                <img
-                                    src="https://api.dicebear.com/7.x/big-smile/svg?seed=Teacher&accessories[]=glasses&hair[]=shortHair&mouth[]=serious"
-                                    alt="Educator Background"
-                                    className="w-full h-full object-cover transform rotate-12"
-                                />
-                            </div>
-
-                            <h3 className="text-lg md:text-2xl font-black uppercase mb-3 md:mb-4 text-black tracking-tight leading-none z-10 relative">For Educators</h3>
-
-                            <ul className="space-y-2 md:space-y-3 text-left z-10 relative">
-                                <li className="flex items-start gap-2 md:gap-3">
-                                    <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span className="font-bold text-black text-xs md:text-base leading-tight">Launch your own branded test series</span>
-                                </li>
-                                <li className="flex items-start gap-2 md:gap-3">
-                                    <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span className="font-bold text-black text-xs md:text-base leading-tight">No technical setup required</span>
-                                </li>
-                                <li className="flex items-start gap-2 md:gap-3">
-                                    <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span className="font-bold text-black text-xs md:text-base leading-tight">Focus on teaching, we handle infrastructure</span>
-                                </li>
-                            </ul>
-                        </div>
+                        {/* Educators Image Replacement */}
+                        <img
+                            src="/For educators.png"
+                            alt="For Educators"
+                            className="flex-1 w-full h-auto object-contain md:object-cover hover:-translate-y-1 transition-transform duration-300"
+                        />
 
                         {/* Students Panel - Studious Watermark Style */}
                         <div className="flex-1 bg-white border-4 border-black rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col justify-center relative overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
