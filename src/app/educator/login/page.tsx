@@ -50,13 +50,13 @@ export default function EducatorLogin() {
 
     return (
         <div className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 lg:p-12">
-            <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-24 items-center">
+            <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-24 items-start">
 
                 {/* Left Column: Marketing Story */}
-                <div className="flex flex-col gap-8 text-black">
+                <div className="flex flex-col gap-8 text-black pb-12 pt-6">
                     <div className="space-y-4">
                         <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.9]">
-                            Launch your branded exam portal in <span className="bg-primary px-2">days</span> — not weeks.
+                            Launch your branded exam portal in <span className="bg-primary px-1">days</span> — not weeks.
                         </h1>
                         <h2 className="text-xl md:text-2xl font-bold opacity-70">
                             You teach. You grow. We run the exam tech behind the scenes.
@@ -77,22 +77,22 @@ export default function EducatorLogin() {
 
                     {/* Mini Timeline */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t-2 border-black/10 pt-6">
-                        <div className="flex gap-3 items-center md:block">
-                            <span className="text-4xl font-black text-black/10">01</span>
+                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
+                            <span className="text-4xl font-black text-black/30">01</span>
                             <div>
                                 <h3 className="font-bold uppercase tracking-wider text-sm">Sign In</h3>
                                 <p className="text-xs font-bold opacity-60">Create your profile in seconds.</p>
                             </div>
                         </div>
-                        <div className="flex gap-3 items-center md:block">
-                            <span className="text-4xl font-black text-black/10">02</span>
+                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
+                            <span className="text-4xl font-black text-black/30">02</span>
                             <div>
                                 <h3 className="font-bold uppercase tracking-wider text-sm">Build Mocks</h3>
                                 <p className="text-xs font-bold opacity-60">Unlimited tests. Zero cost.</p>
                             </div>
                         </div>
-                        <div className="flex gap-3 items-center md:block">
-                            <span className="text-4xl font-black text-black/10">03</span>
+                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
+                            <span className="text-4xl font-black text-black/30">03</span>
                             <div>
                                 <h3 className="font-bold uppercase tracking-wider text-sm">Go Live</h3>
                                 <p className="text-xs font-bold opacity-60">We manage it. You earn.</p>
@@ -101,7 +101,7 @@ export default function EducatorLogin() {
                     </div>
 
                     {/* Highlight Strip */}
-                    <div className="bg-black text-white p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] mt-2">
+                    <div className="bg-black text-white p-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] mt-2">
                         <div className="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-primary mb-2">
                             <span>Free Entry</span>
                             <span>•</span>
@@ -177,7 +177,7 @@ export default function EducatorLogin() {
                             disabled={isLoading}
                             className="w-full h-14 bg-black text-white rounded-2xl font-black uppercase tracking-widest hover:bg-primary hover:text-black hover:-translate-y-1 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0 active:shadow-none mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            {isLoading ? "Logging in..." : "Login to Dashboard"}
+                            {isLoading ? "Logging in..." : "Continue to Dashboard"}
                         </button>
                     </form>
 
