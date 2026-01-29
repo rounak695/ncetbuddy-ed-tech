@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Hero } from "./Hero";
-import { Segmentation } from "./Segmentation";
-import { Features } from "./Features";
 import Link from "next/link";
 
 export const LandingCarousel = () => {
@@ -14,28 +11,51 @@ export const LandingCarousel = () => {
 
     const slides = [
         {
-            component: (
-                <div className="w-full min-h-[100vh] flex-shrink-0 relative">
-                    <Hero isSlide={true} />
+            id: "launch",
+            content: (
+                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
+                        Launch Your <br className="hidden md:block" />
+                        <span className="bg-black text-primary px-4 py-2 italic transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2 hover:scale-105 transition-transform">
+                            Test Series
+                        </span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
+                        Launch your own branded test series. <br className="hidden md:block" />
+                        NTA-style mock tests, proctoring, analytics, and monetization — ready to use.
+                    </p>
                 </div>
-            ),
-            id: "hero"
+            )
         },
         {
-            component: (
-                <div className="w-full min-h-[100vh] flex-shrink-0 relative flex flex-col items-center justify-start pt-[30vh]">
-                    <Segmentation />
+            id: "trust",
+            content: (
+                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
+                    <h1 className="text-5xl md:text-7xl lg:text-7xl font-black tracking-tighter mb-10 leading-[0.95] text-black uppercase">
+                        Built for <span className="underline decoration-8 decoration-primary underline-offset-4">Educators.</span><br />
+                        <span className="italic block mt-2">Trusted by Students.</span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
+                        Infrastructure that scales for real exams and delivers an authentic test experience.
+                    </p>
                 </div>
-            ),
-            id: "segmentation"
+            )
         },
         {
-            component: (
-                <div className="w-full min-h-[100vh] flex-shrink-0 relative flex flex-col items-center justify-start pt-[25vh]">
-                    <Features />
+            id: "empower",
+            content: (
+                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
+                        Empower <br />
+                        <span className="bg-primary text-black px-4 py-1 transform rotate-1 inline-block border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] mt-2">
+                            Your Teaching
+                        </span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
+                        Focus on teaching while we handle technology, scale, and performance insights.
+                    </p>
                 </div>
-            ),
-            id: "features"
+            )
         }
     ];
 
@@ -43,11 +63,11 @@ export const LandingCarousel = () => {
         if (isPaused) return;
 
         const interval = setInterval(() => {
-            setActiveIndex((prev) => (prev + 1) % 3);
+            setActiveIndex((prev) => (prev + 1) % slides.length);
         }, 4500);
 
         return () => clearInterval(interval);
-    }, [isPaused]);
+    }, [isPaused, slides.length]);
 
     // Swipe handling
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -58,27 +78,22 @@ export const LandingCarousel = () => {
     const handleTouchEnd = (e: React.TouchEvent) => {
         setIsPaused(false);
         touchEndY.current = e.changedTouches[0].clientY;
-        handleSwipe();
-    };
-
-    const handleSwipe = () => {
         const distance = touchStartY.current - touchEndY.current;
-        const threshold = 50;
 
-        if (Math.abs(distance) > threshold) {
+        if (Math.abs(distance) > 50) {
             if (distance > 0) {
                 // Swipe Up -> Next Slide
-                setActiveIndex((prev) => (prev + 1) % 3);
+                setActiveIndex((prev) => (prev + 1) % slides.length);
             } else {
                 // Swipe Down -> Prev Slide
-                setActiveIndex((prev) => (prev - 1 + 3) % 3);
+                setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
             }
         }
     };
 
     return (
-        <div
-            className="relative min-h-[100vh] bg-white flex flex-col overflow-hidden"
+        <section
+            className="relative h-[90vh] min-h-[700px] bg-white flex flex-col overflow-hidden border-b-4 border-black"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
@@ -88,54 +103,68 @@ export const LandingCarousel = () => {
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
             </div>
 
-            {/* Fixed Logo (Outside Carousel) */}
-            <div className="absolute top-32 md:top-48 left-0 right-0 z-50 flex justify-center pointer-events-none">
-                <div className="w-24 h-24 md:w-32 md:h-32 mb-8 rounded-3xl overflow-hidden border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] bg-white animate-in zoom-in duration-700 pointer-events-auto">
+            {/* Persistent Top Elements */}
+            <div className="absolute top-8 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
+                {/* Logo */}
+                <div className="w-24 h-24 md:w-28 md:h-28 mb-6 rounded-3xl overflow-hidden border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] bg-white pointer-events-auto hover:scale-105 transition-transform duration-300">
                     <img src="/logo.png" alt="NCET Buddy Logo" className="w-full h-full object-cover" />
+                </div>
+
+                {/* Live Badge */}
+                <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-primary border-2 border-black text-xs font-black uppercase tracking-widest text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <span className="flex h-3 w-3 rounded-full bg-white border-2 border-black animate-pulse" />
+                    NCET Buddy 2.0 is live
                 </div>
             </div>
 
-            {/* Carousel Wrapper */}
+            {/* Carousel Content */}
             <div
-                className="relative z-10 w-full flex-grow overflow-hidden"
+                className="relative z-10 w-full h-full text-black"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
-                <div
-                    className="h-full flex flex-col transition-transform duration-700 ease-in-out"
-                    style={{ transform: `translateY(-${activeIndex * 100}%)`, height: '100%' }}
-                >
-                    {slides.map((slide) => (
-                        <div
-                            key={slide.id}
-                            style={{ height: '100%' }}
-                        >
-                            {slide.component}
-                        </div>
-                    ))}
-                </div>
+                {slides.map((slide, index) => (
+                    <div
+                        key={slide.id}
+                        className={`absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center`}
+                        style={{
+                            transform: `translateY(${(index - activeIndex) * 100}%)`,
+                            opacity: Math.abs(index - activeIndex) <= 1 ? 1 : 0 // Optimization
+                        }}
+                    >
+                        {slide.content}
+                    </div>
+                ))}
             </div>
 
-            {/* Persistent CTA Buttons (Outside Carousel) */}
-            <div className="relative z-50 flex flex-col sm:flex-row gap-6 justify-center items-center pb-20 mt-8">
+            {/* Persistent CTA Buttons (Bottom) */}
+            <div className="absolute bottom-12 left-0 right-0 z-50 flex flex-col sm:flex-row gap-6 justify-center items-center px-4">
                 <Link
                     href="/partner"
-                    className="px-10 py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
+                    className="w-full sm:w-auto text-center px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                 >
                     Educator Login
                 </Link>
                 <Link
                     href="/login"
-                    className="px-10 py-5 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-2 transition-all border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
+                    className="w-full sm:w-auto text-center px-8 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
                 >
                     Student Login
                 </Link>
             </div>
 
-            <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-primary border-2 border-black text-xs font-black uppercase tracking-widest text-black absolute top-[280px] md:top-[350px] left-1/2 -translate-x-1/2 z-40 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] pointer-events-none">
-                <span className="flex h-3 w-3 rounded-full bg-white border-2 border-black animate-pulse" />
-                NCET Buddy 2.0 is live
+            {/* Pagination Indicators (Optional but good for UX) */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40 hidden md:flex">
+                {slides.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setActiveIndex(index)}
+                        className={`w-3 h-3 rounded-full border-2 border-black transition-all ${index === activeIndex ? "bg-primary scale-125" : "bg-white hover:bg-gray-200"
+                            }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                    />
+                ))}
             </div>
-        </div>
+        </section>
     );
 };
