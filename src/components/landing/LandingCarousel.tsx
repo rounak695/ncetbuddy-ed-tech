@@ -30,30 +30,12 @@ export const LandingCarousel = () => {
         {
             id: "trust",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-48 pb-40 md:pt-52 md:pb-44">
-                    <h1 className="text-2xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-4 md:mb-8 text-center text-black uppercase italic leading-[0.9] max-w-5xl z-20 flex-shrink-0">
-                        Built for Educators. Trusted by Students.
-                    </h1>
-
-                    <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl mx-auto items-center justify-center flex-1 min-h-0 overflow-hidden pb-4">
-                        <div className="flex-1 w-full md:w-1/2 h-full flex items-center justify-center relative p-2 md:p-4">
-                            {/* Educators Image Replacement */}
-                            <img
-                                src="/For educators.png"
-                                alt="For Educators"
-                                className="w-auto h-auto max-w-full max-h-full object-contain hover:-translate-y-1 transition-transform duration-300 drop-shadow-xl"
-                            />
-                        </div>
-
-                        <div className="flex-1 w-full md:w-1/2 h-full flex items-center justify-center relative p-2 md:p-4">
-                            {/* Students Image Replacement */}
-                            <img
-                                src="/student.png"
-                                alt="For Students"
-                                className="w-auto h-auto max-w-full max-h-full object-contain hover:-translate-y-1 transition-transform duration-300 drop-shadow-xl"
-                            />
-                        </div>
-                    </div>
+                <div className="w-full h-full flex items-center justify-center relative pt-40 pb-36 px-4">
+                    <img
+                        src="/slide2.png"
+                        alt="Built for Educators. Trusted by Students."
+                        className="w-full h-full object-contain"
+                    />
                 </div>
             )
         },
