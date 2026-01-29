@@ -6,14 +6,14 @@ import Link from "next/link";
 export const LandingCarousel = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
-    const touchStartY = useRef(0);
-    const touchEndY = useRef(0);
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
 
     const slides = [
         {
             id: "launch",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-20 pb-40">
+                <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-28 pb-32">
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
                         Launch Your <br className="hidden md:block" />
                         <span className="bg-black text-primary px-4 py-2 italic transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2 hover:scale-105 transition-transform">
@@ -30,94 +30,92 @@ export const LandingCarousel = () => {
         {
             id: "trust",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-28 pb-32 md:pb-40">
-                    <h1 className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-4 md:mb-10 text-center text-black uppercase italic leading-[0.9] max-w-6xl">
+                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-28 pb-32 md:pb-24">
+                    <h1 className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-6 md:mb-12 text-center text-black uppercase italic leading-[0.9] max-w-6xl">
                         Built for Educators. Trusted by Students.
                     </h1>
 
-                    <div className="flex flex-col md:flex-row gap-4 md:gap-8 lg:gap-12 w-full max-w-5xl mx-auto items-stretch">
-                        {/* Educators Pannel - Comic Style */}
-                        <div className="flex-1 bg-primary border-4 border-black rounded-3xl p-5 md:p-8 flex flex-col relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
-                            {/* Avatar Interaction */}
-                            <div className="absolute -right-4 -top-4 w-24 h-24 md:w-32 md:h-32 bg-white border-4 border-black rounded-full z-10 hidden sm:block transform rotate-12 group-hover:rotate-6 transition-transform">
-                                <img src="https://api.dicebear.com/7.x/big-smile/svg?seed=Felix" alt="Educator" className="w-full h-full object-cover rounded-full" />
+                    <div className="flex flex-col md:flex-row gap-4 md:gap-8 w-full max-w-6xl mx-auto items-stretch h-auto md:h-[400px]">
+                        {/* Educators Pannel - Professional Watermark Style */}
+                        <div className="flex-1 bg-primary border-4 border-black rounded-3xl p-6 md:p-8 flex flex-col justify-center relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
+                            {/* Watermark Avatar: Professional Teacher */}
+                            <div className="absolute -right-12 -top-12 w-64 h-64 opacity-10 pointer-events-none mix-blend-multiply filter grayscale">
+                                <img
+                                    src="https://api.dicebear.com/7.x/big-smile/svg?seed=Teacher&accessories[]=glasses&hair[]=shortHair&mouth[]=serious"
+                                    alt="Educator Background"
+                                    className="w-full h-full object-cover transform rotate-12"
+                                />
                             </div>
 
-                            <h3 className="text-xl md:text-3xl font-black uppercase mb-4 md:mb-6 text-black tracking-tight leading-none z-20 relative">For Educators</h3>
+                            <h3 className="text-2xl md:text-3xl font-black uppercase mb-6 text-black tracking-tight leading-none z-10 relative">For Educators</h3>
 
-                            <ul className="space-y-3 md:space-y-4 text-left z-20 relative">
-                                <li className="flex items-start gap-3 bg-white/50 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                            <ul className="space-y-4 text-left z-10 relative">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">Launch your own branded test series</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Launch your own branded test series</span>
                                 </li>
-                                <li className="flex items-start gap-3 bg-white/50 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">No technical setup required</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">No technical setup required</span>
                                 </li>
-                                <li className="flex items-start gap-3 bg-white/50 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">Focus on teaching, we handle infrastructure</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Focus on teaching, we handle infrastructure</span>
                                 </li>
                             </ul>
-
-                            {/* Mobile Avatar (Inline) */}
-                            <div className="sm:hidden w-16 h-16 bg-white border-4 border-black rounded-full self-end -mt-4 mb-2 -mr-2 rotate-6">
-                                <img src="https://api.dicebear.com/7.x/big-smile/svg?seed=Felix" alt="Educator" className="w-full h-full object-cover rounded-full" />
-                            </div>
                         </div>
 
-                        {/* Students Panel - Comic Style */}
-                        <div className="flex-1 bg-white border-4 border-black rounded-3xl p-5 md:p-8 flex flex-col relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
-                            {/* Avatar Interaction */}
-                            <div className="absolute -left-4 -bottom-4 w-24 h-24 md:w-32 md:h-32 bg-primary border-4 border-black rounded-full z-10 hidden sm:block transform -rotate-12 group-hover:-rotate-6 transition-transform">
-                                <img src="https://api.dicebear.com/7.x/big-smile/svg?seed=Aneka" alt="Student" className="w-full h-full object-cover rounded-full" />
+                        {/* Students Panel - Studious Watermark Style */}
+                        <div className="flex-1 bg-white border-4 border-black rounded-3xl p-6 md:p-8 flex flex-col justify-center relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-transform duration-300 group">
+                            {/* Watermark Avatar: Serious Student */}
+                            <div className="absolute -left-12 -bottom-12 w-64 h-64 opacity-5 pointer-events-none mix-blend-multiply filter grayscale">
+                                <img
+                                    src="https://api.dicebear.com/7.x/big-smile/svg?seed=Student&accessories[]=glasses&hair[]=bangs&mouth[]=smile"
+                                    alt="Student Background"
+                                    className="w-full h-full object-cover transform -rotate-12"
+                                />
                             </div>
 
-                            <h3 className="text-xl md:text-3xl font-black uppercase mb-4 md:mb-6 text-black tracking-tight leading-none text-right md:text-left z-20 relative">For Students</h3>
+                            <h3 className="text-2xl md:text-3xl font-black uppercase mb-6 text-black tracking-tight leading-none z-10 relative">For Students</h3>
 
-                            <ul className="space-y-3 md:space-y-4 text-left z-20 relative ml-0 md:ml-12">
-                                <li className="flex items-start gap-3 bg-primary/10 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                            <ul className="space-y-4 text-left z-10 relative">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">NCET-pattern mock tests</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">NCET-pattern mock tests</span>
                                 </li>
-                                <li className="flex items-start gap-3 bg-primary/10 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">Real exam-like environment</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Real exam-like environment</span>
                                 </li>
-                                <li className="flex items-start gap-3 bg-primary/10 p-2 rounded-xl border-2 border-transparent hover:border-black transition-colors">
-                                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-black flex items-center justify-center mt-0.5 flex-shrink-0">
-                                        <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                <li className="flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center mt-1 flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="font-bold text-black text-sm md:text-lg leading-tight">Performance analytics</span>
+                                    <span className="font-bold text-black text-base md:text-lg leading-tight">Performance analytics</span>
                                 </li>
                             </ul>
-
-                            {/* Mobile Avatar (Inline) */}
-                            <div className="sm:hidden w-16 h-16 bg-primary border-4 border-black rounded-full self-start -mt-4 mb-2 -ml-2 -rotate-6">
-                                <img src="https://api.dicebear.com/7.x/big-smile/svg?seed=Aneka" alt="Student" className="w-full h-full object-cover rounded-full" />
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,7 +124,7 @@ export const LandingCarousel = () => {
         {
             id: "empower",
             content: (
-                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-32 pb-32 md:pb-40">
+                <div className="flex flex-col items-center justify-center h-full px-4 w-full pt-28 pb-32 md:pb-24">
                     <h1 className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-4 text-center text-black uppercase italic leading-[0.9]">
                         Empower Your Teaching
                     </h1>
@@ -226,20 +224,20 @@ export const LandingCarousel = () => {
     // Swipe handling
     const handleTouchStart = (e: React.TouchEvent) => {
         setIsPaused(true);
-        touchStartY.current = e.touches[0].clientY;
+        touchStartX.current = e.touches[0].clientX;
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
         setIsPaused(false);
-        touchEndY.current = e.changedTouches[0].clientY;
-        const distance = touchStartY.current - touchEndY.current;
+        touchEndX.current = e.changedTouches[0].clientX;
+        const distance = touchStartX.current - touchEndX.current;
 
         if (Math.abs(distance) > 50) {
             if (distance > 0) {
-                // Swipe Up -> Next Slide
+                // Swipe Left -> Next Slide
                 setActiveIndex((prev) => (prev + 1) % slides.length);
             } else {
-                // Swipe Down -> Prev Slide
+                // Swipe Right -> Prev Slide
                 setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
             }
         }
@@ -282,8 +280,7 @@ export const LandingCarousel = () => {
                         key={slide.id}
                         className={`absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center`}
                         style={{
-                            transform: `translateY(${(index - activeIndex) * 100}%)`,
-                            opacity: Math.abs(index - activeIndex) <= 1 ? 1 : 0 // Optimization
+                            transform: `translateX(${(index - activeIndex) * 100}%)`,
                         }}
                     >
                         {slide.content}
