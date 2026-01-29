@@ -101,17 +101,17 @@ export default function EducatorLogin() {
                     </div>
 
                     {/* Highlight Strip */}
-                    <div className="bg-black text-white p-4 rounded-2xl shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] mt-2">
-                        <div className="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-primary mb-2">
+                    <div className="bg-black text-white p-4 rounded-2xl shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] mt-2">
+                        <div className="flex flex-wrap gap-4 text-xs font-bold uppercase tracking-wider text-primary mb-1">
                             <span>Free Entry</span>
                             <span>•</span>
                             <span>Unlimited Mocks</span>
                             <span>•</span>
                             <span>Free Guidance</span>
                         </div>
-                        <p className="font-bold text-lg leading-tight">
+                        <p className="font-bold text-xl leading-snug">
                             No setup fee. No tech headache. If you can teach, you can launch.
-                            <span className="block mt-2 text-sm opacity-70 font-normal normal-case">
+                            <span className="block mt-3 text-sm opacity-60 font-normal normal-case">
                                 Monetize with a simple revenue-share model — you earn when your students buy.
                             </span>
                         </p>
