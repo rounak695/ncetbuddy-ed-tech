@@ -104,11 +104,7 @@ export const LandingCarousel = () => {
                     <img src="/logo.png" alt="NCET Buddy Logo" className="w-full h-full object-cover" />
                 </div>
 
-                {/* Live Badge */}
-                <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-primary border-2 border-black text-xs font-black uppercase tracking-widest text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <span className="flex h-3 w-3 rounded-full bg-white border-2 border-black animate-pulse" />
-                    NCET Buddy 2.0 is live
-                </div>
+
             </div>
 
             {/* Carousel Content */}
