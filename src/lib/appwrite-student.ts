@@ -8,6 +8,7 @@ const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_STUDENT;
 if (!projectId) {
     console.error("Appwrite Student Project ID is missing. Please check your .env.local file.");
 } else {
+    console.log("Student Project ID:", projectId); // Debug log
     client
         .setEndpoint(endpoint)
         .setProject(projectId);
