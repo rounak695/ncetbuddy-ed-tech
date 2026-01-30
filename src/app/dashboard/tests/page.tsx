@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { getTests } from "@/lib/appwrite-db";
-import { isAppwriteConfigured } from "@/lib/appwrite";
+import { isAppwriteConfigured } from "@/lib/appwrite-student";
 import { Test } from "@/types";
 
 export default function TestsPage() {

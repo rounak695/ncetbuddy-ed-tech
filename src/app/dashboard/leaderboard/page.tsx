@@ -7,7 +7,7 @@ import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 
-import client from "@/lib/appwrite"; // Import the client instance
+import client from "@/lib/appwrite-student"; // Import the client instance
 
 export default function LeaderboardPage() {
     const { user } = useAuth();

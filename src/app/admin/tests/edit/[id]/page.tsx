@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { getTestById } from "@/lib/appwrite-db";
 import { useRouter, useParams } from "next/navigation";
 import { Test, Question } from "@/types";
-import { databases } from "@/lib/appwrite";
+import { databases } from "@/lib/appwrite-student";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
