@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { account } from "@/lib/appwrite";
+import { account } from "@/lib/appwrite-educator";
 import { useRouter } from "next/navigation";
+import { Models } from "appwrite";
 
 export default function EducatorDashboard() {
     const router = useRouter();
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

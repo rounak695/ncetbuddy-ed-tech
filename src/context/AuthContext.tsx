@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { account, databases, isAppwriteConfigured } from "@/lib/appwrite";
+import { account, databases, isAppwriteConfigured } from "@/lib/appwrite-student";
 import { Models } from "appwrite";
 import { useRouter } from "next/navigation";
 

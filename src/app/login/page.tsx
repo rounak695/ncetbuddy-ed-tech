@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { account, isAppwriteConfigured } from "@/lib/appwrite";
+import { account, isAppwriteConfigured } from "@/lib/appwrite-student";
 import { useAuth } from "@/context/AuthContext";
 import { OAuthProvider } from "appwrite";
 import Link from "next/link";

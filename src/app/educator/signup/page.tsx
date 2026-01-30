@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { account } from "@/lib/appwrite";
+import { account } from "@/lib/appwrite-educator";
 import { ID, OAuthProvider } from "appwrite";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

@@ -1,4 +1,4 @@
-import { databases, isAppwriteConfigured } from "./appwrite";
+import { databases, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query } from "appwrite";
 import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass } from "@/types";
 
