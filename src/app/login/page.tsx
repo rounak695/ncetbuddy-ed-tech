@@ -38,7 +38,7 @@ export default function LoginPage() {
                         <img src="/logo.png" alt="NCET Buddy" className="w-full h-full object-cover" />
                     </div>
                     <h1 className="text-3xl font-black text-black uppercase tracking-tighter italic">
-                        {user ? "Already Logged In" : "Welcome Back"}
+                        Welcome Back
                     </h1>
                     <p className="text-black font-bold opacity-60 uppercase tracking-widest text-[10px] mt-1">
                         {user ? "You're already signed in" : "Sign in with Google to continue"}
