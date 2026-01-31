@@ -64,9 +64,8 @@ export default function LoginPage() {
                     </div>
                 ) : (
                     // Not logged in - show Google login
-                    <Button
+                    <button
                         onClick={handleGoogleLogin}
-                        variant="outline"
                         className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 font-semibold h-14 rounded-xl shadow-md hover:shadow-lg transition-all"
                     >
                         <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -88,7 +87,7 @@ export default function LoginPage() {
                             />
                         </svg>
                         Sign in with Google
-                    </Button>
+                    </button>
                 )}
 
                 <div className="mt-8 text-center text-sm text-secondary space-y-3">
