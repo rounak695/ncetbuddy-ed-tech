@@ -9,10 +9,11 @@ import { Client, Databases, Account } from 'node-appwrite';
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Only protect /educator/* routes (except login and signup)
+    // Only protect /educator/* routes (except login, signup, and oauth-callback)
     if (pathname.startsWith('/educator') &&
         !pathname.startsWith('/educator/login') &&
-        !pathname.startsWith('/educator/signup')) {
+        !pathname.startsWith('/educator/signup') &&
+        !pathname.startsWith('/educator/oauth-callback')) {
 
         // Get Appwrite session cookie
         const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '';
