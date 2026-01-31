@@ -30,7 +30,7 @@ export const LandingCarousel = () => {
         {
             id: "trust",
             content: (
-                <div className="w-full h-full flex items-center justify-center relative pt-40 pb-36 px-4">
+                <div className="w-full h-full flex items-center justify-center relative pt-24 pb-28 md:pt-40 md:pb-36 px-4">
                     <img
                         src="/slide2.png"
                         alt="Built for Educators. Trusted by Students."
@@ -42,7 +42,7 @@ export const LandingCarousel = () => {
         {
             id: "empower",
             content: (
-                <div className="w-full h-full flex items-center justify-center relative pt-40 pb-36 px-4">
+                <div className="w-full h-full flex items-center justify-center relative pt-24 pb-28 md:pt-40 md:pb-36 px-4">
                     <img
                         src="/slide3.png"
                         alt="Empower Your Teaching"
