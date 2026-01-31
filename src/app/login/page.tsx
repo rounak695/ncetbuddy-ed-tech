@@ -51,12 +51,12 @@ export default function LoginPage() {
                     // Already logged in - show dashboard link
                     <div className="flex flex-col gap-4">
                         <Link href="/dashboard" className="w-full">
-                            <Button className="w-full bg-primary text-black hover:bg-primary/90 font-black h-16 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm">
+                            <Button className="w-full bg-primary text-black hover:bg-white font-black h-16 rounded-2xl hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none uppercase tracking-widest">
                                 GO TO DASHBOARD
                             </Button>
                         </Link>
                         <Link href="/" className="w-full">
-                            <Button className="w-full bg-black text-white hover:bg-black/90 font-black h-16 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm">
+                            <Button className="w-full bg-black text-white hover:bg-primary hover:text-black font-black h-16 rounded-2xl hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none uppercase tracking-widest">
                                 BACK TO HOME
                             </Button>
                         </Link>
