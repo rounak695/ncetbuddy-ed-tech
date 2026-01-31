@@ -1,31 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { account } from "@/lib/appwrite-educator";
-import { ID, OAuthProvider } from "appwrite";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { account } from "@/lib/appwrite-educator";
+import { OAuthProvider } from "appwrite";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
-export default function EducatorLogin() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+export default function EducatorLoginPage() {
     const [error, setError] = useState("");
-
-    // Check for existing session on mount
-    useEffect(() => {
-        const checkSession = async () => {
-            try {
-                await account.get();
-                // If get() succeeds, user is already logged in. Redirect to dashboard.
-                router.replace("/educator/dashboard");
-            } catch {
-                // No session, allow login.
-            }
-        };
-        checkSession();
-    }, [router]);
+    const router = useRouter();
 
     const handleGoogleLogin = async () => {
         try {
@@ -40,31 +25,6 @@ export default function EducatorLogin() {
         } catch (err) {
             console.error(err);
             setError("Failed to initialize Google login");
-        }
-    };
-
-    const handleEmailLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError("");
-
-        try {
-            // Force logout if a stale session exists to prevent 401
-            await account.deleteSession("current").catch(() => { });
-
-            await account.createEmailPasswordSession(email, password);
-            // Tag user as educator via prefs
-            try {
-                await account.updatePrefs({ role: "educator" });
-            } catch (prefError) {
-                console.warn("Failed to set role pref", prefError);
-            }
-            router.push("/educator/dashboard");
-        } catch (err) {
-            console.error(err);
-            setError((err as any).message || "Login failed. Please check your credentials.");
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -89,126 +49,47 @@ export default function EducatorLogin() {
                             We solve that. Our infrastructure handles <span className="font-bold text-black border-b-2 border-primary">heavy traffic spikes</span>,
                             ensures 99.9% uptime, and provides bank-grade security.
                         </p>
-                        <p>
-                            Focus purely on your teaching. We manage the messy tech—server scaling, strict proctoring,
-                            and seamless student experience—so you never have to worry about a crash during a live exam.
-                        </p>
-                    </div>
-
-                    {/* Mini Timeline */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t-2 border-black/10 pt-6">
-                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
-                            <span className="text-4xl font-black text-black/30">01</span>
-                            <div>
-                                <h3 className="font-bold uppercase tracking-wider text-sm">Sign In</h3>
-                                <p className="text-xs font-bold opacity-60">Create your profile in seconds.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
-                            <span className="text-4xl font-black text-black/30">02</span>
-                            <div>
-                                <h3 className="font-bold uppercase tracking-wider text-sm">Build Mocks</h3>
-                                <p className="text-xs font-bold opacity-60">Unlimited tests. Zero cost.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 items-center md:flex md:flex-col md:items-start">
-                            <span className="text-4xl font-black text-black/30">03</span>
-                            <div>
-                                <h3 className="font-bold uppercase tracking-wider text-sm">Go Live</h3>
-                                <p className="text-xs font-bold opacity-60">We manage it. You earn.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Highlight Strip */}
-                    <div className="bg-black text-white py-5 px-6 rounded-2xl shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] mt-2">
-                        <div className="flex flex-wrap gap-4 text-[11px] font-bold uppercase tracking-wider text-primary/90 mb-2">
-                            <span>Free Entry</span>
-                            <span>•</span>
-                            <span>Unlimited Mocks</span>
-                            <span>•</span>
-                            <span>Free Guidance</span>
-                        </div>
-                        <p className="font-bold text-xl leading-relaxed max-w-lg">
-                            No setup fee. No tech headache. If you can teach, you can launch.
-                            <span className="block mt-4 text-sm opacity-50 font-normal normal-case">
-                                Monetize with a simple revenue-share model — you earn when your students buy.
-                            </span>
-                        </p>
                     </div>
                 </div>
 
-                {/* Right Column: Glassmorphism Card (Preserving Logic) */}
-                <div className="w-full max-w-md mx-auto relative z-10 backdrop-blur-xl bg-white/60 border-2 border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] rounded-3xl p-6 md:p-10 flex flex-col gap-6">
-                    <div className="text-center space-y-2">
-                        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Educator Login</h2>
-                        <p className="font-bold text-sm opacity-60">Launch your own test series today</p>
+                {/* Right Column: Login Form */}
+                <div className="bg-white p-8 rounded-3xl shadow-2xl border-2 border-black flex flex-col gap-6">
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-3xl font-black uppercase tracking-tight text-black">Educator Login</h3>
+                        <p className="text-lg font-medium text-foreground opacity-70">Sign in with Google to continue</p>
                     </div>
 
-                    {error && (
-                        <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-2 rounded-xl text-sm font-bold animate-pulse">
-                            {error}
-                        </div>
-                    )}
+                    {error && <div className="text-error text-sm bg-error/10 p-3 rounded-xl border border-error/20">{error}</div>}
 
-                    <button
+                    <Button
                         onClick={handleGoogleLogin}
-                        className="w-full h-12 bg-white border-2 border-black rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 hover:-translate-y-0.5 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none font-bold"
+                        variant="outline"
+                        className="h-16 flex items-center justify-center gap-3 bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 font-semibold text-base rounded-xl shadow-md hover:shadow-lg transition-all"
                     >
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                        <svg className="w-6 h-6" viewBox="0 0 24 24">
+                            <path
+                                fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            />
+                            <path
+                                fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            />
+                            <path
+                                fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            />
+                            <path
+                                fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            />
+                        </svg>
                         Continue with Google
-                    </button>
+                    </Button>
 
-                    <div className="relative flex items-center py-2">
-                        <div className="flex-grow border-t-2 border-black/10"></div>
-                        <span className="flex-shrink-0 mx-4 font-bold text-xs opacity-40 uppercase">Or continue with email</span>
-                        <div className="flex-grow border-t-2 border-black/10"></div>
-                    </div>
-
-                    <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs font-black uppercase tracking-wider ml-1">Email</label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full h-12 bg-white border-2 border-black rounded-xl px-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                placeholder="name@example.com"
-                            />
-                        </div>
-
-                        <div className="space-y-1">
-                            <div className="flex justify-between items-center ml-1">
-                                <label className="text-xs font-black uppercase tracking-wider">Password</label>
-                            </div>
-                            <input
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full h-12 bg-white border-2 border-black rounded-xl px-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                placeholder="••••••••"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-14 bg-black text-white rounded-2xl font-black uppercase tracking-widest hover:bg-primary hover:text-black hover:-translate-y-1 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0 active:shadow-none mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? "Logging in..." : "Continue to Dashboard"}
-                        </button>
-                    </form>
-
-                    <div className="text-center space-y-4 pt-2">
-                        <p className="text-xs font-bold">
-                            New here?{" "}
-                            <Link href="/educator/signup" className="underline hover:text-primary">
-                                Create an account
-                            </Link>
-                        </p>
-                    </div>
+                    <p className="text-foreground/60 text-sm text-center mt-2">
+                        Don't have an account? <Link href="/educator/signup" className="text-primary hover:underline font-bold">Sign up</Link>
+                    </p>
                 </div>
             </div>
         </div>
