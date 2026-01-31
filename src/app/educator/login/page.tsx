@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { account } from "@/lib/appwrite-educator";
 import { OAuthProvider } from "appwrite";
@@ -24,7 +24,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     unknown: 'An error occurred. Please try again.',
 };
 
-export default function EducatorLoginPage() {
+function EducatorLoginContent() {
     const [step, setStep] = useState<Step>('code');
     const [clientCode, setClientCode] = useState('');
     const [verifying, setVerifying] = useState(false);
@@ -203,5 +203,20 @@ export default function EducatorLoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function EducatorLoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                    <p className="mt-4 text-foreground/60">Loading...</p>
+                </div>
+            </div>
+        }>
+            <EducatorLoginContent />
+        </Suspense>
     );
 }
