@@ -42,87 +42,19 @@ export default function ContactPage() {
                     </p>
                 </div>
 
-                {/* Google Form Embed - PLACEHOLDER */}
+                {/* Google Form Embed - RESPONSIVE */}
                 <div className="relative w-full border-4 border-black rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                    {/* 
-                        INSTRUCTIONS FOR INTEGRATION:
-                        
-                        1. Follow the setup guide in GOOGLE_FORM_SETUP.md
-                        2. Create the Google Form and get the embed code
-                        3. Replace the iframe src below with your Google Form embed URL
-                        4. The form should look like this:
-                           <iframe src="YOUR_GOOGLE_FORM_EMBED_URL_HERE" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-                        
-                        Example URL format:
-                        https://docs.google.com/forms/d/e/FORM_ID/viewform?embedded=true
-                    */}
-
-                    <div className="bg-gradient-to-br from-primary/20 to-white p-12 text-center min-h-[800px] flex flex-col items-center justify-center">
-                        <div className="max-w-2xl">
-                            <div className="w-24 h-24 rounded-2xl bg-primary border-4 border-black flex items-center justify-center text-5xl mb-6 mx-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                📋
-                            </div>
-                            <h3 className="text-3xl font-black uppercase italic mb-4">Google Form Integration Required</h3>
-                            <p className="text-lg font-bold mb-6 text-black/70">
-                                Follow these steps to complete the setup:
-                            </p>
-                            <ol className="text-left space-y-4 mb-8 text-black font-medium">
-                                <li className="flex items-start gap-3">
-                                    <span className="w-8 h-8 rounded-lg bg-primary border-2 border-black flex items-center justify-center text-sm flex-shrink-0 font-black">1</span>
-                                    <div>
-                                        <strong className="font-black">Open the setup guide:</strong> Read <code className="bg-black text-primary px-2 py-1 rounded font-mono text-sm">GOOGLE_FORM_SETUP.md</code> in the artifacts directory
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="w-8 h-8 rounded-lg bg-primary border-2 border-black flex items-center justify-center text-sm flex-shrink-0 font-black">2</span>
-                                    <div>
-                                        <strong className="font-black">Create Google Form:</strong> Sign in to <code className="bg-black text-primary px-2 py-1 rounded font-mono text-sm">connect@ncetbuddy.in</code> and create the form
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="w-8 h-8 rounded-lg bg-primary border-2 border-black flex items-center justify-center text-sm flex-shrink-0 font-black">3</span>
-                                    <div>
-                                        <strong className="font-black">Get embed code:</strong> Click Send → Embed HTML and copy the iframe URL
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="w-8 h-8 rounded-lg bg-primary border-2 border-black flex items-center justify-center text-sm flex-shrink-0 font-black">4</span>
-                                    <div>
-                                        <strong className="font-black">Update this file:</strong> Replace the commented section in <code className="bg-black text-primary px-2 py-1 rounded font-mono text-sm">src/app/contact/page.tsx</code>
-                                    </div>
-                                </li>
-                            </ol>
-                            <div className="p-6 bg-black text-white rounded-2xl border-4 border-primary">
-                                <p className="font-black uppercase text-sm mb-2">Quick Code Reference:</p>
-                                <code className="text-xs font-mono block text-left bg-primary/20 p-4 rounded-lg overflow-x-auto">
-                                    &lt;iframe<br />
-                                    &nbsp;&nbsp;src="https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?embedded=true"<br />
-                                    &nbsp;&nbsp;width="100%"<br />
-                                    &nbsp;&nbsp;height="800"<br />
-                                    &nbsp;&nbsp;frameBorder="0"<br />
-                                    &gt;<br />
-                                    &nbsp;&nbsp;Loading…<br />
-                                    &lt;/iframe&gt;
-                                </code>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 
-                        UNCOMMENT AND USE THIS AFTER YOU HAVE THE GOOGLE FORM URL:
-                        
-                        <iframe
-                            src="YOUR_GOOGLE_FORM_EMBED_URL_HERE"
-                            width="100%"
-                            height="800"
-                            frameBorder="0"
-                            marginHeight={0}
-                            marginWidth={0}
-                            className="w-full"
-                        >
-                            Loading…
-                        </iframe>
-                    */}
+                    <iframe
+                        src="https://docs.google.com/forms/d/e/1FAIpQLSdgiJ2AAn5C5gDQgMW8NHoiZ-w3tGBAvRadeef13fq2pWhowA/viewform?embedded=true"
+                        width="100%"
+                        height="800"
+                        frameBorder="0"
+                        marginHeight={0}
+                        marginWidth={0}
+                        className="w-full"
+                    >
+                        Loading…
+                    </iframe>
                 </div>
 
                 {/* Additional Contact Info */}
