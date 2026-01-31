@@ -58,7 +58,7 @@ export const LandingCarousel = () => {
 
         const interval = setInterval(() => {
             setActiveIndex((prev) => (prev + 1) % slides.length);
-        }, 12000);
+        }, 8000);
 
         return () => clearInterval(interval);
     }, [isPaused, slides.length]);
