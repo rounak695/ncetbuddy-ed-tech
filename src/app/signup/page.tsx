@@ -48,13 +48,13 @@ export default function SignupPage() {
 
                 {user ? (
                     // Already logged in
-                    <div className="space-y-4">
-                        <Link href="/dashboard">
+                    <div className="flex flex-col gap-4">
+                        <Link href="/dashboard" className="w-full">
                             <Button className="w-full bg-primary text-black hover:bg-primary/90 font-black h-14 rounded-xl shadow-md hover:shadow-lg transition-all">
                                 GO TO DASHBOARD
                             </Button>
                         </Link>
-                        <Link href="/">
+                        <Link href="/" className="w-full">
                             <Button variant="outline" className="w-full border-2 border-black font-bold h-12 rounded-xl hover:bg-gray-50 transition-all">
                                 BACK TO HOME
                             </Button>
