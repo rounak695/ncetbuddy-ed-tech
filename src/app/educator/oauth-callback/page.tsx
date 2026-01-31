@@ -61,8 +61,12 @@ export default function EducatorOAuthCallbackPage() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    credentials: 'include', // Important: send cookies
-                    body: JSON.stringify({ sessionId, codeId }),
+                    body: JSON.stringify({
+                        sessionId,
+                        codeId,
+                        userId: currentUser.$id,
+                        userEmail: currentUser.email,
+                    }),
                 });
 
                 const data = await response.json();

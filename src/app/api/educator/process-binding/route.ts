@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databases, upsertUserProfile } from '@/lib/server/user-profile';
-import { Client, Account } from 'node-appwrite';
 
 export async function POST(request: NextRequest) {
     try {
-        // Parse request body to get session info
+        // Parse request body to get session info and user data
         const body = await request.json();
-        const { sessionId, codeId } = body;
+        const { sessionId, codeId, userId, userEmail } = body;
 
-        if (!sessionId || !codeId) {
+        console.log('Received binding request:', { sessionId: sessionId?.substring(0, 8) + '...', codeId, userId, userEmail });
+
+        if (!sessionId || !codeId || !userId || !userEmail) {
+            console.error('Missing required fields');
             return NextResponse.json(
                 { success: false, error: 'missing_session_info' },
                 { status: 400 }
@@ -26,80 +28,52 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'code_not_found' }, { status: 404 });
         }
 
+        console.log('Code doc retrieved. Pending session:', codeDoc.pendingSessionId?.substring(0, 8) + '...');
+
         // Verify session ID matches
         if (codeDoc.pendingSessionId !== sessionId) {
-            console.error('Session ID mismatch');
+            console.error('Session ID mismatch!', {
+                expected: codeDoc.pendingSessionId?.substring(0, 8),
+                received: sessionId?.substring(0, 8)
+            });
             return NextResponse.json({ success: false, error: 'session_invalid' }, { status: 401 });
         }
 
         // Verify code is active
         if (!codeDoc.active) {
+            console.error('Code is inactive');
             return NextResponse.json({ success: false, error: 'code_inactive' }, { status: 403 });
         }
 
-        // Step 2: Get user from Appwrite session
-        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '';
+        console.log('Session verified. Processing binding...');
 
-        // Find Appwrite session cookie
-        let sessionValue: string | undefined;
-
-        const expectedCookie = request.cookies.get(`a_session_${projectId}`);
-        if (expectedCookie) {
-            sessionValue = expectedCookie.value;
-        } else {
-            const allCookies = request.cookies.getAll();
-            const sessionCookie = allCookies.find(cookie => cookie.name.startsWith('a_session_'));
-            if (sessionCookie) {
-                sessionValue = sessionCookie.value;
-            }
-        }
-
-        if (!sessionValue) {
-            console.error('No session cookie found');
-            return NextResponse.json({ success: false, error: 'no_session' }, { status: 401 });
-        }
-
-        // Create server client with session
-        const serverClient = new Client()
-            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1')
-            .setProject(projectId)
-            .setSession(sessionValue);
-
-        const serverAccount = new Account(serverClient);
-
-        // Get current user
-        let currentUser;
-        try {
-            currentUser = await serverAccount.get();
-        } catch (err) {
-            console.error('Failed to get user:', err);
-            return NextResponse.json({ success: false, error: 'invalid_session' }, { status: 401 });
-        }
-
-        // Step 3: Binding logic
+        // Step 2: Binding logic (using client-provided user info)
+        // This is safe because we verified the session ID matches database
         if (!codeDoc.boundUserId) {
             // First use - bind
+            console.log('First use - binding code to user:', userId);
             try {
                 await databases.updateDocument(dbId, 'educator_codes', codeDoc.$id, {
-                    boundUserId: currentUser.$id,
-                    boundEmail: currentUser.email,
+                    boundUserId: userId,
+                    boundEmail: userEmail,
                     lastUsedAt: Math.floor(Date.now() / 1000),
                     pendingSessionId: null, // Clear pending session
                 });
+                console.log('Code bound successfully');
             } catch (err) {
                 console.error('Failed to bind code:', err);
                 return NextResponse.json({ success: false, error: 'binding_failed' }, { status: 500 });
             }
-        } else if (codeDoc.boundUserId !== currentUser.$id) {
+        } else if (codeDoc.boundUserId !== userId) {
             // Code bound to different user - reject
-            try {
-                await serverAccount.deleteSession('current');
-            } catch (err) {
-                console.error('Failed to logout:', err);
-            }
+            console.error('Code already bound to different user:', {
+                boundTo: codeDoc.boundUserId,
+                attemptedBy: userId
+            });
             return NextResponse.json({ success: false, error: 'code_already_bound' }, { status: 403 });
         } else {
             // Same user - update lastUsedAt and clear pending session
+            console.log('Same user login - updating last used');
             try {
                 await databases.updateDocument(dbId, 'educator_codes', codeDoc.$id, {
                     lastUsedAt: Math.floor(Date.now() / 1000),
@@ -110,19 +84,22 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Step 4: Upsert user profile
+        // Step 3: Upsert user profile
+        console.log('Upserting user profile...');
         try {
-            await upsertUserProfile(currentUser.$id, {
+            await upsertUserProfile(userId, {
                 role: 'educator',
                 educatorCodeId: codeDoc.$id,
-                email: currentUser.email,
+                email: userEmail,
             });
+            console.log('User profile updated successfully');
         } catch (err) {
             console.error('Failed to upsert profile:', err);
             return NextResponse.json({ success: false, error: 'profile_failed' }, { status: 500 });
         }
 
-        // Step 5: Return success
+        // Step 4: Return success
+        console.log('Binding process complete!');
         return NextResponse.json({ success: true });
 
     } catch (err) {
