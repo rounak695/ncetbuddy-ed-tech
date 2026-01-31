@@ -6,7 +6,6 @@ import { account } from "@/lib/appwrite-student";
 import { useAuth } from "@/context/AuthContext";
 import { OAuthProvider } from "appwrite";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 export default function LoginPage() {
@@ -50,15 +49,17 @@ export default function LoginPage() {
                 {user ? (
                     // Already logged in - show dashboard link
                     <div className="flex flex-col gap-4">
-                        <Link href="/dashboard" className="w-full">
-                            <Button className="w-full bg-primary text-black hover:bg-white font-black h-16 rounded-2xl hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none uppercase tracking-widest">
-                                GO TO DASHBOARD
-                            </Button>
+                        <Link
+                            href="/dashboard"
+                            className="w-full text-center px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none bg-[#FFD02F]"
+                        >
+                            GO TO DASHBOARD
                         </Link>
-                        <Link href="/" className="w-full">
-                            <Button className="w-full bg-black text-white hover:bg-primary hover:text-black font-black h-16 rounded-2xl hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none uppercase tracking-widest">
-                                BACK TO HOME
-                            </Button>
+                        <Link
+                            href="/"
+                            className="w-full text-center px-8 py-4 bg-black text-white font-black uppercase tracking-widest rounded-2xl hover:bg-primary hover:text-black hover:-translate-y-1 transition-all border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none"
+                        >
+                            BACK TO HOME
                         </Link>
                     </div>
                 ) : (
