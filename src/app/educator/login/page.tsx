@@ -89,7 +89,7 @@ function EducatorLoginContent() {
             // Start OAuth with custom callback URL
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/api/educator/oauth/callback`,
+                `${window.location.origin}/educator/oauth-callback`,
                 `${window.location.origin}/educator/login?error=oauth_failed`
             );
         } catch (err) {
