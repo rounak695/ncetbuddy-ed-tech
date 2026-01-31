@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             email: session.email,
                             displayName: session.name,
                             role: 'user',
+                            premiumStatus: false,
                             createdAt: Math.floor(Date.now() / 1000)
                         }
                     );
