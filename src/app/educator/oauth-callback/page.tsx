@@ -23,12 +23,32 @@ export default function EducatorOAuthCallbackPage() {
                     return;
                 }
 
-                // Verify session exists by getting current user
+                // Wait for Appwrite session to be ready (OAuth takes time)
                 let currentUser;
-                try {
-                    currentUser = await account.get();
-                } catch (err) {
-                    console.error('Failed to get session:', err);
+                let retries = 0;
+                const maxRetries = 10; // Try for ~15 seconds total
+
+                while (retries < maxRetries) {
+                    try {
+                        currentUser = await account.get();
+                        // Success - session is ready!
+                        break;
+                    } catch (err) {
+                        // Session not ready yet, wait and retry
+                        retries++;
+                        if (retries >= maxRetries) {
+                            console.error('Failed to get session after retries:', err);
+                            setErrorMessage('no_session');
+                            setStatus('error');
+                            setTimeout(() => router.push('/educator/login?error=no_session'), 2000);
+                            return;
+                        }
+                        // Exponential backoff: 200ms, 400ms, 800ms, 1600ms, etc.
+                        await new Promise(resolve => setTimeout(resolve, 200 * Math.pow(2, retries - 1)));
+                    }
+                }
+
+                if (!currentUser) {
                     setErrorMessage('no_session');
                     setStatus('error');
                     setTimeout(() => router.push('/educator/login?error=no_session'), 2000);
