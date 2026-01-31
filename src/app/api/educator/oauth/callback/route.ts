@@ -19,19 +19,36 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(new URL('/educator/login?error=gate_invalid', request.url));
         }
 
-        // Step 2: Verify Appwrite session exists
-        // Get session from cookies
-        const sessionCookie = request.cookies.get('a_session_' + (process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || ''));
+        // Step 2: Find Appwrite session cookie
+        // After OAuth, Appwrite sets a session cookie with format: a_session_{projectId}
+        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '';
 
-        if (!sessionCookie) {
+        // Get all cookies and find the session cookie
+        let sessionValue: string | undefined;
+
+        // Try the expected cookie name first
+        const expectedCookie = request.cookies.get(`a_session_${projectId}`);
+        if (expectedCookie) {
+            sessionValue = expectedCookie.value;
+        } else {
+            // Search for any cookie starting with 'a_session_'
+            const allCookies = request.cookies.getAll();
+            const sessionCookie = allCookies.find(cookie => cookie.name.startsWith('a_session_'));
+            if (sessionCookie) {
+                sessionValue = sessionCookie.value;
+            }
+        }
+
+        if (!sessionValue) {
+            console.error('No Appwrite session cookie found');
             return NextResponse.redirect(new URL('/educator/login?error=no_session', request.url));
         }
 
         // Create server-side client with session
         const serverClient = new Client()
             .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1')
-            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '')
-            .setSession(sessionCookie.value);
+            .setProject(projectId)
+            .setSession(sessionValue);
 
         const serverAccount = new Account(serverClient);
 
