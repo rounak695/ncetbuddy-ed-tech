@@ -50,12 +50,12 @@ export default function SignupPage() {
                     // Already logged in
                     <div className="flex flex-col gap-4">
                         <Link href="/dashboard" className="w-full">
-                            <Button className="w-full bg-primary text-black hover:bg-primary/90 font-black h-14 rounded-xl shadow-md hover:shadow-lg transition-all">
+                            <Button className="w-full bg-primary text-black hover:bg-primary/90 font-black h-16 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm">
                                 GO TO DASHBOARD
                             </Button>
                         </Link>
                         <Link href="/" className="w-full">
-                            <Button variant="outline" className="w-full border-2 border-black font-bold h-12 rounded-xl hover:bg-gray-50 transition-all">
+                            <Button className="w-full bg-black text-white hover:bg-black/90 font-black h-16 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm">
                                 BACK TO HOME
                             </Button>
                         </Link>
