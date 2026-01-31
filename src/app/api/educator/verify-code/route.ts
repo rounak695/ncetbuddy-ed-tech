@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 10 * 60, // 10 minutes
+            maxAge: 30 * 60, // 30 minutes (increased for OAuth flow)
         });
 
         return cookieResponse;

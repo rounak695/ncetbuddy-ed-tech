@@ -18,7 +18,7 @@ export function generateGateToken(codeDocId: string): string {
     const payload: GateTokenPayload = {
         codeDocId,
         iat: now,
-        exp: now + (10 * 60), // 10 minutes
+        exp: now + (30 * 60), // 30 minutes (increased for OAuth flow)
     };
 
     return jwt.sign(payload, JWT_SECRET);
