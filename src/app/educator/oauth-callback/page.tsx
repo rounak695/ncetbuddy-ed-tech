@@ -12,15 +12,14 @@ export default function EducatorOAuthCallbackPage() {
     useEffect(() => {
         async function processCallback() {
             try {
-                // Get gate token from cookie
-                const gateTokenCookie = document.cookie
-                    .split('; ')
-                    .find(row => row.startsWith('edu_gate='));
+                // Get session info from localStorage
+                const sessionId = localStorage.getItem('edu_session_id');
+                const codeId = localStorage.getItem('edu_code_id');
 
-                if (!gateTokenCookie) {
-                    setErrorMessage('gate_expired');
+                if (!sessionId || !codeId) {
+                    setErrorMessage('session_missing');
                     setStatus('error');
-                    setTimeout(() => router.push('/educator/login?error=gate_expired'), 2000);
+                    setTimeout(() => router.push('/educator/login?error=session_missing'), 2000);
                     return;
                 }
 
@@ -43,11 +42,16 @@ export default function EducatorOAuthCallbackPage() {
                         'Content-Type': 'application/json',
                     },
                     credentials: 'include', // Important: send cookies
+                    body: JSON.stringify({ sessionId, codeId }),
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
+                    // Clear localStorage
+                    localStorage.removeItem('edu_session_id');
+                    localStorage.removeItem('edu_code_id');
+
                     setStatus('success');
                     // Redirect to dashboard
                     setTimeout(() => router.push('/educator/dashboard'), 1000);

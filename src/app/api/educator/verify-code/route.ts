@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databases } from '@/lib/server/user-profile';
 import { hashCode } from '@/lib/server/hash-code';
-import { generateGateToken } from '@/lib/server/gate-token';
 import { Query } from 'node-appwrite';
+import crypto from 'crypto';
 
 // Simple in-memory rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -69,21 +69,28 @@ export async function POST(request: NextRequest) {
 
         const codeDoc = response.documents[0];
 
-        // Generate gate token
-        const token = generateGateToken(codeDoc.$id);
+        // Generate random session ID (no expiry - persists until OAuth completes)
+        const sessionId = crypto.randomUUID();
 
-        // Set HttpOnly cookie
-        const cookieResponse = NextResponse.json({ ok: true });
+        // Store session ID in database
+        try {
+            await databases.updateDocument(dbId, 'educator_codes', codeDoc.$id, {
+                pendingSessionId: sessionId,
+            });
+        } catch (err) {
+            console.error('Failed to store session ID:', err);
+            return NextResponse.json(
+                { ok: false, message: 'Server error' },
+                { status: 500 }
+            );
+        }
 
-        cookieResponse.cookies.set('edu_gate', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 30 * 60, // 30 minutes (increased for OAuth flow)
+        // Return session ID to client (they'll send it back during OAuth)
+        return NextResponse.json({
+            ok: true,
+            sessionId,
+            codeId: codeDoc.$id,
         });
-
-        return cookieResponse;
 
     } catch (err) {
         console.error('Verify code error:', err);

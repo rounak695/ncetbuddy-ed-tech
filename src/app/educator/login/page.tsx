@@ -60,6 +60,9 @@ function EducatorLoginContent() {
             const data = await res.json();
 
             if (data.ok) {
+                // Store session ID and code ID in localStorage (no expiry!)
+                localStorage.setItem('edu_session_id', data.sessionId);
+                localStorage.setItem('edu_code_id', data.codeId);
                 setStep('oauth');
             } else {
                 setError(data.message || 'Verification failed');
@@ -74,10 +77,11 @@ function EducatorLoginContent() {
 
     const handleGoogleOAuth = async () => {
         try {
-            // Verify gate is still valid
-            const status = await fetch('/api/educator/gate-status').then(r => r.json());
+            // Verify session info exists
+            const sessionId = localStorage.getItem('edu_session_id');
+            const codeId = localStorage.getItem('edu_code_id');
 
-            if (!status.verified) {
+            if (!sessionId || !codeId) {
                 setError('Verification expired. Please verify your code again.');
                 setStep('code');
                 return;

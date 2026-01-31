@@ -1,25 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyGateToken } from '@/lib/server/gate-token';
 import { databases, upsertUserProfile } from '@/lib/server/user-profile';
 import { Client, Account } from 'node-appwrite';
 
 export async function POST(request: NextRequest) {
     try {
-        // Step 1: Verify gate token from cookie
-        const gateToken = request.cookies.get('edu_gate')?.value;
+        // Parse request body to get session info
+        const body = await request.json();
+        const { sessionId, codeId } = body;
 
-        if (!gateToken) {
-            return NextResponse.json({ success: false, error: 'gate_expired' }, { status: 401 });
+        if (!sessionId || !codeId) {
+            return NextResponse.json(
+                { success: false, error: 'missing_session_info' },
+                { status: 400 }
+            );
         }
 
-        const gatePayload = verifyGateToken(gateToken);
+        // Step 1: Verify session ID matches database
+        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
-        if (!gatePayload) {
-            return NextResponse.json({ success: false, error: 'gate_invalid' }, { status: 401 });
+        let codeDoc;
+        try {
+            codeDoc = await databases.getDocument(dbId, 'educator_codes', codeId);
+        } catch (err) {
+            console.error('Failed to fetch code:', err);
+            return NextResponse.json({ success: false, error: 'code_not_found' }, { status: 404 });
         }
 
-        // Step 2: Get user from client-side session
-        // The request will have cookies from the client
+        // Verify session ID matches
+        if (codeDoc.pendingSessionId !== sessionId) {
+            console.error('Session ID mismatch');
+            return NextResponse.json({ success: false, error: 'session_invalid' }, { status: 401 });
+        }
+
+        // Verify code is active
+        if (!codeDoc.active) {
+            return NextResponse.json({ success: false, error: 'code_inactive' }, { status: 403 });
+        }
+
+        // Step 2: Get user from Appwrite session
         const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '';
 
         // Find Appwrite session cookie
@@ -58,23 +76,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'invalid_session' }, { status: 401 });
         }
 
-        // Step 3: Fetch educator code
-        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
-
-        let codeDoc;
-        try {
-            codeDoc = await databases.getDocument(dbId, 'educator_codes', gatePayload.codeDocId);
-        } catch (err) {
-            console.error('Failed to fetch code:', err);
-            return NextResponse.json({ success: false, error: 'code_not_found' }, { status: 404 });
-        }
-
-        // Verify code is active
-        if (!codeDoc.active) {
-            return NextResponse.json({ success: false, error: 'code_inactive' }, { status: 403 });
-        }
-
-        // Step 4: Binding logic
+        // Step 3: Binding logic
         if (!codeDoc.boundUserId) {
             // First use - bind
             try {
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
                     boundUserId: currentUser.$id,
                     boundEmail: currentUser.email,
                     lastUsedAt: Math.floor(Date.now() / 1000),
+                    pendingSessionId: null, // Clear pending session
                 });
             } catch (err) {
                 console.error('Failed to bind code:', err);
@@ -96,17 +99,18 @@ export async function POST(request: NextRequest) {
             }
             return NextResponse.json({ success: false, error: 'code_already_bound' }, { status: 403 });
         } else {
-            // Same user - update lastUsedAt
+            // Same user - update lastUsedAt and clear pending session
             try {
                 await databases.updateDocument(dbId, 'educator_codes', codeDoc.$id, {
                     lastUsedAt: Math.floor(Date.now() / 1000),
+                    pendingSessionId: null, // Clear pending session
                 });
             } catch (err) {
                 console.error('Failed to update lastUsedAt:', err);
             }
         }
 
-        // Step 5: Upsert user profile
+        // Step 4: Upsert user profile
         try {
             await upsertUserProfile(currentUser.$id, {
                 role: 'educator',
@@ -118,11 +122,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'profile_failed' }, { status: 500 });
         }
 
-        // Step 6: Clear gate token and return success
-        const response = NextResponse.json({ success: true });
-        response.cookies.delete('edu_gate');
-
-        return response;
+        // Step 5: Return success
+        return NextResponse.json({ success: true });
 
     } catch (err) {
         console.error('Process binding error:', err);
