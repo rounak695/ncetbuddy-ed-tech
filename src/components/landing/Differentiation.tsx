@@ -12,80 +12,61 @@ export const Differentiation = () => {
                     </p>
                 </div>
 
-                <div className="max-w-5xl mx-auto mb-20">
-                    <div className="overflow-x-auto bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b-4 border-black bg-gray-50">
-                                    <th className="p-6 text-black font-black uppercase tracking-wide text-sm md:text-base w-1/3">Feature</th>
-                                    <th className="p-6 text-black font-black uppercase tracking-wide text-sm md:text-base bg-[#FFD02F]/20 border-x-4 border-black text-center w-1/3">NCET Buddy</th>
-                                    <th className="p-6 text-black font-black uppercase tracking-wide text-sm md:text-base text-center w-1/3 opacity-50">Typical Prep App</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y-2 divide-black">
-                                {[
-                                    { feature: "Built for educators", buddy: true, other: false },
-                                    { feature: "Branded exams (educator identity)", buddy: true, other: false },
-                                    { feature: "Real exam environment (NTA-like)", buddy: true, other: false },
-                                    { feature: "Proctoring & attempt control", buddy: true, other: false },
-                                    { feature: "Revenue sharing with teachers", buddy: true, other: false },
-                                    { feature: "Handles traffic spikes during exams", buddy: true, other: false },
-                                    { feature: "Used as infrastructure by other brands", buddy: true, other: false },
-                                    { feature: "Focuses on exam delivery, not just practice", buddy: true, other: false }
-                                ].map((row, index) => (
-                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-4 md:p-6 font-bold text-sm md:text-base text-black border-r-4 border-black">{row.feature}</td>
-                                        <td className="p-4 md:p-6 text-center border-r-4 border-black bg-[#FFD02F]/10">
-                                            {row.buddy ? (
-                                                <div className="w-8 h-8 rounded-full bg-black text-[#FFD02F] flex items-center justify-center mx-auto border-2 border-black">
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                            ) : (
-                                                <span className="text-red-500 font-black text-xl">❌</span>
-                                            )}
-                                        </td>
-                                        <td className="p-4 md:p-6 text-center opacity-50">
-                                            {row.other ? (
-                                                <div className="w-8 h-8 rounded-full bg-black text-[#FFD02F] flex items-center justify-center mx-auto border-2 border-black">
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                            ) : (
-                                                <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mx-auto border-2 border-gray-400">
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <div className="max-w-4xl mx-auto mb-20 space-y-8">
+                    {/* Contrast Strip 1 */}
+                    <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
+                        <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
+                            Built for educators — <span className="text-primary">not just aspirants</span>
+                        </h3>
+                        <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
+                            NCET Buddy is designed for teachers to run real examinations, not merely upload practice questions.
+                        </p>
+                        <p className="text-black/50 font-medium text-sm md:text-base italic">
+                            Unlike typical prep apps which are built primarily for student practice.
+                        </p>
+                    </div>
+
+                    {/* Contrast Strip 2 */}
+                    <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
+                        <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
+                            Your identity. <span className="text-primary">Your exam.</span>
+                        </h3>
+                        <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
+                            Every exam carries the educator’s brand, authority, and ownership — not the platform’s.
+                        </p>
+                        <p className="text-black/50 font-medium text-sm md:text-base italic">
+                            Most apps hide educators behind a generic platform identity.
+                        </p>
+                    </div>
+
+                    {/* Contrast Strip 3 */}
+                    <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
+                        <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
+                            Real exam pressure <span className="text-primary">by design</span>
+                        </h3>
+                        <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
+                            NTA-like interface, strict attempt control, and discipline-first exam flow.
+                        </p>
+                        <p className="text-black/50 font-medium text-sm md:text-base italic">
+                            Practice platforms optimise comfort, not realism.
+                        </p>
+                    </div>
+
+                    {/* Contrast Strip 4 */}
+                    <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
+                        <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
+                            Infrastructure, <span className="text-primary">not content resale</span>
+                        </h3>
+                        <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
+                            NCET Buddy provides examination infrastructure — not courses or content bundles.
+                        </p>
+                        <p className="text-black/50 font-medium text-sm md:text-base italic">
+                            Typical apps monetise content, not exam systems.
+                        </p>
                     </div>
                 </div>
 
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex flex-col gap-6">
-                        {[
-                            { label: "Designed for high-stakes exam workflows", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-                            { label: "Built to support multiple educator brands", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
-                            { label: "Engineered with exam-day reliability as the core priority", icon: "M13 10V3L4 14h7v7l9-11h-7z" }
-                        ].map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-4 p-4 border-2 border-dashed border-black/20 rounded-xl bg-white/50 hover:bg-white hover:border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
-                                <div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                                    </svg>
-                                </div>
-                                <span className="font-bold text-sm uppercase tracking-wide opacity-70">{item.label}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+
             </div>
         </section>
     );

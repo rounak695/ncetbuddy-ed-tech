@@ -58,33 +58,87 @@ export const Proctoring = () => {
             <div className="container mx-auto px-4 relative z-10">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-6xl font-black mb-6 text-black uppercase tracking-tighter italic leading-[0.9]">
-                        NTA-Grade <br />
-                        <span className="text-primary">Secure Proctoring</span>
+                        Exam Rules, <br />
+                        <span className="text-primary">Enforced by System</span>
                     </h2>
                     <p className="text-black font-bold uppercase tracking-widest text-xs opacity-60 mb-12">
-                        Strict Mode ensures discipline, fairness, and exam-hall like seriousness
+                        Once the exam starts, the system takes control. No exceptions.
                     </p>
 
-                    <div className="max-w-3xl mx-auto bg-white border-4 border-black rounded-3xl p-8 md:p-12 mb-20 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-                            {features.map((feature, index) => (
-                                <div key={index} className="flex flex-col gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-black text-primary flex items-center justify-center border-2 border-black flex-shrink-0">
-                                        {feature.icon}
+                    <div className="max-w-xl mx-auto mb-20">
+                        <div className="bg-white border-4 border-black rounded-xl p-6 md:p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center relative">
+                            {/* Header */}
+                            <h3 className="text-sm font-black uppercase tracking-widest mb-6 border-b-2 border-black/10 pb-4 inline-block">
+                                Strict Mode Status
+                            </h3>
+
+                            {/* Status Chips */}
+                            {/* Status Chips */}
+                            {/* Status Chips */}
+                            {/* Status Chips */}
+                            {/* Status Chips */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 w-full max-w-4xl mx-auto">
+                                {/* Screen Locked (Active) */}
+                                <div className="relative h-14 w-full group z-0 hover:z-50 focus-within:z-50" tabIndex={0}>
+                                    {/* Base State (Truncated) */}
+                                    <div className="absolute inset-0 w-full flex items-center justify-center gap-2 bg-black text-white px-4 rounded-lg border-2 border-black shadow-md transition-opacity duration-200 group-hover:opacity-0 group-focus:opacity-0">
+                                        <svg className="w-5 h-5 text-[#FFD02F] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        <span className="font-bold uppercase text-xs tracking-widest min-w-0 truncate">Screen Locked</span>
                                     </div>
-                                    <div>
-                                        <h3 className="text-lg font-black uppercase italic mb-2">{feature.title}</h3>
-                                        <p className="text-sm font-medium opacity-70 leading-relaxed">{feature.description}</p>
+                                    {/* Hover State (Expanded Overlay) */}
+                                    <div className="absolute left-0 top-0 h-14 min-w-full w-max max-w-[280px] flex items-center justify-center gap-2 bg-black text-white px-4 rounded-lg border-2 border-black shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-[1.03] group-hover:pointer-events-auto group-focus:opacity-100 group-focus:scale-[1.03] group-focus:pointer-events-auto transition-all duration-200 ease-out origin-center z-50">
+                                        <svg className="w-5 h-5 text-[#FFD02F] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        <span className="font-bold uppercase text-xs tracking-widest whitespace-nowrap">Screen Locked</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
 
-                        <div className="mt-12 pt-12 border-t-2 border-dashed border-gray-300">
-                            <h3 className="text-xl font-black uppercase italic mb-4">Why Strict Mode Matters</h3>
-                            <p className="text-base font-medium opacity-80 leading-relaxed max-w-2xl mx-auto">
-                                NCET Buddy’s Integrity Engine is designed to closely simulate official NTA exam environments.
-                                This reduces malpractice, builds student discipline, and gives educators confidence to conduct high-stakes mock tests online.
+                                {/* Activity Monitored (Armed) */}
+                                <div className="relative h-14 w-full group z-0 hover:z-50 focus-within:z-50" tabIndex={0}>
+                                    {/* Base State */}
+                                    <div className="absolute inset-0 w-full flex items-center justify-center gap-2 bg-white text-black px-4 rounded-lg border-2 border-black shadow-sm transition-opacity duration-200 group-hover:opacity-0 group-focus:opacity-0">
+                                        <svg className="w-5 h-5 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        <span className="font-bold uppercase text-xs tracking-widest min-w-0 truncate">Activity Monitored</span>
+                                    </div>
+                                    {/* Hover State */}
+                                    <div className="absolute left-0 top-0 h-14 min-w-full w-max max-w-[280px] flex items-center justify-center gap-2 bg-white text-black px-4 rounded-lg border-2 border-black shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-[1.03] group-hover:pointer-events-auto group-focus:opacity-100 group-focus:scale-[1.03] group-focus:pointer-events-auto transition-all duration-200 ease-out origin-center z-50">
+                                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        <span className="font-black uppercase text-xs tracking-widest whitespace-nowrap">Activity Monitored</span>
+                                    </div>
+                                </div>
+
+                                {/* Content Protected (Armed) */}
+                                <div className="relative h-14 w-full md:col-span-2 lg:col-span-1 group z-0 hover:z-50 focus-within:z-50" tabIndex={0}>
+                                    {/* Base State */}
+                                    <div className="absolute inset-0 w-full flex items-center justify-center gap-2 bg-white text-black px-4 rounded-lg border-2 border-black shadow-sm transition-opacity duration-200 group-hover:opacity-0 group-focus:opacity-0">
+                                        <svg className="w-5 h-5 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        <span className="font-bold uppercase text-xs tracking-widest min-w-0 truncate">Content Protected</span>
+                                    </div>
+                                    {/* Hover State */}
+                                    <div className="absolute right-0 top-0 h-14 min-w-full w-max max-w-[280px] flex items-center justify-center gap-2 bg-white text-black px-4 rounded-lg border-2 border-black shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-[1.03] group-hover:pointer-events-auto group-focus:opacity-100 group-focus:scale-[1.03] group-focus:pointer-events-auto transition-all duration-200 ease-out origin-right z-50">
+                                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        <span className="font-black uppercase text-xs tracking-widest whitespace-nowrap">Content Protected</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Enforcement Text */}
+                            <p className="font-bold text-sm md:text-base leading-relaxed opacity-80 max-w-lg mx-auto">
+                                Once the exam starts, <span className="text-black font-black underline decoration-2 decoration-[#FFD02F]">the system takes control</span>.
+                                Full-screen is enforced. Tab switching is logged instantly. Copy-paste and screenshots are completely disabled.
                             </p>
                         </div>
                     </div>
