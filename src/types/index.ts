@@ -6,6 +6,8 @@ export interface Question {
     correctAnswer: number;
 }
 
+export type PYQSubject = 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain';
+
 export interface Test {
     id: string;
     title: string;
@@ -17,6 +19,9 @@ export interface Test {
     createdAt: number;
     isVisible: boolean;
     status?: 'Draft' | 'Published' | 'Archived';
+    // Business model distinction
+    testType?: 'pyq' | 'educator'; // PYQ = platform-owned free content, Educator = educator-owned premium content
+    pyqSubject?: 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain'; // For PYQ categorization
 }
 
 export interface TestResult {

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { createTest } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Test, Question } from "@/types";
+import { Test, Question, PYQSubject } from "@/types";
 
 export default function CreateTestPage() {
     const { user } = useAuth();
@@ -19,7 +19,9 @@ export default function CreateTestPage() {
         description: "",
         duration: 60,
         subject: "General",
-        questions: []
+        questions: [],
+        testType: 'pyq', // Default to PYQ
+        pyqSubject: 'non-domain' // Default PYQ subject
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
         { text: "", options: ["", "", "", ""], correctAnswer: 0 }
@@ -62,7 +64,9 @@ export default function CreateTestPage() {
             duration: testData.duration || 60,
             questions: questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })),
             createdAt: Math.floor(Date.now() / 1000),
-            createdBy: user?.$id || "admin" // Fallback to "admin" if somehow null, though auth check should prevent this
+            createdBy: user?.$id || "admin",
+            testType: testData.testType || 'pyq',
+            pyqSubject: testData.testType === 'pyq' ? testData.pyqSubject : undefined
         } as any);
 
         if (testId) {
@@ -93,8 +97,56 @@ export default function CreateTestPage() {
                     value={testData.duration}
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                 />
+
+                {/* Test Type Selection */}
                 <div style={{ marginTop: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject</label>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Test Type</label>
+                    <select
+                        value={testData.testType || 'pyq'}
+                        onChange={(e) => setTestData({ ...testData, testType: e.target.value as 'pyq' | 'educator' })}
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            fontSize: "1rem"
+                        }}
+                    >
+                        <option value="pyq">PYQ (Platform-Owned, Free)</option>
+                        <option value="educator">Educator Mock Test (Premium)</option>
+                    </select>
+                </div>
+
+                {/* PYQ Subject - Only show if testType is 'pyq' */}
+                {testData.testType === 'pyq' && (
+                    <div style={{ marginTop: "1rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>PYQ Subject Category</label>
+                        <select
+                            value={testData.pyqSubject || 'non-domain'}
+                            onChange={(e) => setTestData({ ...testData, pyqSubject: e.target.value as PYQSubject })}
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "8px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-secondary)",
+                                color: "var(--text-primary)",
+                                fontSize: "1rem"
+                            }}
+                        >
+                            <option value="languages">Languages (English, Hindi, etc.)</option>
+                            <option value="humanities">Humanities (History, Geography, etc.)</option>
+                            <option value="science">Science (Physics, Chemistry, Biology)</option>
+                            <option value="commerce">Commerce (Economics, Accounts, etc.)</option>
+                            <option value="non-domain">Non-Domain (General Knowledge, Aptitude)</option>
+                        </select>
+                    </div>
+                )}
+
+                <div style={{ marginTop: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject (Optional)</label>
                     <select
                         value={testData.subject || "General"}
                         onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
