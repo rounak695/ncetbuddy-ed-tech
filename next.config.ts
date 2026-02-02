@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard/video-classes',
+        destination: '/dashboard/videos',
+        permanent: false,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

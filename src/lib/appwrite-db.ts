@@ -67,7 +67,8 @@ export const createTest = async (test: Omit<Test, "id">): Promise<string | null>
         const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), {
             ...test,
             questions: JSON.stringify(test.questions),
-            createdAt: Math.floor(Date.now() / 1000)
+            createdAt: Math.floor(Date.now() / 1000),
+            isVisible: test.isVisible !== undefined ? test.isVisible : true // Default to visible
         });
         return response.$id;
     } catch (error) {
@@ -158,6 +159,119 @@ export const getLeaderboard = async (limit: number = 10): Promise<UserProfile[]>
         return [];
     }
 };
+
+/**
+ * Get leaderboard summary for privacy-focused display
+ * Returns only the top performer (public) and current user's standing (private)
+ * 
+ * Percentile Calculation Rule:
+ * - Only includes students who have attempted at least 1 test
+ * - Percentile = (students with lower score / (total - 1)) * 100
+ * - Uses competition ranking (tied scores get same rank)
+ */
+export const getLeaderboardSummary = async (currentUserId: string): Promise<{
+    topPerformer: (UserProfile & { rank: number }) | null;
+    userStanding: {
+        rank: number;
+        totalScore: number;
+        testsAttempted: number;
+        percentile: number;
+        aheadOfPercent: number;
+        totalParticipants: number;
+    } | null;
+    totalParticipants: number;
+}> => {
+    if (!isAppwriteConfigured()) {
+        return { topPerformer: null, userStanding: null, totalParticipants: 0 };
+    }
+
+    try {
+        // 1. Fetch all users
+        const usersResponse = await databases.listDocuments(DB_ID, 'users', [
+            Query.limit(100)
+        ]);
+        const users = usersResponse.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+
+        // 2. Fetch all test results
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.limit(5000),
+            Query.select(['userId', 'score'])
+        ]);
+
+        // 3. Aggregate scores per user
+        const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
+
+        resultsResponse.documents.forEach((doc: any) => {
+            const uid = doc.userId;
+            const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
+            userStats.set(uid, {
+                totalScore: current.totalScore + (Number(doc.score) || 0),
+                testsAttempted: current.testsAttempted + 1
+            });
+        });
+
+        // 4. Build leaderboard with only users who attempted tests
+        const leaderboard = users
+            .map(user => {
+                const stats = userStats.get(user.uid);
+                if (!stats || stats.testsAttempted === 0) return null; // Exclude users with 0 attempts
+                return {
+                    ...user,
+                    totalScore: stats.totalScore,
+                    testsAttempted: stats.testsAttempted
+                };
+            })
+            .filter(Boolean) as (UserProfile & { totalScore: number; testsAttempted: number })[];
+
+        // 5. Sort by total score (descending)
+        leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+
+        const totalParticipants = leaderboard.length;
+
+        // 6. Get top performer (rank #1)
+        const topPerformer = leaderboard.length > 0
+            ? { ...leaderboard[0], rank: 1 }
+            : null;
+
+        // 7. Calculate current user's standing
+        let userStanding = null;
+        const userIndex = leaderboard.findIndex(u => u.uid === currentUserId);
+
+        if (userIndex !== -1) {
+            const userProfile = leaderboard[userIndex];
+            const rank = userIndex + 1; // 1-based rank
+
+            // Calculate percentile
+            // "Ahead of X%" = users with lower score / (total - 1) * 100
+            const usersWithLowerScore = leaderboard.filter(u => (u.totalScore || 0) < (userProfile.totalScore || 0)).length;
+
+            let aheadOfPercent = 0;
+            if (totalParticipants > 1) {
+                aheadOfPercent = Math.floor((usersWithLowerScore / (totalParticipants - 1)) * 100);
+            }
+
+            userStanding = {
+                rank,
+                totalScore: userProfile.totalScore || 0,
+                testsAttempted: userProfile.testsAttempted || 0,
+                percentile: 100 - aheadOfPercent, // Traditional percentile (higher is better)
+                aheadOfPercent, // For display: "ahead of X%"
+                totalParticipants
+            };
+        }
+
+        return {
+            topPerformer,
+            userStanding,
+            totalParticipants
+        };
+
+    } catch (error) {
+        console.error("Error fetching leaderboard summary:", error);
+        return { topPerformer: null, userStanding: null, totalParticipants: 0 };
+    }
+};
+
 
 export const getUserTestResults = async (userId: string): Promise<TestResult[]> => {
     if (!isAppwriteConfigured()) return [];
@@ -415,6 +529,24 @@ export const getEducator = async (id: string): Promise<Educator | null> => {
     } catch (error) {
         console.error("Error fetching educator:", error);
         return null;
+    }
+};
+
+export const getAllEducators = async (): Promise<Educator[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'educators', [
+            Query.orderAsc('name')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Educator[];
+    } catch (error: any) {
+        // Suppress "Collection not found" error to avoid UI toast, just return empty list
+        if (error?.code === 404 || error?.message?.includes('not found')) {
+            console.warn("Educators collection missing. Please run setup script.");
+            return [];
+        }
+        console.error("Error fetching all educators:", error);
+        return [];
     }
 };
 

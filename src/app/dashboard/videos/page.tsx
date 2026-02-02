@@ -1,170 +1,217 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { getAllEducators, getUserProfile, getFileViewUrl } from "@/lib/appwrite-db";
+import { Educator } from "@/types";
 import { Card } from "@/components/ui/Card";
-import Section from "@/components/dashboard/Section";
 import { Button } from "@/components/ui/Button";
-import { useState, useEffect } from "react";
-import { getVideoClasses } from "@/lib/appwrite-db";
-import { VideoClass } from "@/types";
+import Link from "next/link";
 
-export default function VideosPage() {
-    const [videos, setVideos] = useState<VideoClass[]>([]);
+// General Videos Data (Hardcoded as requested)
+const GENERAL_VIDEOS = [
+    {
+        id: "gen_1",
+        title: "NCET Updates & Guidance",
+        youtubeId: "-mlBgihzbg8", // Parsed from url
+        url: "https://youtu.be/-mlBgihzbg8?si=T43TUF-QZbwOPxRX",
+        duration: "10 min" // Placeholder
+    },
+    {
+        id: "gen_2",
+        title: "Important Announcements",
+        youtubeId: "f3aBbTVwIjA",
+        url: "https://youtu.be/f3aBbTVwIjA?si=LLJuVKGPu1ihTxuJ",
+        duration: "15 min"
+    },
+    {
+        id: "gen_3",
+        title: "Exam Strategy",
+        youtubeId: "w_iv_jBgmxE",
+        url: "https://youtu.be/w_iv_jBgmxE?si=XxAOvDhAEn7ToC0O",
+        duration: "12 min"
+    }
+];
+
+export default function SimpleVideosPage() {
+    const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<"General" | "Classes">("General");
+    const [educators, setEducators] = useState<Educator[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedVideo, setSelectedVideo] = useState<VideoClass | null>(null);
-    const [activeCategory, setActiveCategory] = useState("All");
-
-    const categories = ["All", "Physics", "Chemistry", "Maths", "General"];
+    const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
 
     useEffect(() => {
-        const fetchVideos = async () => {
+        const fetchEducators = async () => {
+            setLoading(true);
             try {
-                // 1. Fetch from YouTube Channel
-                const ytResponse = await fetch('/api/youtube?channelId=UCVijTMH5H7gzVPnJF8HXKhQ');
-                const ytData = await ytResponse.json();
+                const allEducators = await getAllEducators();
 
-                // 2. Fetch from Appwrite (Internal manual videos)
-                const dbData = await getVideoClasses();
+                // Highlight enrolled educator
+                if (user) {
+                    const profile = await getUserProfile(user.$id);
+                    const enrolledId = profile?.enrolledEducatorId;
 
-                // Combined data
-                const combined = Array.isArray(ytData) ? [...ytData, ...dbData] : dbData;
+                    if (enrolledId) {
+                        allEducators.sort((a, b) => {
+                            if (a.id === enrolledId) return -1;
+                            if (b.id === enrolledId) return 1;
+                            return 0; // Keep existing order (alphabetical)
+                        });
+                    }
+                }
 
-                // Remove duplicates by videoId/url
-                const uniqueVideos = combined.reduce((acc: VideoClass[], current) => {
-                    const x = acc.find(item => item.url === current.url);
-                    if (!x) return acc.concat([current]);
-                    return acc;
-                }, []);
-
-                setVideos(uniqueVideos);
+                setEducators(allEducators);
             } catch (error) {
-                console.error("Error fetching videos:", error);
+                console.error("Failed to load educators", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchVideos();
-    }, []);
 
-    const extractYouTubeVideoId = (url: string): string | null => {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
+        if (activeTab === "Classes") {
+            fetchEducators();
+        }
+    }, [activeTab, user]);
+
+    const getLogoUrl = (fileId: string) => {
+        try {
+            return getFileViewUrl('images', fileId).toString();
+        } catch {
+            return null;
+        }
     };
-
-    const filteredVideos = activeCategory === "All"
-        ? videos
-        : videos.filter(v => v.subject?.toLowerCase() === activeCategory.toLowerCase());
 
     return (
         <div className="space-y-6 md:space-y-10 animate-in fade-in duration-500 pb-20 md:pb-0">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-black uppercase tracking-tight italic">Video Classes</h1>
-                    <p className="text-sm md:text-base text-black font-bold opacity-60">Master concepts with premium video lectures</p>
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl md:text-3xl font-black text-black uppercase tracking-tight italic">Simple Videos</h1>
+                <p className="text-sm md:text-base text-black font-bold opacity-60">
+                    {activeTab === "General"
+                        ? "Updates about NCET exam & important announcements"
+                        : "Educator-specific videos by subject"}
+                </p>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-4 border-b-2 border-black/10 pb-1">
+                <button
+                    onClick={() => setActiveTab("General")}
+                    className={`pb-2 px-2 text-sm md:text-base font-black uppercase tracking-widest transition-all ${activeTab === "General"
+                        ? "border-b-4 border-primary text-black translate-y-0.5"
+                        : "text-gray-400 hover:text-black border-transparent"
+                        }`}
+                >
+                    General
+                </button>
+                <button
+                    onClick={() => setActiveTab("Classes")}
+                    className={`pb-2 px-2 text-sm md:text-base font-black uppercase tracking-widest transition-all ${activeTab === "Classes"
+                        ? "border-b-4 border-primary text-black translate-y-0.5"
+                        : "text-gray-400 hover:text-black border-transparent"
+                        }`}
+                >
+                    Classes
+                </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === "General" && (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {GENERAL_VIDEOS.map((vid) => (
+                            <div
+                                key={vid.id}
+                                className="group relative bg-white border-2 md:border-4 border-black rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] md:hover:shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] transition-all cursor-pointer transform hover:-translate-y-1 active:scale-95"
+                                onClick={() => setSelectedVideo(vid)}
+                            >
+                                <div className="aspect-video bg-black relative border-b-2 md:border-b-4 border-black">
+                                    <img
+                                        src={`https://img.youtube.com/vi/${vid.youtubeId}/hqdefault.jpg`}
+                                        alt={vid.title}
+                                        className="w-full h-full object-cover group-hover:opacity-40 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+                                        <div className="w-12 h-12 rounded-full bg-primary border-4 border-black flex items-center justify-center shadow-sm">
+                                            <div className="border-t-[8px] border-t-transparent border-l-[12px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="font-black text-black text-lg leading-tight uppercase tracking-tight line-clamp-2">{vid.title}</h3>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Categories */}
-            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-                {categories.map((cat, i) => (
-                    <button
-                        key={i}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all border-2 whitespace-nowrap ${activeCategory === cat ? 'bg-primary border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' : 'bg-white border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-primary/10'}`}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </div>
+            {activeTab === "Classes" && (
+                <div>
+                    {loading ? (
+                        <div className="flex justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-primary border-t-black rounded-full animate-spin"></div>
+                        </div>
+                    ) : educators.length === 0 ? (
+                        <div className="text-center py-20 opacity-50 font-bold uppercase tracking-widest">
+                            No educators published yet. Check back soon.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
+                            {educators.map((edu) => {
+                                const logoUrl = edu.logoFileId ? getLogoUrl(edu.logoFileId) : null;
+                                return (
+                                    <Link
+                                        href={`/dashboard/videos/classes/${edu.id}`}
+                                        key={edu.id}
+                                        className="flex flex-col items-center group"
+                                    >
+                                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl md:rounded-3xl border-2 md:border-4 border-black overflow-hidden bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group-hover:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] transition-all transform group-hover:-translate-y-1 mb-3">
+                                            {logoUrl ? (
+                                                <img src={logoUrl} alt={edu.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-primary text-2xl font-black">
+                                                    {edu.name.substring(0, 2).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="font-black text-xs md:text-sm uppercase tracking-tight leading-tight group-hover:text-primary transition-colors">{edu.name}</div>
+                                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{edu.subject}</div>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
 
-            {/* Video Player Modal */}
+            {/* Video Player Modal (Reused) */}
             {selectedVideo && (
                 <div
                     className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6"
                     onClick={() => setSelectedVideo(null)}
                 >
                     <div
-                        className="w-full max-w-5xl bg-white rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] md:shadow-[16px_16px_0px_0px_rgba(255,208,47,1)]"
+                        className="w-full max-w-5xl bg-white rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-black shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="aspect-video relative bg-black">
                             <iframe
-                                src={`https://www.youtube.com/embed/${extractYouTubeVideoId(selectedVideo.url)}?autoplay=1`}
+                                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1`}
                                 className="w-full h-full"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                             />
                         </div>
-                        <div className="p-4 md:p-8 bg-white border-t-2 md:border-t-4 border-black max-h-[40vh] overflow-y-auto">
-                            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                <div className="flex-1">
-                                    <h2 className="text-lg md:text-2xl font-black text-black mb-2 uppercase italic leading-tight">{selectedVideo.title}</h2>
-                                    <span className="inline-block px-3 py-1 bg-primary border-2 border-black text-[10px] font-black uppercase tracking-widest">{selectedVideo.duration} MINUTES</span>
-                                </div>
-                                <Button
-                                    onClick={() => setSelectedVideo(null)}
-                                    className="w-full md:w-auto bg-black text-white hover:bg-primary hover:text-black font-black uppercase tracking-widest text-xs px-6 py-3 h-auto shrink-0"
-                                >
-                                    CLOSE
-                                </Button>
-                            </div>
-                            {selectedVideo.description && (
-                                <p className="text-xs md:text-base text-black font-bold opacity-70 mt-4 leading-relaxed whitespace-pre-wrap">{selectedVideo.description}</p>
-                            )}
+                        <div className="p-4 flex justify-between items-center bg-white border-t-4 border-black">
+                            <h2 className="text-xl font-black uppercase italic">{selectedVideo.title}</h2>
+                            <Button onClick={() => setSelectedVideo(null)} className="bg-black text-white hover:bg-red-500 font-bold">CLOSE</Button>
                         </div>
                     </div>
                 </div>
             )}
-
-            <div className="space-y-6">
-                <div className="px-1 mb-4 flex justify-between items-end">
-                    <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Premium Lectures</h2>
-                </div>
-
-                {loading ? (
-                    <div className="p-12 text-center text-black font-black uppercase tracking-widest animate-pulse">Loading amazing content...</div>
-                ) : filteredVideos.length === 0 ? (
-                    <Card className="p-16 text-center border-4 border-dashed border-black bg-white rounded-3xl">
-                        <p className="text-black font-black uppercase tracking-widest">No video classes available yet.</p>
-                    </Card>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-                        {filteredVideos.map((vid) => {
-                            const videoId = extractYouTubeVideoId(vid.url);
-                            return (
-                                <div
-                                    key={vid.id}
-                                    className="group relative bg-white border-2 md:border-4 border-black rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] md:hover:shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] transition-all cursor-pointer transform hover:-translate-y-1 md:hover:-translate-y-2 active:scale-95 md:active:scale-100"
-                                    onClick={() => setSelectedVideo(vid)}
-                                >
-                                    <div className="aspect-video bg-black relative border-b-2 md:border-b-4 border-black">
-                                        <img
-                                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                                            alt={vid.title}
-                                            className="w-full h-full object-cover group-hover:opacity-40 transition-opacity"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary border-2 md:border-4 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                                <div className="border-t-[8px] md:border-t-[10px] border-t-transparent border-l-[12px] md:border-l-[16px] border-l-black border-b-[8px] md:border-b-[10px] border-b-transparent ml-1"></div>
-                                            </div>
-                                        </div>
-                                        <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 px-2 py-1 bg-black text-primary text-[8px] md:text-[10px] font-black rounded border border-black uppercase tracking-widest">
-                                            {vid.duration} MIN
-                                        </div>
-                                    </div>
-                                    <div className="p-4 md:p-6">
-                                        <h3 className="font-black text-black text-base md:text-lg leading-tight mb-2 md:mb-3 group-hover:text-primary transition-colors uppercase tracking-tight line-clamp-2">{vid.title}</h3>
-                                        <p className="text-[10px] md:text-xs text-black font-bold opacity-60 line-clamp-2 italic">
-                                            {vid.description}
-                                        </p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
         </div>
     );
 }
-

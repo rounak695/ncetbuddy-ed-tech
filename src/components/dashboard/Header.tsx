@@ -150,10 +150,10 @@ export default function Header() {
                     )}
                 </div>
 
-                <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border hover:bg-black/5 transition-colors cursor-pointer group whitespace-nowrap shadow-sm">
+                <Link href="/dashboard/live-classes" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border hover:bg-black/5 transition-colors cursor-pointer group whitespace-nowrap shadow-sm">
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                     <span className="text-sm font-bold text-secondary group-hover:text-foreground">Live Classes</span>
-                </div>
+                </Link>
 
                 <Link href="/" className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 md:px-5 md:py-2.5 rounded-xl cursor-pointer hover:bg-primary/20 transition-all justify-between md:justify-start shadow-sm whitespace-nowrap hidden lg:flex">
                     <div className="flex items-center gap-3">

@@ -1,9 +1,10 @@
 
 const { Client, Databases, Storage, ID, Permission, Role } = require('node-appwrite');
+require('dotenv').config({ path: '.env.local' });
 
 // Config
 const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
-const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_STUDENT;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -22,6 +23,8 @@ const storage = new Storage(client);
 
 async function setup() {
     console.log('--- Setting up Educator Video Schema ---');
+
+
 
     // 1. Create Educators Collection
     try {

@@ -111,8 +111,9 @@ export interface Educator {
     id: string; // Document ID
     name: string;
     subject: string;
-    logoFileId: string;
-    catalogXmlFileId: string;
+    logoFileId?: string;
+    catalogXmlFileId?: string;
+    youtubeChannelId?: string;
 }
 
 export interface VideoProgress {

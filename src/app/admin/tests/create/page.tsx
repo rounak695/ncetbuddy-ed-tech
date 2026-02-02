@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/Input";
 import { LatexRenderer } from "@/components/ui/LatexRenderer";
 import { useState } from "react";
 import { createTest } from "@/lib/appwrite-db";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Test, Question } from "@/types";
 
 export default function CreateTestPage() {
+    const { user } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [testData, setTestData] = useState<Partial<Test>>({
@@ -59,7 +61,8 @@ export default function CreateTestPage() {
             subject: testData.subject || "General",
             duration: testData.duration || 60,
             questions: questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })),
-            createdAt: Math.floor(Date.now() / 1000)
+            createdAt: Math.floor(Date.now() / 1000),
+            createdBy: user?.$id || "admin" // Fallback to "admin" if somehow null, though auth check should prevent this
         } as any);
 
         if (testId) {
@@ -213,7 +216,7 @@ export default function CreateTestPage() {
                     />
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
-                        {q.options.map((opt, oIndex) => (
+                        {q.options.map((opt: string, oIndex: number) => (
                             <div key={oIndex}>
                                 <Input
                                     label={`Option ${String.fromCharCode(65 + oIndex)}`}
