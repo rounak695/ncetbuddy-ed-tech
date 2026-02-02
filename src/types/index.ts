@@ -59,6 +59,7 @@ export interface UserProfile {
     role: 'user' | 'admin';
     premiumStatus: boolean;
     isBanned?: boolean;
+    enrolledEducatorId?: string;
     totalScore?: number;
     testsAttempted?: number;
     stats?: {
@@ -105,3 +106,21 @@ export interface VideoClass {
     thumbnailUrl?: string;
     createdAt?: string | number;  // datetime or timestamp
 }
+
+export interface Educator {
+    id: string; // Document ID
+    name: string;
+    subject: string;
+    logoFileId: string;
+    catalogXmlFileId: string;
+}
+
+export interface VideoProgress {
+    studentId: string;
+    educatorId: string;
+    videoId: string;
+    watched: boolean;
+    lastTimestamp?: number;
+    updatedAt?: number | string;
+}
+

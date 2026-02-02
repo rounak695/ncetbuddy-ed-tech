@@ -1,6 +1,6 @@
-import { databases, isAppwriteConfigured } from "./appwrite-student";
+import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -403,4 +403,88 @@ export const deleteVideoClass = async (videoId: string) => {
         console.error("Error deleting video class:", error);
         throw error;
     }
+};
+
+// --- Educator Video System (New) ---
+
+export const getEducator = async (id: string): Promise<Educator | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const doc = await databases.getDocument(DB_ID, 'educators', id);
+        return { id: doc.$id, ...doc } as unknown as Educator;
+    } catch (error) {
+        console.error("Error fetching educator:", error);
+        return null;
+    }
+};
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        // First try 'user_profiles' (preferred)
+        try {
+            const doc = await databases.getDocument(DB_ID, 'user_profiles', userId);
+            return { uid: doc.$id, ...doc } as unknown as UserProfile;
+        } catch (e) {
+            // Fallback to 'users' if legacy or not migrated
+            const doc = await databases.getDocument(DB_ID, 'users', userId);
+            return { uid: doc.$id, ...doc } as unknown as UserProfile;
+        }
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+    }
+};
+
+export const getVideoProgress = async (studentId: string, educatorId: string): Promise<VideoProgress[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'video_progress', [
+            Query.equal('studentId', studentId),
+            Query.equal('educatorId', educatorId)
+        ]);
+        return response.documents.map(doc => ({ ...doc })) as unknown as VideoProgress[];
+    } catch (error) {
+        console.error("Error fetching video progress:", error);
+        return [];
+    }
+};
+
+export const updateVideoProgress = async (studentId: string, educatorId: string, videoId: string, watched: boolean) => {
+    if (!isAppwriteConfigured()) return;
+    try {
+        // Check if exists
+        const result = await databases.listDocuments(DB_ID, 'video_progress', [
+            Query.equal('studentId', studentId),
+            Query.equal('educatorId', educatorId),
+            Query.equal('videoId', videoId)
+        ]);
+
+        const data = {
+            studentId,
+            educatorId,
+            videoId,
+            watched,
+            updatedAt: new Date().toISOString() // Using string format as Appwrite handles it
+        } as any;
+
+        if (result.documents.length > 0) {
+            // Update
+            await databases.updateDocument(DB_ID, 'video_progress', result.documents[0].$id, data);
+        } else {
+            // Create
+            await databases.createDocument(DB_ID, 'video_progress', ID.unique(), data);
+        }
+    } catch (error) {
+        console.error("Error updating video progress:", error);
+        throw error;
+    }
+};
+
+export const getFileViewUrl = (bucketId: string, fileId: string) => {
+    return storage.getFileView(bucketId, fileId);
+};
+
+export const getFileDownloadUrl = (bucketId: string, fileId: string) => {
+    return storage.getFileDownload(bucketId, fileId);
 };
