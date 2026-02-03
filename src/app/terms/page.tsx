@@ -24,7 +24,7 @@ export default function TermsAndConditions() {
             <div className="max-w-4xl mx-auto py-16 px-6">
                 {/* Page Title */}
                 <div className="mb-12">
-                    <h1 className="text-4xl font-black text-black uppercase mb-2">Terms & Conditions</h1>
+                    <h1 className="text-4xl font-black text-black uppercase mb-2">Terms and Conditions</h1>
                     <div className="h-1 w-32 bg-primary mt-4"></div>
                     <p className="mt-6 text-xs text-black/60 font-bold uppercase">Last Updated: January 2026</p>
                 </div>
