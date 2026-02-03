@@ -306,7 +306,13 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                                 <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                        src={currentQuestion.imageUrl}
+                                        src={
+                                            currentQuestion.imageUrl.startsWith('http')
+                                                ? currentQuestion.imageUrl
+                                                : currentQuestion.imageUrl.startsWith('/')
+                                                    ? currentQuestion.imageUrl
+                                                    : `/${currentQuestion.imageUrl}`
+                                        }
                                         alt="Question detailed view"
                                         style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "4px", border: "1px solid #ddd" }}
                                     />
