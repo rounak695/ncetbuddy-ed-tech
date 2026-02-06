@@ -2,6 +2,7 @@ import { LandingCarousel } from "@/components/landing/LandingCarousel";
 import { Footer } from "@/components/landing/Footer";
 import { Proctoring } from "@/components/landing/Proctoring";
 import { Differentiation } from "@/components/landing/Differentiation";
+import { Testimonials } from "@/components/landing/Testimonials";
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
       <LandingCarousel />
       <Proctoring />
       <Differentiation />
+      <Testimonials />
       <Footer />
     </main>
   );
