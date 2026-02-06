@@ -1,5 +1,4 @@
 import { LandingCarousel } from "@/components/landing/LandingCarousel";
-import { Mentors } from "@/components/landing/Mentors";
 import { Footer } from "@/components/landing/Footer";
 import { Proctoring } from "@/components/landing/Proctoring";
 import { Differentiation } from "@/components/landing/Differentiation";
@@ -10,7 +9,6 @@ export default function Home() {
       <LandingCarousel />
       <Proctoring />
       <Differentiation />
-      <Mentors />
       <Footer />
     </main>
   );
