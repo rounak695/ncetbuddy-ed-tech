@@ -30,6 +30,13 @@ const GENERAL_VIDEOS = [
         youtubeId: "w_iv_jBgmxE",
         url: "https://youtu.be/w_iv_jBgmxE?si=XxAOvDhAEn7ToC0O",
         duration: "12 min"
+    },
+    {
+        id: "manual-NnyjilWraUE",
+        title: "NCET ITEP 2026 Roadmap | Best Strategy for Every Student",
+        youtubeId: "NnyjilWraUE",
+        url: "https://youtu.be/NnyjilWraUE",
+        duration: "15 min"
     }
 ];
 
@@ -81,6 +88,10 @@ export default function SimpleVideosPage() {
         }
     };
 
+    const handleVideoSelect = (vid: any) => {
+        setSelectedVideo(vid);
+    };
+
     return (
         <div className="space-y-6 md:space-y-10 animate-in fade-in duration-500 pb-20 md:pb-0">
             {/* Header */}
@@ -123,7 +134,7 @@ export default function SimpleVideosPage() {
                             <div
                                 key={vid.id}
                                 className="group relative bg-white border-2 md:border-4 border-black rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] md:hover:shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] transition-all cursor-pointer transform hover:-translate-y-1 active:scale-95"
-                                onClick={() => setSelectedVideo(vid)}
+                                onClick={() => handleVideoSelect(vid)}
                             >
                                 <div className="aspect-video bg-black relative border-b-2 md:border-b-4 border-black">
                                     <img
