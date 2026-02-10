@@ -8,7 +8,10 @@ import { OAuthProvider } from "appwrite";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 
+import { useAnalytics } from "@/context/AnalyticsContext";
+
 export default function LoginPage() {
+    const { trackEvent } = useAnalytics();
     const [error, setError] = useState("");
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
@@ -17,6 +20,7 @@ export default function LoginPage() {
     // This prevents a back-button loop where /dashboard ← /login → /dashboard
 
     const handleGoogleLogin = () => {
+        trackEvent('login', '/login', 'method:google_init');
         try {
             account.createOAuth2Session(
                 OAuthProvider.Google,
@@ -28,7 +32,6 @@ export default function LoginPage() {
             setError("Failed to initialize Google login");
         }
     };
-
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
             <Card className="w-full max-w-md bg-card border-border p-8 shadow-2xl">

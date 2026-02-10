@@ -130,3 +130,32 @@ export interface VideoProgress {
     updatedAt?: number | string;
 }
 
+export interface UserSession {
+    $id?: string;
+    userId: string;
+    startTime: number;
+    endTime?: number;
+    duration?: number;
+    deviceInfo?: string;
+    ipAddress?: string;
+}
+
+export interface UserEvent {
+    $id?: string;
+    userId: string;
+    eventType: 'login' | 'page_visit' | 'test_start' | 'test_complete' | 'video_watch' | 'other';
+    pageName?: string;
+    metadata?: string; // JSON string
+    timestamp: number;
+}
+
+export interface UserAnalytics { // Aggregated stats for a user
+    userId: string;
+    totalTime: number; // in seconds
+    lastActive: number;
+    mostUsedFeature: string;
+    testsAttempted: number;
+    engagementLevel: 'High' | 'Medium' | 'Low';
+    sessions: number;
+}
+

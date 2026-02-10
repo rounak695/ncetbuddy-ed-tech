@@ -1,6 +1,6 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
-import { ID, Query } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress } from "@/types";
+import { ID, Query, Models } from "appwrite";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, UserEvent, UserAnalytics } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -87,7 +87,7 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
     }
 };
 
-export const saveTestResult = async (result: any) => {
+export const saveTestResult = async (result: Partial<TestResult> & { correctCount?: number, incorrectCount?: number }) => {
     try {
         // 1. Save the individual test result
         const { correctCount, incorrectCount, ...dataToSave } = result; // Omit these two fields
@@ -417,7 +417,7 @@ export const getUsers = async (): Promise<UserProfile[]> => {
     }
 };
 
-export const updateUser = async (uid: string, data: any) => {
+export const updateUser = async (uid: string, data: Partial<UserProfile>) => {
     try {
         await databases.updateDocument(DB_ID, 'users', uid, data);
     } catch (error) {
@@ -535,6 +535,23 @@ export const getEducator = async (id: string): Promise<Educator | null> => {
     }
 };
 
+// --- Analytics ---
+
+export const createUserSession = async (userId: string, deviceInfo?: string): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.createDocument(DB_ID, 'sessions', ID.unique(), {
+            userId,
+            startTime: Math.floor(Date.now() / 1000),
+            deviceInfo: deviceInfo || 'unknown'
+        });
+        return response.$id;
+    } catch (error) {
+        // console.error("Error creating session:", error); // Silent fail for analytics
+        return null;
+    }
+};
+
 export const getAllEducators = async (): Promise<Educator[]> => {
     if (!isAppwriteConfigured()) return [];
     try {
@@ -623,3 +640,149 @@ export const getFileViewUrl = (bucketId: string, fileId: string) => {
 export const getFileDownloadUrl = (bucketId: string, fileId: string) => {
     return storage.getFileDownload(bucketId, fileId);
 };
+
+export const endUserSession = async (sessionId: string) => {
+    if (!isAppwriteConfigured()) return;
+    try {
+        const endTime = Math.floor(Date.now() / 1000);
+        const session = await databases.getDocument(DB_ID, 'sessions', sessionId);
+
+        const startTime = typeof session.startTime === 'string'
+            ? parseInt(session.startTime)
+            : (session.startTime || endTime);
+
+        const duration = Math.max(0, endTime - startTime);
+
+        await databases.updateDocument(DB_ID, 'sessions', sessionId, {
+            endTime,
+            duration
+        });
+
+        await updateUserAnalytics(session.userId, {
+            lastActive: endTime,
+            totalTime: duration,
+            sessionCount: 1
+        });
+
+    } catch (error) {
+        // console.error("Error ending session:", error);
+    }
+};
+
+export const logUserEvent = async (event: Omit<UserEvent, "$id" | "timestamp">) => {
+    if (!isAppwriteConfigured()) return;
+    try {
+        await databases.createDocument(DB_ID, 'events', ID.unique(), {
+            ...event,
+            timestamp: Math.floor(Date.now() / 1000)
+        });
+
+        const updates: any = { lastActive: Math.floor(Date.now() / 1000) };
+        if (event.eventType === 'test_start') {
+            updates.testsAttempted = 1;
+        }
+        // Only update stats for significant events to reduce writes
+        if (event.eventType === 'page_visit' || event.eventType === 'test_start') {
+            await updateUserAnalytics(event.userId, updates);
+        }
+
+    } catch (error) {
+        // console.error("Error logging event:", error);
+    }
+};
+
+const extractNumber = (val: unknown): number => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') return parseFloat(val) || 0;
+    return 0;
+}
+
+const calculateEngagement = (totalTime: number, sessions: number): 'High' | 'Medium' | 'Low' => {
+    const hours = totalTime / 3600;
+    if (hours > 10 || sessions > 50) return 'High';
+    if (hours > 2 || sessions > 10) return 'Medium';
+    return 'Low';
+}
+
+const updateUserAnalytics = async (userId: string, updates: {
+    totalTime?: number,
+    lastActive?: number,
+    sessionCount?: number,
+    testsAttempted?: number
+}) => {
+    try {
+        let analyticsDoc: (Models.Document & UserAnalytics) | null = null;
+        try {
+            const response = await databases.listDocuments(DB_ID, 'user_analytics', [
+                Query.equal('userId', userId),
+                Query.limit(1)
+            ]);
+            if (response.documents.length > 0) {
+                analyticsDoc = response.documents[0] as unknown as (Models.Document & UserAnalytics);
+            }
+        } catch (e) {
+            // Ignore
+        }
+
+        if (analyticsDoc) {
+            const currentTotalTime = extractNumber(analyticsDoc.totalTime);
+            const currentSessions = extractNumber(analyticsDoc.sessions);
+            const currentTests = extractNumber(analyticsDoc.testsAttempted);
+
+            const newTotalTime = currentTotalTime + (updates.totalTime || 0);
+            const newSessions = currentSessions + (updates.sessionCount || 0);
+
+            await databases.updateDocument(DB_ID, 'user_analytics', analyticsDoc.$id, {
+                totalTime: newTotalTime,
+                lastActive: updates.lastActive || analyticsDoc.lastActive,
+                sessions: newSessions,
+                testsAttempted: currentTests + (updates.testsAttempted || 0),
+                engagementLevel: calculateEngagement(newTotalTime, newSessions)
+            });
+        } else {
+            const newTotalTime = updates.totalTime || 0;
+            const newSessions = updates.sessionCount || 0;
+
+            await databases.createDocument(DB_ID, 'user_analytics', ID.unique(), {
+                userId,
+                totalTime: newTotalTime,
+                lastActive: updates.lastActive || Math.floor(Date.now() / 1000),
+                sessions: newSessions,
+                testsAttempted: updates.testsAttempted || 0,
+                engagementLevel: calculateEngagement(newTotalTime, newSessions),
+                mostUsedFeature: 'General'
+            });
+        }
+    } catch (error) {
+        // console.error("Error updating user analytics:", error);
+    }
+}
+
+export const getAllUserAnalytics = async (): Promise<UserAnalytics[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'user_analytics', [
+            Query.orderDesc('lastActive'),
+            Query.limit(100) // Limit to 100 for now
+        ]);
+
+        const users = await databases.listDocuments(DB_ID, 'users', [Query.limit(100)]);
+        const userMap = new Map(users.documents.map(u => [u.$id, u]));
+
+        return response.documents.map(doc => {
+            // Try to merge actual user email/name if needed, or rely on a separate join in UI
+            // For now just return analytics data
+            return {
+                id: doc.$id,
+                ...doc,
+                totalTime: extractNumber(doc.totalTime),
+                lastActive: extractNumber(doc.lastActive),
+                sessions: extractNumber(doc.sessions),
+                testsAttempted: extractNumber(doc.testsAttempted)
+            };
+        }) as unknown as UserAnalytics[];
+    } catch (error) {
+        console.error("Error fetching all analytics", error);
+        return [];
+    }
+}
