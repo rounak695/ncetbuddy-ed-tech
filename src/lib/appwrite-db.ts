@@ -503,7 +503,10 @@ export const getVideoClasses = async (): Promise<VideoClass[]> => {
 
 export const createVideoClass = async (video: Omit<VideoClass, "id">) => {
     try {
-        await databases.createDocument(DB_ID, 'videos', ID.unique(), video);
+        await databases.createDocument(DB_ID, 'videos', ID.unique(), {
+            ...video,
+            createdAt: video.createdAt || Math.floor(Date.now() / 1000)
+        });
     } catch (error) {
         console.error("Error creating video class:", error);
         throw error;

@@ -139,6 +139,21 @@ const COLLECTIONS = [
             { key: 'contactEmail', type: 'email', required: true },
             { key: 'showBanner', type: 'boolean', required: true },
         ]
+    },
+    {
+        name: 'videos',
+        id: 'videos',
+        attributes: [
+            { key: 'title', type: 'string', size: 255, required: true },
+            { key: 'description', type: 'string', size: 5000, required: false },
+            { key: 'url', type: 'string', size: 1000, required: true },
+            { key: 'videoId', type: 'string', size: 255, required: true },
+            { key: 'duration', type: 'integer', required: true },
+            { key: 'subject', type: 'string', size: 100, required: false, default: 'General' },
+            { key: 'authorId', type: 'string', size: 255, required: false },
+            { key: 'thumbnailUrl', type: 'string', size: 1000, required: false },
+            { key: 'createdAt', type: 'integer', required: false },
+        ]
     }
 ];
 
