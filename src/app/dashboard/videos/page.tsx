@@ -6,7 +6,6 @@ import { getAllEducators, getUserProfile, getFileViewUrl } from "@/lib/appwrite-
 import { Educator } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-<<<<<<< HEAD
 import Link from "next/link";
 
 // General Videos Data (Hardcoded as requested)
@@ -47,26 +46,6 @@ export default function SimpleVideosPage() {
     const [educators, setEducators] = useState<Educator[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
-=======
-import { useState, useEffect } from "react";
-import { getVideoClasses } from "@/lib/appwrite-db";
-import { useAnalytics } from "@/context/AnalyticsContext";
-import { VideoClass } from "@/types";
-
-export default function VideosPage() {
-    const { trackEvent } = useAnalytics();
-    const [videos, setVideos] = useState<VideoClass[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedVideo, setSelectedVideo] = useState<VideoClass | null>(null);
-    const [activeCategory, setActiveCategory] = useState("All");
-
-    const handleVideoSelect = (video: VideoClass) => {
-        setSelectedVideo(video);
-        trackEvent('video_watch', '/dashboard/videos', `Video: ${video.title}`);
-    };
-
-    const categories = ["All", "Physics", "Chemistry", "Maths", "General"];
->>>>>>> f398069 (feat: Implement user analytics tracking and Admin Analytics Dashboard)
 
     useEffect(() => {
         const fetchEducators = async () => {
@@ -244,58 +223,6 @@ export default function VideosPage() {
                     </div>
                 </div>
             )}
-<<<<<<< HEAD
-=======
-
-            <div className="space-y-6">
-                <div className="px-1 mb-4 flex justify-between items-end">
-                    <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">Premium Lectures</h2>
-                </div>
-
-                {loading ? (
-                    <div className="p-12 text-center text-black font-black uppercase tracking-widest animate-pulse">Loading amazing content...</div>
-                ) : filteredVideos.length === 0 ? (
-                    <Card className="p-16 text-center border-4 border-dashed border-black bg-white rounded-3xl">
-                        <p className="text-black font-black uppercase tracking-widest">No video classes available yet.</p>
-                    </Card>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-                        {filteredVideos.map((vid) => {
-                            const videoId = extractYouTubeVideoId(vid.url);
-                            return (
-                                <div
-                                    key={vid.id}
-                                    className="group relative bg-white border-2 md:border-4 border-black rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] md:hover:shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] transition-all cursor-pointer transform hover:-translate-y-1 md:hover:-translate-y-2 active:scale-95 md:active:scale-100"
-                                    onClick={() => handleVideoSelect(vid)}
-                                >
-                                    <div className="aspect-video bg-black relative border-b-2 md:border-b-4 border-black">
-                                        <img
-                                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                                            alt={vid.title}
-                                            className="w-full h-full object-cover group-hover:opacity-40 transition-opacity"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary border-2 md:border-4 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                                <div className="border-t-[8px] md:border-t-[10px] border-t-transparent border-l-[12px] md:border-l-[16px] border-l-black border-b-[8px] md:border-b-[10px] border-b-transparent ml-1"></div>
-                                            </div>
-                                        </div>
-                                        <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 px-2 py-1 bg-black text-primary text-[8px] md:text-[10px] font-black rounded border border-black uppercase tracking-widest">
-                                            {vid.duration} MIN
-                                        </div>
-                                    </div>
-                                    <div className="p-4 md:p-6">
-                                        <h3 className="font-black text-black text-base md:text-lg leading-tight mb-2 md:mb-3 group-hover:text-primary transition-colors uppercase tracking-tight line-clamp-2">{vid.title}</h3>
-                                        <p className="text-[10px] md:text-xs text-black font-bold opacity-60 line-clamp-2 italic">
-                                            {vid.description}
-                                        </p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
->>>>>>> f398069 (feat: Implement user analytics tracking and Admin Analytics Dashboard)
         </div>
     );
 }

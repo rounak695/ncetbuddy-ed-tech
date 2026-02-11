@@ -783,8 +783,6 @@ export const getEducatorStats = async (educatorId: string): Promise<EducatorStat
         return { totalRevenue: 0, totalSales: 0, recentSales: [] };
     }
 };
-    }
-};
 
 export const endUserSession = async (sessionId: string) => {
     if (!isAppwriteConfigured()) return;
@@ -929,7 +927,5 @@ export const getAllUserAnalytics = async (): Promise<UserAnalytics[]> => {
     } catch (error) {
         console.error("Error fetching all analytics", error);
         return [];
-    }
-}
     }
 }
