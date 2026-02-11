@@ -7,16 +7,21 @@ import { Input } from "@/components/ui/Input";
 import { VideoClass } from "@/types";
 import { getVideoClasses, createVideoClass, deleteVideoClass } from "@/lib/appwrite-db";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function AdminVideosPage() {
+    const { user } = useAuth();
     const [videos, setVideos] = useState<VideoClass[]>([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
         url: "",
-        duration: 0
+        duration: 0,
+        subject: "General"
     });
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchVideos();
@@ -41,12 +46,20 @@ export default function AdminVideosPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        if (!user) {
+            setError("You must be logged in to add videos.");
+            return;
+        }
 
         const videoId = extractYouTubeVideoId(formData.url);
         if (!videoId) {
-            alert("Invalid YouTube URL. Please enter a valid YouTube video link.");
+            setError("Invalid YouTube URL. Please enter a valid YouTube video link.");
             return;
         }
+
+        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
         setSaving(true);
         try {
@@ -56,15 +69,21 @@ export default function AdminVideosPage() {
                 url: formData.url,
                 duration: formData.duration || 0,
                 videoId: videoId,
-                authorId: "admin"
+                subject: formData.subject,
+                authorId: user.$id,
+                thumbnailUrl: thumbnailUrl,
             });
 
-            setFormData({ title: "", description: "", url: "", duration: 0 });
+            setFormData({ title: "", description: "", url: "", duration: 0, subject: "General" });
             fetchVideos();
             alert("Video added successfully!");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error adding video:", error);
-            alert("Failed to add video.");
+            let msg = error.message || "Failed to add video. Check console for details.";
+            if (msg.includes("Attribute") || msg.includes("structure") || error.code === 400) {
+                msg += " (Hint: You may need to update your database schema. Run 'node scripts/setup-schema.js')";
+            }
+            setError(msg);
         } finally {
             setSaving(false);
         }
@@ -89,6 +108,12 @@ export default function AdminVideosPage() {
             {/* Add Video Form */}
             <Card style={{ marginBottom: "2rem", padding: "1.5rem" }}>
                 <h2 style={{ marginBottom: "1.5rem" }}>Add New Video</h2>
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <strong className="font-bold">Error: </strong>
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div style={{ display: "grid", gap: "1rem", marginBottom: "1rem" }}>
                         <Input
@@ -98,6 +123,21 @@ export default function AdminVideosPage() {
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             required
                         />
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                            <select
+                                className="w-full px-3 py-2 border rounded-md"
+                                value={formData.subject}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            >
+                                <option value="General">General</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Maths">Maths</option>
+                            </select>
+                        </div>
+
                         <Input
                             label="Duration (minutes)"
                             type="number"
@@ -147,9 +187,11 @@ export default function AdminVideosPage() {
                                 />
                                 <div style={{ flex: 1 }}>
                                     <h3 style={{ marginBottom: "0.25rem" }}>{video.title}</h3>
-                                    <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                                        {video.duration} min
-                                    </p>
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-semibold uppercase">{video.subject || 'General'}</span>
+                                        <span>•</span>
+                                        <span>{video.duration} min</span>
+                                    </div>
                                     {video.description && (
                                         <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
                                             {video.description}

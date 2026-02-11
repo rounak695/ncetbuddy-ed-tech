@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import styles from "./TestEngine.module.css";
 import { useRouter } from "next/navigation";
 import { getTestById, saveTestResult } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
-import { Test, Question } from "@/types";
+import { Test } from "@/types";
 import { LatexRenderer } from "@/components/ui/LatexRenderer";
+import { useAnalytics } from "@/context/AnalyticsContext";
 
 interface TestEngineProps {
     testId: string;
@@ -17,6 +17,7 @@ interface TestEngineProps {
 export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const router = useRouter();
     const { user } = useAuth();
+    const { trackEvent } = useAnalytics();
     const [test, setTest] = useState<Test | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -67,6 +68,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
         try {
             await saveTestResult(result);
+            trackEvent('test_complete', `/dashboard/tests/${testId}`, `Score: ${score}/${test.questions.length * 4}`);
 
             // Store answers in sessionStorage for review page
             sessionStorage.setItem(`test_answers_${testId}`, JSON.stringify(answers));
@@ -98,6 +100,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const startTest = () => {
         setHasStarted(true);
         enterFullScreen();
+        trackEvent('test_start', `/dashboard/tests/${testId}`, test?.title);
     };
 
     useEffect(() => {

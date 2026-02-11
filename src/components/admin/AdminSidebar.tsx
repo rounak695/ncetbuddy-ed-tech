@@ -9,6 +9,7 @@ export const AdminSidebar = () => {
 
     const navItems = [
         { label: "Dashboard", href: "/admin" },
+        { label: "Analytics", href: "/admin/analytics" },
         { label: "Books / Notes", href: "/admin/books" },
         { label: "Formula Cards", href: "/admin/formula-cards" },
         { label: "Video Classes", href: "/admin/videos" },

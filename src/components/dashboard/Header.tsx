@@ -155,21 +155,7 @@ export default function Header() {
                     <span className="text-sm font-bold text-secondary group-hover:text-foreground">Live Classes</span>
                 </Link>
 
-                <Link href="/" className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 md:px-5 md:py-2.5 rounded-xl cursor-pointer hover:bg-primary/20 transition-all justify-between md:justify-start shadow-sm whitespace-nowrap hidden lg:flex">
-                    <div className="flex items-center gap-3">
-                        <span className="text-lg">🎯</span>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] md:text-xs text-secondary font-bold uppercase tracking-wider hidden md:block">Daily Goal</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs md:text-sm font-bold text-foreground">0/75 Qs</span>
-                                <div className="w-12 md:w-16 h-1.5 bg-background rounded-full overflow-hidden border border-border">
-                                    <div className="w-0 h-full bg-primary rounded-full"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <span className="text-secondary text-sm ml-2 font-bold">→</span>
-                </Link>
+
             </div>
         </div>
     );

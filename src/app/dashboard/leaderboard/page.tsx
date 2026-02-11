@@ -88,7 +88,7 @@ export default function LeaderboardPage() {
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-10">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Leaderboard</h1>
                     <p className="text-sm md:text-base text-black font-bold opacity-60 mt-1 uppercase tracking-wider">
@@ -98,7 +98,7 @@ export default function LeaderboardPage() {
                 <Button
                     onClick={() => fetchLeaderboardData(false)}
                     variant="outline"
-                    className="border-2 border-black text-black hover:bg-black hover:text-white transition-all font-black text-xs uppercase tracking-widest"
+                    className="w-full sm:w-auto border-2 border-black text-black hover:bg-black hover:text-white transition-all font-black text-xs uppercase tracking-widest"
                     disabled={loading}
                 >
                     {loading ? "Syncing..." : "Refresh"}
