@@ -68,7 +68,16 @@ export async function POST(request: NextRequest) {
 
         if (!data.success) {
             console.error("Instamojo Error:", data);
-            return NextResponse.json({ error: "Failed to create payment request", details: data }, { status: 500 });
+            return NextResponse.json({
+                error: "Failed to create payment request",
+                details: data,
+                debug: {
+                    hasApiKey: !!process.env.INSTAMOJO_API_KEY,
+                    hasAuthToken: !!process.env.INSTAMOJO_AUTH_TOKEN,
+                    endpointUsed: process.env.INSTAMOJO_ENDPOINT || "default",
+                    urlAttempted: `${INSTAMOJO_ENDPOINT}payment-requests/`
+                }
+            }, { status: 500 });
         }
 
         const paymentRequest = data.payment_request;
