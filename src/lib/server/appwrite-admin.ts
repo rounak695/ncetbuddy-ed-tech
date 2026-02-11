@@ -2,7 +2,7 @@ import { Client, Databases } from 'node-appwrite';
 
 // Initialize Admin Client for STUDENT Project
 const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
+    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT_STUDENT || 'https://cloud.appwrite.io/v1')
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_STUDENT || '')
     .setKey(process.env.APPWRITE_API_KEY || '');
 

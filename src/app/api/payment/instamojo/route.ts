@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
         try {
             test = await databases.getDocument(DB_ID, 'tests', testId);
         } catch (e) {
-            return NextResponse.json({ error: "Test not found" }, { status: 404 });
+            console.error("Error fetching test details:", e); // Log the actual error
+            return NextResponse.json({ error: "Test not found", details: e }, { status: 404 });
         }
 
         if (!test.price || test.price <= 0) {
