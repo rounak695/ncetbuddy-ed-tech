@@ -43,8 +43,55 @@ export async function POST(request: NextRequest) {
         }
 
         // 3. Create Payment Request on Instamojo
+        // 3. Create Payment Request on Instamojo
         const payload = new URLSearchParams();
-        // ... (rest of payload construction)
+        payload.append('purpose', `Purchase Test: ${test.title}`);
+        payload.append('amount', test.price.toString());
+        payload.append('buyer_name', userName || 'Student');
+        payload.append('email', userEmail || '');
+        payload.append('phone', userPhone || '');
+        payload.append('redirect_url', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/callback`);
+        payload.append('send_email', 'False'); // Per user guide
+        payload.append('webhook', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/webhook`);
+        payload.append('allow_repeated_payments', 'False');
+
+        const response = await fetch(`${INSTAMOJO_ENDPOINT}payment-requests/`, {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': INSTAMOJO_API_KEY!,
+                'X-Auth-Token': INSTAMOJO_AUTH_TOKEN!,
+            },
+            body: payload
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error("Instamojo Error:", data);
+            return NextResponse.json({ error: "Failed to create payment request", details: data }, { status: 500 });
+        }
+
+        const paymentRequest = data.payment_request;
+
+        // 3. Create 'Pending' Purchase Record in Database (Admin Access)
+        try {
+            await databases.createDocument(DB_ID, 'purchases', ID.unique(), {
+                userId,
+                testId,
+                paymentRequestId: paymentRequest.id,
+                amount: test.price,
+                status: 'pending',
+                createdAt: Math.floor(Date.now() / 1000)
+            });
+        } catch (dbError) {
+            console.error("Failed to create purchase record in DB:", dbError);
+            return NextResponse.json({ error: "Database error" }, { status: 500 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            paymentUrl: `${paymentRequest.longurl}?embed=form` // Enable Light Checkout
+        });
 
     } catch (error: any) {
         console.error("Payment API Error:", error);
@@ -59,61 +106,4 @@ export async function POST(request: NextRequest) {
             stack: error.stack
         }, { status: 500 });
     }
-}
-payload.append('purpose', `Purchase Test: ${test.title}`);
-payload.append('amount', test.price.toString());
-payload.append('buyer_name', userName || 'Student');
-payload.append('email', userEmail || '');
-payload.append('phone', userPhone || '');
-payload.append('redirect_url', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/callback`);
-payload.append('send_email', 'False'); // Per user guide
-payload.append('webhook', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/webhook`);
-payload.append('allow_repeated_payments', 'False');
-
-const response = await fetch(`${INSTAMOJO_ENDPOINT}payment-requests/`, {
-    method: 'POST',
-    headers: {
-        'X-Api-Key': INSTAMOJO_API_KEY!,
-        'X-Auth-Token': INSTAMOJO_AUTH_TOKEN!,
-    },
-    body: payload
-});
-
-const data = await response.json();
-
-if (!data.success) {
-    console.error("Instamojo Error:", data);
-    return NextResponse.json({ error: "Failed to create payment request", details: data }, { status: 500 });
-}
-
-const paymentRequest = data.payment_request;
-
-// 3. Create 'Pending' Purchase Record in Database (Admin Access)
-try {
-    await databases.createDocument(DB_ID, 'purchases', ID.unique(), {
-        userId,
-        testId,
-        paymentRequestId: paymentRequest.id,
-        amount: test.price,
-        status: 'pending',
-        createdAt: Math.floor(Date.now() / 1000)
-    });
-} catch (dbError) {
-    console.error("Failed to create purchase record in DB:", dbError);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
-}
-
-return NextResponse.json({
-    success: true,
-    paymentUrl: `${paymentRequest.longurl}?embed=form` // Enable Light Checkout
-});
-
-    } catch (error: any) {
-    console.error("Payment API Error:", error);
-    return NextResponse.json({
-        error: "Internal Server Error",
-        details: error.message || error,
-        stack: error.stack
-    }, { status: 500 });
-}
 }
