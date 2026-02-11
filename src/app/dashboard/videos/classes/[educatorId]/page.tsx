@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getEducator, getFileViewUrl } from "@/lib/appwrite-db";
+import { getEducator, getFileViewUrl, getEducatorVideos } from "@/lib/appwrite-db";
 import { parseEducatorXml, EducatorCatalog } from "@/lib/xml-parser";
-import { Educator } from "@/types";
+import { Educator, EducatorVideo } from "@/types";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -16,7 +17,9 @@ export default function EducatorLibraryPage() {
     const [error, setError] = useState<string | null>(null);
     const [educator, setEducator] = useState<Educator | null>(null);
     const [catalog, setCatalog] = useState<EducatorCatalog | null>(null);
+    const [uploadedVideos, setUploadedVideos] = useState<EducatorVideo[]>([]);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
 
     useEffect(() => {
         const loadData = async () => {

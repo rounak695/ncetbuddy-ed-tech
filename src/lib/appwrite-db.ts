@@ -1,6 +1,6 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -83,6 +83,17 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
         return true;
     } catch (error) {
         console.error("Error deleting test:", error);
+        return false;
+    }
+};
+
+export const updateTest = async (testId: string, data: Partial<Test>): Promise<boolean> => {
+    try {
+        const { id, ...updateData } = data; // Remove ID from payload if present
+        await databases.updateDocument(DB_ID, 'tests', testId, updateData);
+        return true;
+    } catch (error) {
+        console.error("Error updating test:", error);
         return false;
     }
 };
@@ -619,4 +630,136 @@ export const getFileViewUrl = (bucketId: string, fileId: string) => {
 
 export const getFileDownloadUrl = (bucketId: string, fileId: string) => {
     return storage.getFileDownload(bucketId, fileId);
+};
+
+// --- Purchases (Payment) ---
+
+export const createPurchase = async (purchase: Omit<Purchase, "id" | "createdAt">): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.createDocument(DB_ID, 'purchases', ID.unique(), {
+            ...purchase,
+            createdAt: Math.floor(Date.now() / 1000)
+        });
+        return response.$id;
+    } catch (error) {
+        console.error("Error creating purchase record:", error);
+        return null;
+    }
+};
+
+export const updatePurchaseStatus = async (purchaseId: string, status: 'pending' | 'completed' | 'failed', paymentId?: string) => {
+    try {
+        const data: any = { status };
+        if (paymentId) data.paymentId = paymentId;
+
+        await databases.updateDocument(DB_ID, 'purchases', purchaseId, data);
+    } catch (error) {
+        console.error("Error updating purchase status:", error);
+        throw error;
+    }
+};
+
+export const getPurchaseByPaymentRequestId = async (paymentRequestId: string): Promise<Purchase | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('paymentRequestId', paymentRequestId),
+            Query.limit(1)
+        ]);
+        if (response.documents.length === 0) return null;
+        return { id: response.documents[0].$id, ...response.documents[0] } as unknown as Purchase;
+    } catch (error) {
+        console.error("Error fetching purchase by payment request ID:", error);
+        return null;
+    }
+};
+
+export const getUserPurchases = async (userId: string): Promise<Purchase[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.orderDesc('createdAt')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Purchase[];
+    } catch (error) {
+        console.error("Error fetching user purchases:", error);
+        return [];
+    }
+};
+
+export const hasUserPurchasedTest = async (userId: string, testId: string): Promise<boolean> => {
+    if (!isAppwriteConfigured()) return false;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.equal('testId', testId),
+            Query.equal('status', 'completed')
+        ]);
+        return response.documents.length > 0;
+    } catch (error) {
+        console.error("Error checking test purchase:", error);
+        return false;
+    }
+};
+
+// --- Educator Portal Functions ---
+
+export const getEducatorVideos = async (educatorId: string): Promise<EducatorVideo[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'educator_videos', [
+            Query.equal('educatorId', educatorId),
+            Query.orderDesc('createdAt')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as EducatorVideo[];
+    } catch (error) {
+        console.error("Error fetching educator videos:", error);
+        return [];
+    }
+};
+
+export const createEducatorVideo = async (video: Omit<EducatorVideo, "id">) => {
+    try {
+        await databases.createDocument(DB_ID, 'educator_videos', ID.unique(), video);
+    } catch (error) {
+        console.error("Error creating educator video:", error);
+        throw error;
+    }
+};
+
+export const deleteEducatorVideo = async (id: string) => {
+    try {
+        await databases.deleteDocument(DB_ID, 'educator_videos', id);
+    } catch (error) {
+        console.error("Error deleting educator video:", error);
+        throw error;
+    }
+};
+
+export const getEducatorStats = async (educatorId: string): Promise<EducatorStats> => {
+    if (!isAppwriteConfigured()) return { totalRevenue: 0, totalSales: 0, recentSales: [] };
+
+    try {
+        // Fetch ALL completed purchases (Simulating single-educator platform for MVP)
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('status', 'completed'),
+            Query.orderDesc('createdAt'),
+            Query.limit(100)
+        ]);
+
+        const purchases = response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Purchase[];
+        const totalSales = response.total;
+        const totalRevenue = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        return {
+            totalRevenue,
+            totalSales,
+            recentSales: purchases.slice(0, 5)
+        };
+    } catch (error) {
+        console.error("Error fetching educator stats:", error);
+        return { totalRevenue: 0, totalSales: 0, recentSales: [] };
+    }
 };

@@ -22,6 +22,18 @@ export interface Test {
     // Business model distinction
     testType?: 'pyq' | 'educator'; // PYQ = platform-owned free content, Educator = educator-owned premium content
     pyqSubject?: 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain'; // For PYQ categorization
+    price?: number; // Cost of the test in INR (0 for free)
+}
+
+export interface Purchase {
+    id: string;
+    userId: string;
+    testId: string;
+    paymentId?: string; // Instamojo Payment ID (available after success)
+    paymentRequestId: string; // Instamojo Payment Request ID
+    amount: number;
+    status: 'pending' | 'completed' | 'failed';
+    createdAt: number;
 }
 
 export interface TestResult {
@@ -130,3 +142,16 @@ export interface VideoProgress {
     updatedAt?: number | string;
 }
 
+export interface EducatorVideo {
+    id: string;
+    educatorId: string;
+    title: string;
+    url: string; // YouTube URL
+    createdAt: number;
+}
+
+export interface EducatorStats {
+    totalRevenue: number;
+    totalSales: number;
+    recentSales: Purchase[];
+}
