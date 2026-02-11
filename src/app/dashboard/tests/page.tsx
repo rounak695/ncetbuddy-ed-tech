@@ -160,7 +160,7 @@ function EducatorTestsList() {
 
                             <div className="mt-auto pt-4 border-t border-border">
                                 {isPurchased ? (
-                                    <Link href={`/dashboard/tests/view/${test.id}`}>
+                                    <Link href={`/dashboard/tests/${test.id}`}>
                                         <button className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-primary/90">
                                             Start Test
                                         </button>
