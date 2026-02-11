@@ -18,6 +18,8 @@ export default function LeaderboardPage() {
         testsAttempted: number;
         aheadOfPercent: number;
         totalParticipants: number;
+        mockTestPerformances?: { testId: string; title: string; score: number; obtainedAt: number }[];
+        pyqPerformance?: { totalScore: number; testsAttempted: number };
     } | null>(null);
     const [totalParticipants, setTotalParticipants] = useState(0);
     const [educator, setEducator] = useState<Educator | null>(null);
@@ -213,6 +215,70 @@ export default function LeaderboardPage() {
                     )}
                 </Card>
             </div>
+
+            {/* Test-wise Performance (Mock Tests) */}
+            {userStanding?.mockTestPerformances && userStanding.mockTestPerformances.length > 0 && (
+                <div>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="h-8 w-2 bg-black rounded-full"></div>
+                        <h2 className="text-xl font-black text-black uppercase tracking-widest italic">Mock Test Performance</h2>
+                    </div>
+                    <Card className="overflow-hidden border-4 border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b-4 border-black bg-primary">
+                                        <th className="p-4 text-sm font-black text-black uppercase tracking-wider">Test Name</th>
+                                        <th className="p-4 text-sm font-black text-black uppercase tracking-wider">Score</th>
+                                        <th className="p-4 text-sm font-black text-black uppercase tracking-wider hidden sm:table-cell">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {userStanding.mockTestPerformances.map((test, index) => (
+                                        <tr key={index} className="border-b border-black hover:bg-primary/5 transition-colors last:border-0">
+                                            <td className="p-4 text-black font-bold">
+                                                {test.title}
+                                            </td>
+                                            <td className="p-4 text-black font-black">
+                                                {test.score.toLocaleString()} XP
+                                            </td>
+                                            <td className="p-4 text-black font-medium opacity-60 hidden sm:table-cell">
+                                                {new Date(test.obtainedAt).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* PYQ Performance Summary */}
+            {userStanding?.pyqPerformance && (
+                <div>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="h-8 w-2 bg-black rounded-full"></div>
+                        <h2 className="text-xl font-black text-black uppercase tracking-widest italic">PYQ Performance</h2>
+                    </div>
+                    <Card className="p-8 border-4 border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <span className="text-sm font-black text-black uppercase tracking-widest opacity-60">Total PYQ Score</span>
+                                <p className="text-3xl font-black text-black uppercase italic">
+                                    {userStanding.pyqPerformance.totalScore.toLocaleString()} XP
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <span className="text-sm font-black text-black uppercase tracking-widest opacity-60">PYQs Attempted</span>
+                                <p className="text-3xl font-black text-black uppercase italic">
+                                    {userStanding.pyqPerformance.testsAttempted}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* Privacy Notice */}
             <div className="text-center">

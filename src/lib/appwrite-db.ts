@@ -189,6 +189,8 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         percentile: number;
         aheadOfPercent: number;
         totalParticipants: number;
+        mockTestPerformances: { testId: string; title: string; score: number; obtainedAt: number }[];
+        pyqPerformance: { totalScore: number; testsAttempted: number };
     } | null;
     totalParticipants: number;
 }> => {
@@ -206,19 +208,70 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         // 2. Fetch all test results
         const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
             Query.limit(5000),
-            Query.select(['userId', 'score'])
+            // We need createdAt to show date in test-wise performance
+            Query.select(['userId', 'score', 'testId', '$createdAt'])
         ]);
 
+        // 2.1 Fetch all tests to determine type (Mock vs PYQ) and get Titles
+        // We fetch only needed fields to optimize
+        const testsResponse = await databases.listDocuments(DB_ID, 'tests', [
+            Query.limit(1000),
+            Query.select(['$id', 'title', 'testType'])
+        ]);
+
+        const testMetadata = new Map<string, { title: string, type: 'pyq' | 'educator' | undefined }>();
+        testsResponse.documents.forEach((doc: any) => {
+            testMetadata.set(doc.$id, { title: doc.title, type: doc.testType });
+        });
+
         // 3. Aggregate scores per user
-        const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
+        interface UserStats {
+            totalScore: number;
+            testsAttempted: number; // Overall
+            mockTests: { testId: string; title: string; score: number; obtainedAt: number }[];
+            pyqTotalScore: number;
+            pyqAttempts: number;
+        }
+
+        const userStats = new Map<string, UserStats>();
 
         resultsResponse.documents.forEach((doc: any) => {
             const uid = doc.userId;
-            const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
-            userStats.set(uid, {
-                totalScore: current.totalScore + (Number(doc.score) || 0),
-                testsAttempted: current.testsAttempted + 1
-            });
+            const score = Number(doc.score) || 0;
+            const testId = doc.testId;
+            const createdAt = new Date(doc.$createdAt).getTime(); // Timestamp
+
+            const meta = testMetadata.get(testId);
+            const isPyq = meta?.type === 'pyq';
+            const testTitle = meta?.title || 'Unknown Test';
+
+            const current = userStats.get(uid) || {
+                totalScore: 0,
+                testsAttempted: 0,
+                mockTests: [],
+                pyqTotalScore: 0,
+                pyqAttempts: 0
+            };
+
+            // Update Overall
+            current.totalScore += score;
+            current.testsAttempted += 1;
+
+            // Update Specifics
+            if (isPyq) {
+                current.pyqTotalScore += score;
+                current.pyqAttempts += 1;
+            } else {
+                // Assume it's a Mock Test (educator or undefined)
+                current.mockTests.push({
+                    testId,
+                    title: testTitle,
+                    score,
+                    obtainedAt: createdAt
+                });
+            }
+
+            userStats.set(uid, current);
         });
 
         // 4. Build leaderboard with only users who attempted tests
@@ -226,13 +279,27 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
             .map(user => {
                 const stats = userStats.get(user.uid);
                 if (!stats || stats.testsAttempted === 0) return null; // Exclude users with 0 attempts
+
+                // Sort mock tests by date desc (most recent first)
+                stats.mockTests.sort((a, b) => b.obtainedAt - a.obtainedAt);
+
                 return {
                     ...user,
                     totalScore: stats.totalScore,
-                    testsAttempted: stats.testsAttempted
+                    testsAttempted: stats.testsAttempted,
+                    mockTestPerformances: stats.mockTests,
+                    pyqPerformance: {
+                        totalScore: stats.pyqTotalScore,
+                        testsAttempted: stats.pyqAttempts
+                    }
                 };
             })
-            .filter(Boolean) as (UserProfile & { totalScore: number; testsAttempted: number })[];
+            .filter(Boolean) as (UserProfile & {
+                totalScore: number;
+                testsAttempted: number;
+                mockTestPerformances: { testId: string; title: string; score: number; obtainedAt: number }[];
+                pyqPerformance: { totalScore: number; testsAttempted: number };
+            })[];
 
         // 5. Sort by total score (descending)
         leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
@@ -267,7 +334,9 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
                 testsAttempted: userProfile.testsAttempted || 0,
                 percentile: 100 - aheadOfPercent, // Traditional percentile (higher is better)
                 aheadOfPercent, // For display: "ahead of X%"
-                totalParticipants
+                totalParticipants,
+                mockTestPerformances: userProfile.mockTestPerformances,
+                pyqPerformance: userProfile.pyqPerformance
             };
         }
 
