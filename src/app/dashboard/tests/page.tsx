@@ -109,7 +109,13 @@ function EducatorTestsList() {
             if (data.success && data.paymentUrl) {
                 window.location.href = data.paymentUrl; // Redirect to Instamojo
             } else {
-                alert(data.error || "Payment initiation failed");
+                console.error("Payment Error Data:", data);
+                // TEMPORARY DEBUGGING: Show full error details in alert
+                const errorMsg = data.details
+                    ? `Error: ${data.error}\nDetails: ${typeof data.details === 'object' ? JSON.stringify(data.details, null, 2) : data.details}\nDebug: ${JSON.stringify(data.debug, null, 2)}`
+                    : (data.error || "Payment initiation failed");
+
+                alert(errorMsg);
                 setPurchasingId(null);
             }
         } catch (error) {
