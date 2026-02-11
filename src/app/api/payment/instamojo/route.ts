@@ -87,8 +87,12 @@ export async function POST(request: NextRequest) {
             paymentUrl: `${paymentRequest.longurl}?embed=form` // Enable Light Checkout
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Payment API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            error: "Internal Server Error",
+            details: error.message || error,
+            stack: error.stack
+        }, { status: 500 });
     }
 }
