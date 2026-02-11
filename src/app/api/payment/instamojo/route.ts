@@ -18,9 +18,19 @@ export async function POST(request: NextRequest) {
         let test;
         try {
             test = await databases.getDocument(DB_ID, 'tests', testId);
-        } catch (e) {
-            console.error("Error fetching test details:", e); // Log the actual error
-            return NextResponse.json({ error: "Test not found", details: e }, { status: 404 });
+        } catch (e: any) {
+            console.error("Error fetching test details:", e);
+            // TEMPORARY DEBUGGING: Return full error to client
+            return NextResponse.json({
+                error: "Test fetch failed",
+                details: e.message || e,
+                debug: {
+                    testId,
+                    dbId: DB_ID,
+                    projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_STUDENT,
+                    hasKey: !!process.env.APPWRITE_API_KEY
+                }
+            }, { status: 404 });
         }
 
         if (!test.price || test.price <= 0) {
