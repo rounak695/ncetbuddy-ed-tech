@@ -97,17 +97,14 @@ export async function POST(request: NextRequest) {
         console.error("Payment API Error:", error);
         return NextResponse.json({
             error: "Internal Server Error",
-            return NextResponse.json({
-                error: "Internal Server Error",
-                details: error.message || error,
-                debug: {
-                    hasApiKey: !!process.env.INSTAMOJO_API_KEY,
-                    hasAuthToken: !!process.env.INSTAMOJO_AUTH_TOKEN,
-                    endpointUsed: process.env.INSTAMOJO_ENDPOINT || "default",
-                    urlAttempted: `${INSTAMOJO_ENDPOINT}payment-requests/`,
-                    payloadPreview: payload.toString()
-                },
-                stack: error.stack
-            }, { status: 500 });
-        }
+            details: error.message || error,
+            debug: {
+                hasApiKey: !!process.env.INSTAMOJO_API_KEY,
+                hasAuthToken: !!process.env.INSTAMOJO_AUTH_TOKEN,
+                endpointUsed: process.env.INSTAMOJO_ENDPOINT || "default",
+                urlAttempted: `${INSTAMOJO_ENDPOINT}payment-requests/`
+            },
+            stack: error.stack
+        }, { status: 500 });
+    }
 }
