@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         payload.append('email', userEmail || '');
         payload.append('phone', userPhone || '');
         payload.append('redirect_url', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/callback`);
-        payload.append('send_email', 'True');
+        payload.append('send_email', 'False'); // Per user guide
         payload.append('webhook', `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000'}/api/payment/webhook`);
         payload.append('allow_repeated_payments', 'False');
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            paymentUrl: paymentRequest.longurl
+            paymentUrl: `${paymentRequest.longurl}?embed=form` // Enable Light Checkout
         });
 
     } catch (error) {

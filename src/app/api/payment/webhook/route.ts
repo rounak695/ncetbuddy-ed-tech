@@ -29,8 +29,11 @@ export async function POST(request: NextRequest) {
         }
 
         // 1. Verify MAC (Message Authentication Code)
-        // Sort keys alphabetically
-        const keys = Object.keys(data).filter(k => k !== 'mac').sort();
+        // Sort keys alphabetically (Case-Insensitive as per Instamojo docs)
+        const keys = Object.keys(data)
+            .filter(k => k !== 'mac')
+            .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
         const message = keys.map(k => `${data[k]}`).join('|');
 
         const generatedMac = crypto.createHmac('sha1', salt)
