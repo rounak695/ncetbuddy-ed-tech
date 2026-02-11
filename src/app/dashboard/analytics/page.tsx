@@ -1,25 +1,23 @@
 "use client";
-// Force rebuild
 
 import { Card } from "@/components/ui/Card";
-import Section from "@/components/dashboard/Section";
 import { useAuth } from "@/context/AuthContext";
-
-import { useEffect, useState, useMemo } from "react";
-import { getUserTestResults, getTestById, getUserProfile, getEducator } from "@/lib/appwrite-db";
+import { useEffect, useState } from "react";
+import { getUserTestResults, getTestById, getUserProfile, getEducator, hasCompletedAnyPurchase } from "@/lib/appwrite-db";
 import { TestResult, Test, UserProfile, Educator } from "@/types";
 import Link from "next/link";
 
 export default function AnalyticsPage() {
     const { user } = useAuth();
+    const [isPremium, setIsPremium] = useState(false);
+    const [checkingAccess, setCheckingAccess] = useState(true);
     const [results, setResults] = useState<TestResult[]>([]);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [educator, setEducator] = useState<Educator | null>(null);
 
-    // New Stats State
     const [stats, setStats] = useState({
         performanceIndex: 0,
-        seriousnessScore: 0, // tests taken
+        seriousnessScore: 0,
         educatorRank: "N/A",
         trueAccuracy: 0,
         last3Accuracy: 0
@@ -28,26 +26,32 @@ export default function AnalyticsPage() {
     const [recentPerformance, setRecentPerformance] = useState<{ title: string; score: number; total: number }[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Insights State
     const [subjectInsights, setSubjectInsights] = useState<{
         strongest: { subject: string; accuracy: number }[];
         weakest: { subject: string; accuracy: number }[];
-        allSubjects: { subject: string; accuracy: number }[]; // For trend tracking
+        allSubjects: { subject: string; accuracy: number }[];
     }>({ strongest: [], weakest: [], allSubjects: [] });
 
-    // Next Action State
     const [nextAction, setNextAction] = useState<{ title: string; subtitle: string }>({
         title: "Start Your Journey",
         subtitle: "Attempt your first mock test to unlock insights"
     });
 
     useEffect(() => {
-        const fetchAnalytics = async () => {
+        const checkPremiumAccess = async () => {
             if (!user) return;
 
             try {
+                const hasPurchased = await hasCompletedAnyPurchase(user.$id);
+                setIsPremium(hasPurchased);
+                setCheckingAccess(false);
 
-                // 1. Fetch User Data & Educator Context
+                if (!hasPurchased) {
+                    setLoading(false);
+                    return;
+                }
+
+                // Fetch full analytics only for premium users
                 const profile = await getUserProfile(user.$id);
                 setUserProfile(profile);
 
@@ -60,16 +64,10 @@ export default function AnalyticsPage() {
                     }
                 }
 
-                // 2. Fetch Results
                 const userResults = await getUserTestResults(user.$id);
                 setResults(userResults);
 
                 const totalTests = userResults.length;
-
-                // --- Calculate Metrics ---
-
-                // A. Performance Index: (Average Score % + Consistency Factor) / 2
-                // Simplified: Just Average Score % for now, but label it Performance Index
                 let globalAccuracy = 0;
                 let last3Accuracy = 0;
                 let performanceIndex = 0;
@@ -81,29 +79,23 @@ export default function AnalyticsPage() {
                     }, 0);
                     globalAccuracy = Math.round(totalPercentage / totalTests);
 
-                    // True Accuracy (Last 3 Tests)
                     const last3 = userResults.slice(0, 3);
                     const last3TotalPercentage = last3.reduce((acc, curr) => {
                         const maxScore = curr.totalQuestions * 4;
                         return acc + ((curr.score / maxScore) * 100);
                     }, 0);
                     last3Accuracy = Math.round(last3TotalPercentage / last3.length);
-
-                    // Performance Index Logic
-                    // Base it on Global Accuracy but cap/boost based on consistency?
-                    // Let's keep it simple: It's the weighted average of global (40%) and recent (60%)
                     performanceIndex = Math.round((globalAccuracy * 0.4) + (last3Accuracy * 0.6));
                 }
 
                 setStats({
                     performanceIndex: totalTests > 0 ? performanceIndex : 0,
                     seriousnessScore: totalTests,
-                    educatorRank: "N/A", // Infrastructure placeholder
+                    educatorRank: "N/A",
                     trueAccuracy: globalAccuracy,
                     last3Accuracy: last3Accuracy
                 });
 
-                // Helper for Next Action
                 if (totalTests === 0) {
                     setNextAction({
                         title: "Start Your Journey",
@@ -126,11 +118,7 @@ export default function AnalyticsPage() {
                     });
                 }
 
-                // --- Insights Calculation ---
-                // 1. Get Unique Test IDs
                 const uniqueTestIds = Array.from(new Set(userResults.map(r => r.testId)));
-
-                // 2. Fetch Test Details (specifically for Subject)
                 const testDetailsMap = new Map<string, Test>();
                 await Promise.all(uniqueTestIds.map(async (tid) => {
                     try {
@@ -141,7 +129,6 @@ export default function AnalyticsPage() {
                     }
                 }));
 
-                // 3. Aggregate Scores by Subject
                 const subjectStats = new Map<string, { totalScore: number; maxScore: number }>();
 
                 userResults.forEach(res => {
@@ -150,26 +137,20 @@ export default function AnalyticsPage() {
 
                     const current = subjectStats.get(subject) || { totalScore: 0, maxScore: 0 };
                     current.totalScore += res.score;
-                    current.maxScore += (res.totalQuestions * 4); // Assuming 4 marks per q
+                    current.maxScore += (res.totalQuestions * 4);
                     subjectStats.set(subject, current);
                 });
 
-                // 4. Calculate Accuracy per Subject
                 const subjectAccuracy = Array.from(subjectStats.entries()).map(([sub, data]) => ({
                     subject: sub,
                     accuracy: Math.round((data.totalScore / data.maxScore) * 100)
                 }));
 
-                // 5. Sort
                 subjectAccuracy.sort((a, b) => b.accuracy - a.accuracy);
 
-                // 6. Split into Strongest / Weakest
-                // If less than 3 subjects, show them in strongest.
-                // Weakest are those below 60% or just the bottom list if enough data.
-                const strongest = subjectAccuracy.slice(0, 2); // Show top 2
+                const strongest = subjectAccuracy.slice(0, 2);
                 const weakest = subjectAccuracy.length > 2 ? subjectAccuracy.slice(-2).reverse() : [];
 
-                // Adjust Next Action based on Weakest Topic if actionable
                 if (totalTests > 0 && last3Accuracy < 60 && weakest.length > 0) {
                     setNextAction({
                         title: `Revise ${weakest[0].subject}`,
@@ -179,8 +160,6 @@ export default function AnalyticsPage() {
 
                 setSubjectInsights({ strongest, weakest, allSubjects: subjectAccuracy });
 
-
-                // Prepare Graph Data
                 const recentResults = userResults.slice(0, 5);
                 const graphData = recentResults.map(res => {
                     const test = testDetailsMap.get(res.testId);
@@ -199,9 +178,98 @@ export default function AnalyticsPage() {
             }
         };
 
-        fetchAnalytics();
+        checkPremiumAccess();
     }, [user]);
 
+    // Loading State
+    if (checkingAccess || loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-black border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-xs font-black text-black uppercase tracking-widest">Loading Analytics...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Locked State (Non-Premium)
+    if (!isPremium) {
+        return (
+            <div className="space-y-10 animate-in fade-in duration-500 pb-10">
+                <div>
+                    <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Premium Analytics</h1>
+                    <p className="text-sm md:text-base text-black font-bold opacity-60 mt-1 uppercase tracking-wider">
+                        Unlock Advanced Performance Insights
+                    </p>
+                </div>
+
+                {/* Locked Premium Card */}
+                <Card className="relative p-12 md:p-16 border-4 border-black bg-gradient-to-br from-primary/20 to-white shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    {/* Lock Icon Background */}
+                    <div className="absolute top-8 right-8 text-[120px] opacity-5">🔒</div>
+
+                    <div className="relative z-10 space-y-8 text-center max-w-2xl mx-auto">
+                        <div className="inline-block p-6 bg-black rounded-3xl border-4 border-primary shadow-[4px_4px_0px_0px_rgba(255,208,47,1)]">
+                            <span className="text-6xl">📊</span>
+                        </div>
+
+                        <h2 className="text-4xl font-black text-black uppercase italic leading-tight">
+                            Premium Analytics Dashboard
+                        </h2>
+
+                        <p className="text-base md:text-lg text-black/70 font-bold leading-relaxed">
+                            Purchase any mock test to unlock your personalized performance dashboard with advanced insights, AI-powered recommendations, and detailed analytics.
+                        </p>
+
+                        {/* Feature Grid */}
+                        <div className="grid grid-cols-2 gap-4 mt-8">
+                            {[
+                                { icon: "📈", label: "Performance Tracking" },
+                                { icon: "🎯", label: "Subject Deep-Dive" },
+                                { icon: "⚡", label: "Speed Analytics" },
+                                { icon: "🧠", label: "Smart Recommendations" },
+                            ].map((feature, i) => (
+                                <div key={i} className="p-4 bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                    <div className="text-3xl mb-2">{feature.icon}</div>
+                                    <p className="text-xs font-black text-black uppercase">{feature.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <Link
+                            href="/dashboard/tests"
+                            className="inline-block mt-8 px-12 py-5 bg-black text-primary border-4 border-black rounded-2xl font-black uppercase text-lg shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all tracking-wider"
+                        >
+                            🔓 Unlock Now - Browse Tests
+                        </Link>
+
+                        <p className="text-xs text-black/40 font-bold uppercase tracking-widest">
+                            One-time purchase • Lifetime access
+                        </p>
+                    </div>
+                </Card>
+
+                {/* Teaser Preview */}
+                <div className="relative">
+                    <div className="blur-sm pointer-events-none select-none opacity-30">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[1, 2, 3, 4].map((i) => (
+                                <Card key={i} className="p-8 border-4 border-black bg-white h-40"></Card>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black text-primary px-8 py-3 rounded-xl border-4 border-primary font-black uppercase text-sm tracking-wider shadow-xl">
+                            Preview Mode - Purchase to Unlock
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Premium Analytics (Unlocked)
     const statCards = [
         { label: "Overall Performance", value: stats.performanceIndex > 0 ? `${stats.performanceIndex}/100` : "N/A", subtext: stats.performanceIndex > 0 ? "Based on accuracy & practice" : "Not enough data yet", positive: true },
         { label: "Practice Consistency", value: `${stats.seriousnessScore} / 12`, subtext: "Tests attempted", positive: true },
@@ -216,14 +284,22 @@ export default function AnalyticsPage() {
 
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-10">
-            <div>
-                <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Performance Overview</h1>
-                <p className="text-sm md:text-base text-black font-bold opacity-60 mt-1 uppercase tracking-wider">
-                    {educator ? `${educator.name} • NCET Preparation` : "Practice Mode • NCET Preparation"}
-                </p>
-                <p className="text-xs text-black/50 font-bold mt-2">
-                    This report updates after every mock test.
-                </p>
+            {/* Premium Badge */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Performance Overview</h1>
+                        <span className="px-4 py-1.5 bg-primary border-2 border-black rounded-lg text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                            ⭐ Premium
+                        </span>
+                    </div>
+                    <p className="text-sm md:text-base text-black font-bold opacity-60 uppercase tracking-wider">
+                        {educator ? `${educator.name} • NCET Preparation` : "Practice Mode • NCET Preparation"}
+                    </p>
+                    <p className="text-xs text-black/50 font-bold mt-2">
+                        This report updates after every mock test.
+                    </p>
+                </div>
             </div>
 
             {/* KPI Cards */}
@@ -272,7 +348,6 @@ export default function AnalyticsPage() {
                                             <span className="text-[10px] font-black text-black uppercase tracking-tighter truncate w-full italic" title={data.title}>
                                                 {data.title.substring(0, 15)}
                                             </span>
-                                            {/* Logic to show trend arrow based on comparison with previous index? Hard to do in map without context, purely visual for now */}
                                             <span className="text-[10px] font-bold text-black/40">
                                                 {Math.round((data.score / data.total) * 100)}%
                                             </span>

@@ -724,6 +724,23 @@ export const hasUserPurchasedTest = async (userId: string, testId: string): Prom
     }
 };
 
+// Check if user has made ANY completed purchase (for premium features)
+export const hasCompletedAnyPurchase = async (userId: string): Promise<boolean> => {
+    if (!isAppwriteConfigured()) return false;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.equal('status', 'completed'),
+            Query.limit(1)
+        ]);
+        return response.documents.length > 0;
+    } catch (error) {
+        console.error("Error checking purchases:", error);
+        return false;
+    }
+};
+
+
 // --- Educator Portal Functions ---
 
 export const getEducatorVideos = async (educatorId: string): Promise<EducatorVideo[]> => {
