@@ -7,10 +7,13 @@ import { Test, Question } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LatexRenderer } from "@/components/ui/LatexRenderer";
+import { useAuth } from "@/context/AuthContext";
+import { TestLeaderboard } from "@/components/test/TestLeaderboard";
 
 function TestReviewContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { user } = useAuth();
     const testId = searchParams.get("testId");
     const score = parseInt(searchParams.get("score") || "0");
     const totalQuestions = parseInt(searchParams.get("total") || "0");
@@ -102,6 +105,14 @@ function TestReviewContent() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+
+            {/* Leaderboard Section */}
+            <div className="max-w-5xl mx-auto px-4 py-6 md:py-8">
+                {testId && user && (
+                    <TestLeaderboard testId={testId} currentUserId={user.$id} />
+                )}
             </div>
 
             {/* Questions Review */}
@@ -226,7 +237,7 @@ function TestReviewContent() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 

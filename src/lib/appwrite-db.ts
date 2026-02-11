@@ -786,3 +786,116 @@ export const getAllUserAnalytics = async (): Promise<UserAnalytics[]> => {
         return [];
     }
 }
+
+export interface TestLeaderboardEntry {
+    rank: number;
+    userId: string;
+    userName: string;
+    score: number;
+    completedAt: number;
+    isCurrentUser: boolean;
+    accuracy: number;
+    timeTaken: number; // in seconds
+}
+
+export const getTestLeaderboard = async (testId: string, currentUserId?: string): Promise<{ leaderboard: TestLeaderboardEntry[], userRank: TestLeaderboardEntry | null }> => {
+    if (!isAppwriteConfigured()) return { leaderboard: [], userRank: null };
+    try {
+        // 1. Fetch all test results for this test
+        // We order by score descending
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.equal('testId', testId),
+            Query.orderDesc('score'),
+            Query.limit(5000) // Adjust limit as needed
+        ]);
+
+        if (resultsResponse.documents.length === 0) {
+            return { leaderboard: [], userRank: null };
+        }
+
+        // 2. Deduplicate users - keep highest score
+        const userBestResults = new Map<string, any>();
+        resultsResponse.documents.forEach((doc: any) => {
+            const existing = userBestResults.get(doc.userId);
+            if (!existing || doc.score > existing.score) {
+                userBestResults.set(doc.userId, doc);
+            }
+            // Tie-breaking: if scores equal, maybe use earlier completion?
+            // For now, simplistic overwrite if score is higher, or if equal (later in list means earlier date? No, depends on sort order)
+            // If we sort by score DESC, we still need secondary sort.
+            // Let's assume the first one we see is the best if we sorted by score DESC.
+            // But if multiple attempts have same score, which one to keep?
+            // Usually the one with less time or earlier date.
+            // The DB query sorted by score. If we want second level sort, it's safer to do in memory.
+        });
+
+        // Convert map to array
+        let sortedResults = Array.from(userBestResults.values());
+
+        // 3. Sort in memory for precise ranking (Score DESC, Duration/Time ASC)
+        // Note: We don't have 'duration' explicitly in TestResult type in this file yet (it has completedAt).
+        // If we don't have start time, we can't calculate duration from result alone unless result has 'duration' or 'timeTaken'.
+        // TestResult in types/index.ts doesn't have duration.
+        // We will just sort by score DESC.
+        sortedResults.sort((a, b) => b.score - a.score);
+
+        // 4. Fetch User details
+        // Collect user IDs
+        const userIds = sortedResults.map(r => r.userId);
+
+        // Fetch users in batches or using contains
+        // Appwrite limit is usually 100 per request.
+        // If many users, this loop might be needed.
+        // For efficiency, let's just fetch all users if list is small, or use `getUsers` helper logic.
+        // Assuming we have a helper or can just list users.
+
+        // Let's try to fetch all users (up to reasonable limit) to map names.
+        // Or better: fetch only needed users if count is small.
+        let userMap = new Map<string, string>();
+
+        // Chunk userIds into batches of 100 for queries
+        const chunkSize = 50; // slightly conservative
+        for (let i = 0; i < userIds.length; i += chunkSize) {
+            const chunk = userIds.slice(i, i + chunkSize);
+            if (chunk.length === 0) continue;
+
+            try {
+                const usersResponse = await databases.listDocuments(DB_ID, 'users', [
+                    Query.equal('$id', chunk)
+                ]);
+                usersResponse.documents.forEach((u: any) => {
+                    userMap.set(u.$id, u.name || u.displayName || 'Anonymous');
+                });
+            } catch (e) {
+                console.error("Error fetching users batch:", e);
+                // Fallback: try to fetch individual if batch fails? Or just continue.
+            }
+        }
+
+        // If map is empty (maybe permissions issue or query not supported), we might have fallback names
+
+        // 5. Build Leaderboard Entries
+        const leaderboard: TestLeaderboardEntry[] = sortedResults.map((doc, index) => {
+            // Calculate additional stats if needed
+            return {
+                rank: index + 1,
+                userId: doc.userId,
+                userName: userMap.get(doc.userId) || 'Unknown User',
+                score: doc.score,
+                completedAt: doc.completedAt,
+                isCurrentUser: doc.userId === currentUserId,
+                accuracy: doc.totalQuestions > 0 ? (doc.score / (doc.totalQuestions * 4)) * 100 : 0, // approximation
+                timeTaken: 0 // placeholder
+            };
+        });
+
+        // 6. Find current user's rank
+        const userRank = leaderboard.find(e => e.userId === currentUserId) || null;
+
+        return { leaderboard, userRank };
+
+    } catch (error) {
+        console.error("Error fetching test leaderboard:", error);
+        return { leaderboard: [], userRank: null };
+    }
+};
