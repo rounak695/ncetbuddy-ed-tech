@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useRef } from "react";
-import { getNotifications } from "@/lib/appwrite-db";
+import { getNotifications, getDailyProgress, updateStreakAndDaily, setUserDailyGoal } from "@/lib/appwrite-db";
 import { Notification } from "@/types";
 
 export default function Header() {
@@ -9,6 +9,8 @@ export default function Header() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [streakData, setStreakData] = useState({ streak: 0, dailyProgress: 0, dailyGoalTarget: 5 });
+    const [isEditingGoal, setIsEditingGoal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Helper to get read IDs from local storage
@@ -35,6 +37,26 @@ export default function Header() {
         };
         fetchNotifications();
     }, []);
+
+    useEffect(() => {
+        const fetchStreak = async () => {
+            if (!user?.$id) return;
+            try {
+                await updateStreakAndDaily(user.$id);
+                const data = await getDailyProgress(user.$id);
+                if (data) {
+                    setStreakData({
+                        streak: data.streak,
+                        dailyProgress: data.dailyProgress,
+                        dailyGoalTarget: data.dailyGoalTarget
+                    });
+                }
+            } catch (e) {
+                console.error("Streak fetch error", e);
+            }
+        };
+        if (user) fetchStreak();
+    }, [user]);
 
     const handleMarkAllAsRead = () => {
         if (notifications.length === 0) return;
@@ -67,6 +89,18 @@ export default function Header() {
         };
     }, []);
 
+    const handleUpdateGoal = async (newTarget: number) => {
+        if (!user?.$id) return;
+        try {
+            if (newTarget < 1) newTarget = 1;
+            setStreakData(prev => ({ ...prev, dailyGoalTarget: newTarget })); // UI Optimistic Update
+            await setUserDailyGoal(user.$id, newTarget, `Solve ${newTarget} Questions`);
+            setIsEditingGoal(false);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8 relative z-30">
             <div className="flex items-center gap-3 md:gap-4">
@@ -87,6 +121,75 @@ export default function Header() {
             </div>
 
             <div className="flex items-center gap-3 md:gap-4">
+                {/* Streak Widget */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white font-black transform hover:scale-105 transition-transform cursor-pointer group relative">
+                    <span className="text-lg animate-pulse group-hover:scale-125 transition-transform">🔥</span>
+                    <span className="text-sm md:text-base">{streakData.streak}</span>
+
+                    {/* Hover Tooltip for Daily Goal */}
+                    <div className="absolute top-full right-0 mt-4 w-48 bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-50 invisible group-hover:visible translate-y-2 group-hover:translate-y-0 duration-200">
+                        <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-left text-black">
+                                Daily Goal
+                            </h4>
+                            {!isEditingGoal ? (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditingGoal(true);
+                                    }}
+                                    className="text-[10px] text-blue-500 hover:text-blue-700 font-bold uppercase transition-colors"
+                                >
+                                    Edit
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditingGoal(false);
+                                    }}
+                                    className="text-[10px] text-gray-400 hover:text-gray-600 font-bold uppercase transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                        </div>
+
+                        {isEditingGoal ? (
+                            <div className="mb-2">
+                                <label className="text-[10px] font-bold text-gray-500 block mb-1">Target Questions:</label>
+                                <input
+                                    type="number"
+                                    className="w-full border-2 border-black rounded px-2 py-1 text-xs font-bold text-black"
+                                    defaultValue={streakData.dailyGoalTarget}
+                                    onBlur={(e) => handleUpdateGoal(Number(e.target.value))}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateGoal(Number(e.currentTarget.value))}
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex justify-between text-xs font-bold mb-1 text-black">
+                                    <span>Progress</span>
+                                    <span>{streakData.dailyProgress}/{streakData.dailyGoalTarget}</span>
+                                </div>
+                                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden border border-black/10">
+                                    <div
+                                        className="h-full bg-orange-500 transition-all duration-500"
+                                        style={{ width: `${Math.min(100, (streakData.dailyProgress / streakData.dailyGoalTarget) * 100)}%` }}
+                                    ></div>
+                                </div>
+                                {streakData.dailyProgress >= streakData.dailyGoalTarget ? (
+                                    <p className="text-[10px] font-bold text-green-600 mt-2 text-center uppercase animate-pulse">🎉 Goal Reached!</p>
+                                ) : (
+                                    <p className="text-[10px] font-bold text-gray-400 mt-2 text-center">Keep going!</p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
                 {/* Notification Bell */}
                 <div className="relative" ref={dropdownRef}>
                     <button

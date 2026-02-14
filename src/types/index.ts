@@ -144,6 +144,11 @@ export interface UserProfile {
         booksViewed: number;
         streak: number;
     };
+    streak?: number;
+    lastActiveDate?: string; // YYYY-MM-DD
+    dailyGoal?: string;
+    dailyProgress?: number;
+    dailyGoalTarget?: number;
     createdAt?: number;
 }
 

@@ -148,6 +148,15 @@ export const saveTestResult = async (result: Partial<TestResult> & { correctCoun
 
         // Note: We are no longer updating the 'users' collection here because the 
         // derived stats are calculated dynamically.
+
+        // Update Daily Streak & Progress
+        if (dataToSave.userId) {
+            // We use totalQuestions as the metric for daily progress (questions solved)
+            const questionsAttempted = dataToSave.totalQuestions || 0;
+            // Actually saveTestResult is called after test completion.
+            await updateStreakAndDaily(dataToSave.userId, questionsAttempted);
+        }
+
     } catch (error) {
         console.error("Error saving test result:", error);
         throw error;
@@ -1465,3 +1474,76 @@ export const getAllTestResults = async (): Promise<TestResult[]> => {
     }
 };
 
+// --- Streak & Daily Goal ---
+
+export const getDailyProgress = async (userId: string): Promise<{ streak: number; lastActiveDate: string; dailyGoal: string; dailyProgress: number; dailyGoalTarget: number }> => {
+    if (!isAppwriteConfigured()) return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
+    try {
+        const user = await getUserProfile(userId);
+        if (!user) return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
+
+        return {
+            streak: user.streak || 0,
+            lastActiveDate: user.lastActiveDate || '',
+            dailyGoal: user.dailyGoal || 'Solve 5 Questions',
+            dailyProgress: user.dailyProgress || 0,
+            dailyGoalTarget: user.dailyGoalTarget || 5
+        };
+    } catch (error) {
+        console.error("Error fetching daily progress:", error);
+        return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
+    }
+};
+
+export const updateStreakAndDaily = async (userId: string, progressIncrement: number = 0) => {
+    if (!isAppwriteConfigured()) return;
+    try {
+        const user = await getUserProfile(userId);
+        if (!user) return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const lastActive = user.lastActiveDate;
+
+        let streak = user.streak || 0;
+        let dailyProgress = user.dailyProgress || 0;
+
+        // If logic runs on a new day
+        if (lastActive !== today) {
+            dailyProgress = 0; // Reset progress
+
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            if (lastActive === yesterdayStr) {
+                streak += 1;
+            } else {
+                streak = 1; // Reset or start new
+            }
+        }
+
+        dailyProgress += progressIncrement;
+
+        await updateUser(userId, {
+            streak,
+            lastActiveDate: today,
+            dailyProgress
+        });
+
+        return { streak, dailyProgress };
+    } catch (error) {
+        console.error("Error updating streak/daily:", error);
+    }
+};
+
+export const setUserDailyGoal = async (userId: string, target: number, goalText: string) => {
+    if (!isAppwriteConfigured()) return;
+    try {
+        await updateUser(userId, {
+            dailyGoal: goalText,
+            dailyGoalTarget: target
+        });
+    } catch (error) {
+        console.error("Error setting daily goal:", error);
+    }
+};

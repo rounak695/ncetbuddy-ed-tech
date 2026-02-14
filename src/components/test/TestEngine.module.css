@@ -375,6 +375,7 @@
     justify-content: center;
     font-weight: bold;
 }
+
 /* Hamburger Menu Button */
 .hamburgerBtn {
     display: none;
@@ -404,7 +405,7 @@
     .hamburgerBtn {
         display: flex;
     }
-    
+
     .sidebar {
         position: absolute;
         right: 0;

@@ -483,7 +483,7 @@ function TestReviewContent() {
                         return (
                             <Card
                                 key={index}
-                                className={`p-4 md:p-6 border-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] ${!isAttempted
+                                className={`p-4 md:p-6 border-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${!isAttempted
                                     ? "border-gray-400 bg-gray-50"
                                     : isCorrect
                                         ? "border-green-500 bg-green-50"
