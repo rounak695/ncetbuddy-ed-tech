@@ -1,157 +1,215 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
-import { getTestById } from "@/lib/appwrite-db";
-import { Test } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { getTestPerformanceSummary } from "@/lib/appwrite-db";
+import { TestPerformanceSummary } from "@/types";
 
-function TestResultContent() {
+function formatTime(seconds: number): string {
+    if (!seconds || seconds <= 0) return '—';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
+function getGrade(percentage: number): { grade: string; label: string; color: string; emoji: string } {
+    if (percentage >= 90) return { grade: 'A+', label: 'Outstanding!', color: '#10B981', emoji: '🏆' };
+    if (percentage >= 80) return { grade: 'A', label: 'Excellent', color: '#059669', emoji: '🌟' };
+    if (percentage >= 70) return { grade: 'B+', label: 'Very Good', color: '#3B82F6', emoji: '💪' };
+    if (percentage >= 60) return { grade: 'B', label: 'Good', color: '#2563EB', emoji: '👍' };
+    if (percentage >= 50) return { grade: 'C+', label: 'Above Average', color: '#F59E0B', emoji: '📈' };
+    if (percentage >= 40) return { grade: 'C', label: 'Average', color: '#D97706', emoji: '🎯' };
+    if (percentage >= 30) return { grade: 'D', label: 'Below Average', color: '#EF4444', emoji: '📚' };
+    return { grade: 'F', label: 'Needs Improvement', color: '#DC2626', emoji: '🔄' };
+}
+
+function ResultContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user } = useAuth();
 
+    const testId = searchParams.get("testId") || "";
     const score = parseInt(searchParams.get("score") || "0");
     const total = parseInt(searchParams.get("total") || "0");
-    const correct = parseInt(searchParams.get("correct") || "0");
-    const incorrect = parseInt(searchParams.get("incorrect") || "0");
-    const testId = searchParams.get("testId");
+    const maxScore = total * 4;
+    const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    const gradeInfo = getGrade(percentage);
 
-    const [test, setTest] = useState<Test | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [performance, setPerformance] = useState<TestPerformanceSummary | null>(null);
+    const [animatedPercentage, setAnimatedPercentage] = useState(0);
+    const [showContent, setShowContent] = useState(false);
 
     useEffect(() => {
-        const fetchTestDetails = async () => {
-            if (testId) {
-                const data = await getTestById(testId);
-                setTest(data);
+        // Entrance animation
+        const timer = setTimeout(() => setShowContent(true), 300);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        // Animate percentage counter
+        if (!showContent) return;
+        let current = 0;
+        const step = Math.max(1, Math.floor(percentage / 40));
+        const interval = setInterval(() => {
+            current += step;
+            if (current >= percentage) {
+                current = percentage;
+                clearInterval(interval);
             }
-            setLoading(false);
-        };
-        fetchTestDetails();
-    }, [testId]);
+            setAnimatedPercentage(current);
+        }, 30);
+        return () => clearInterval(interval);
+    }, [percentage, showContent]);
 
-    const maxScore = total * 4;
-    const percentage = Math.round((correct / total) * 100) || 0;
+    useEffect(() => {
+        if (!testId || !user) return;
+        getTestPerformanceSummary(testId, user.$id).then(data => {
+            if (data) setPerformance(data);
+        });
+    }, [testId, user]);
 
-    let grade = "C";
-    if (percentage >= 90) grade = "A+";
-    else if (percentage >= 80) grade = "A";
-    else if (percentage >= 70) grade = "B";
-    else if (percentage >= 60) grade = "C";
-    else if (percentage >= 40) grade = "D";
-    else grade = "F";
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    // Circular progress SVG values
+    const radius = 80;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (animatedPercentage / 100) * circumference;
 
     return (
-        <div className="space-y-10 max-w-4xl mx-auto py-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
-            <div className="text-center">
-                <h1 className="text-5xl font-black text-black mb-2 uppercase italic tracking-tighter">Performance Analysis</h1>
-                <p className="text-black font-bold opacity-60 uppercase tracking-widest text-xs">Summary of your mock test attempt</p>
-            </div>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className={`max-w-lg w-full space-y-6 transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Score Card */}
-                <Card className="flex flex-col items-center justify-center p-10 bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] rounded-3xl relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-                    <span className="text-black text-xs font-black mb-4 uppercase tracking-widest opacity-50">Score Obtained</span>
-                    <div className="text-6xl font-black text-black mb-4">
-                        {score}<span className="text-2xl opacity-30">/{maxScore}</span>
+                {/* Main Result Card */}
+                <Card className="p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white text-center relative overflow-hidden">
+
+                    {/* Background decoration */}
+                    <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-yellow-300 to-primary"></div>
+
+                    {/* Grade & Emoji */}
+                    <div className="mb-4">
+                        <span className="text-5xl">{gradeInfo.emoji}</span>
                     </div>
-                    <span className={`px-6 py-2 rounded-full font-black uppercase text-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-primary text-black`}>{grade} Grade</span>
-                </Card>
 
-                {/* Accuracy Card */}
-                <Card className="flex flex-col items-center justify-center p-10 bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(255,208,47,1)] rounded-3xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-black"></div>
-                    <span className="text-black text-xs font-black mb-6 uppercase tracking-widest opacity-50">Accuracy</span>
-                    <div className="relative w-36 h-36 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90">
+                    <div className="mb-1">
+                        <span
+                            className="text-6xl font-black italic"
+                            style={{ color: gradeInfo.color }}
+                        >
+                            {gradeInfo.grade}
+                        </span>
+                    </div>
+                    <p className="text-sm font-black uppercase tracking-widest text-black/50 mb-8">{gradeInfo.label}</p>
+
+                    {/* Circular Progress */}
+                    <div className="relative w-48 h-48 mx-auto mb-6">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                            {/* Background circle */}
                             <circle
-                                cx="72"
-                                cy="72"
-                                r="64"
-                                stroke="currentColor"
-                                strokeWidth="12"
-                                fill="transparent"
-                                className="text-black/5"
+                                cx="100" cy="100" r={radius}
+                                fill="none" stroke="#E5E7EB" strokeWidth="12"
                             />
+                            {/* Progress circle */}
                             <circle
-                                cx="72"
-                                cy="72"
-                                r="64"
-                                stroke="currentColor"
+                                cx="100" cy="100" r={radius}
+                                fill="none"
+                                stroke={gradeInfo.color}
                                 strokeWidth="12"
-                                fill="transparent"
-                                strokeDasharray={402.12}
-                                strokeDashoffset={402.12 - (402.12 * percentage) / 100}
-                                className={percentage >= 50 ? "text-primary" : "text-black"}
                                 strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                className="transition-all duration-300"
                             />
                         </svg>
-                        <span className="absolute text-4xl font-black text-black">{percentage}%</span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-4xl font-black text-black">{animatedPercentage}%</span>
+                            <span className="text-[10px] font-bold text-black/40 uppercase">Accuracy</span>
+                        </div>
+                    </div>
+
+                    {/* Score */}
+                    <div className="bg-gray-100 rounded-xl px-6 py-4 inline-block border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                        <span className="text-3xl font-black text-black">{score}</span>
+                        <span className="text-lg font-bold text-black/30">/{maxScore}</span>
+                        <div className="text-[10px] font-black text-black/40 uppercase tracking-wider mt-1">Total Score</div>
                     </div>
                 </Card>
 
-                {/* Analysis Card */}
-                <Card className="flex flex-col items-center justify-center p-10 bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] rounded-3xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-                    <span className="text-black text-xs font-black mb-6 uppercase tracking-widest opacity-50">Question Breakdown</span>
-                    <div className="w-full space-y-6">
-                        <div className="flex justify-between items-end">
-                            <span className="text-black font-black uppercase tracking-tighter text-sm">Correct</span>
-                            <span className="text-2xl font-black text-green-500">+{correct}</span>
+                {/* Rank Card (if available) */}
+                {performance && (
+                    <Card className="p-5 border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div className="text-2xl font-black text-black">
+                                    #{performance.rank}
+                                </div>
+                                <div className="text-[10px] font-black text-black/40 uppercase mt-1">Your Rank</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-black" style={{
+                                    color: performance.percentile >= 70 ? '#10B981' : performance.percentile >= 40 ? '#F59E0B' : '#EF4444'
+                                }}>
+                                    {performance.percentile}%
+                                </div>
+                                <div className="text-[10px] font-black text-black/40 uppercase mt-1">Percentile</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-black text-black">
+                                    {performance.totalAttemptees}
+                                </div>
+                                <div className="text-[10px] font-black text-black/40 uppercase mt-1">Students</div>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-end">
-                            <span className="text-black font-black uppercase tracking-tighter text-sm">Mistakes</span>
-                            <span className="text-2xl font-black text-red-500">-{incorrect}</span>
-                        </div>
-                        <div className="w-full bg-black/5 rounded-full h-4 border-2 border-black p-0.5">
-                            <div
-                                className="bg-primary h-full rounded-full border border-black"
-                                style={{ width: `${percentage}%` }}
-                            ></div>
-                        </div>
+                    </Card>
+                )}
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-green-50 border-2 border-green-400 rounded-xl p-3 text-center shadow-[3px_3px_0px_0px_rgba(16,185,129,0.3)]">
+                        <div className="text-xl font-black text-green-600">{performance?.correctCount || '—'}</div>
+                        <div className="text-[9px] font-black text-green-500/60 uppercase tracking-wider">Correct</div>
                     </div>
-                </Card>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-center gap-6 pt-10">
-                <Link href="/dashboard/tests" className="w-full sm:w-auto">
-                    <Button className="w-full bg-white border-4 border-black text-black hover:bg-black hover:text-white font-black py-6 px-10 h-auto text-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
-                        TRY ANOTHER TEST
-                    </Button>
-                </Link>
-                <Link href="/dashboard" className="w-full sm:w-auto">
-                    <Button className="w-full bg-primary border-4 border-black text-black font-black py-6 px-10 h-auto text-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
-                        BACK TO HOME
-                    </Button>
-                </Link>
-            </div>
-
-            {test && (
-                <div className="mt-12 text-center p-6 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs border-2 border-black">
-                    REPORT GENERATED FOR: {test.title}
+                    <div className="bg-red-50 border-2 border-red-400 rounded-xl p-3 text-center shadow-[3px_3px_0px_0px_rgba(239,68,68,0.3)]">
+                        <div className="text-xl font-black text-red-600">{performance?.incorrectCount || '—'}</div>
+                        <div className="text-[9px] font-black text-red-500/60 uppercase tracking-wider">Wrong</div>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-gray-400 rounded-xl p-3 text-center shadow-[3px_3px_0px_0px_rgba(107,114,128,0.3)]">
+                        <div className="text-xl font-black text-gray-600">{performance?.unattemptedCount || '—'}</div>
+                        <div className="text-[9px] font-black text-gray-500/60 uppercase tracking-wider">Skipped</div>
+                    </div>
                 </div>
-            )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                    <Button
+                        onClick={() => router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${total}`)}
+                        variant="outline"
+                        className="flex-1 justify-center border-2 border-black text-black hover:bg-black hover:text-white font-black py-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm"
+                    >
+                        📊 Full Analysis
+                    </Button>
+                    <Button
+                        onClick={() => router.push("/dashboard/tests")}
+                        className="flex-1 justify-center bg-primary border-2 border-black text-black hover:bg-black hover:text-primary font-black py-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm"
+                    >
+                        Try Another Test →
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }
 
 export default function TestResultPage() {
     return (
-        <Suspense fallback={<div className="text-foreground p-4">Loading result...</div>}>
-            <TestResultContent />
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+                <p className="text-sm font-bold text-black/40 uppercase tracking-widest">Loading results...</p>
+            </div>
+        }>
+            <ResultContent />
         </Suspense>
     );
 }

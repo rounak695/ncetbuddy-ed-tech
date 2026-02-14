@@ -1,6 +1,6 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query, Models } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, UserEvent, UserAnalytics } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -91,14 +91,23 @@ export const saveTestResult = async (result: Partial<TestResult> & { correctCoun
     try {
         // 1. Save the individual test result
         const { correctCount, incorrectCount, ...dataToSave } = result; // Omit these two fields
+        const docData: any = {
+            ...dataToSave,
+            answers: JSON.stringify(dataToSave.answers)
+        };
+        // Add timeTaken if provided
+        if (dataToSave.timeTaken !== undefined) {
+            docData.timeTaken = dataToSave.timeTaken;
+        }
+        // Add questionTimes if provided (stored as JSON string)
+        if (dataToSave.questionTimes) {
+            docData.questionTimes = JSON.stringify(dataToSave.questionTimes);
+        }
         await databases.createDocument(
             DB_ID,
             'test-results',
             ID.unique(),
-            {
-                ...dataToSave,
-                answers: JSON.stringify(dataToSave.answers)
-            }
+            docData
         );
         // Note: We are no longer updating the 'users' collection here because the 
         // attributes 'totalScore' and 'testsAttempted' might be missing from the schema.
@@ -787,109 +796,145 @@ export const getAllUserAnalytics = async (): Promise<UserAnalytics[]> => {
     }
 }
 
-export interface TestLeaderboardEntry {
-    rank: number;
-    userId: string;
-    userName: string;
-    score: number;
-    completedAt: number;
-    isCurrentUser: boolean;
-    accuracy: number;
-    timeTaken: number; // in seconds
-}
+// Legacy alias for backward compatibility
+export type TestLeaderboardEntry = TestRankEntry;
 
-export const getTestLeaderboard = async (testId: string, currentUserId?: string): Promise<{ leaderboard: TestLeaderboardEntry[], userRank: TestLeaderboardEntry | null }> => {
+/**
+ * Enhanced Test Ranking Engine
+ * - Competition ranking (ties get same rank)
+ * - Tie-breaking by time taken (less time = better)
+ * - Percentile calculation per-test
+ * - Only considers users who attempted this specific test
+ */
+export const getTestLeaderboard = async (testId: string, currentUserId?: string): Promise<{ leaderboard: TestRankEntry[], userRank: TestRankEntry | null }> => {
     if (!isAppwriteConfigured()) return { leaderboard: [], userRank: null };
     try {
-        // 1. Fetch all test results for this test
-        // We order by score descending
+        // 1. Fetch ALL test results for this test
         const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
             Query.equal('testId', testId),
-            Query.orderDesc('score'),
-            Query.limit(5000) // Adjust limit as needed
+            Query.limit(5000)
         ]);
 
         if (resultsResponse.documents.length === 0) {
             return { leaderboard: [], userRank: null };
         }
 
-        // 2. Deduplicate users - keep highest score
+        // 2. Get the test info for totalQuestions / maxScore
+        let testDoc: any = null;
+        try {
+            testDoc = await databases.getDocument(DB_ID, 'tests', testId);
+        } catch (e) { /* ignore */ }
+        const totalQuestionsFromTest = testDoc?.questions
+            ? (typeof testDoc.questions === 'string' ? JSON.parse(testDoc.questions) : testDoc.questions).length
+            : 0;
+
+        // 3. Deduplicate users - keep BEST score; tie-break by less time
         const userBestResults = new Map<string, any>();
         resultsResponse.documents.forEach((doc: any) => {
             const existing = userBestResults.get(doc.userId);
-            if (!existing || doc.score > existing.score) {
+            if (!existing) {
                 userBestResults.set(doc.userId, doc);
+            } else {
+                // Higher score wins
+                if (doc.score > existing.score) {
+                    userBestResults.set(doc.userId, doc);
+                } else if (doc.score === existing.score) {
+                    // Same score → less time wins
+                    const docTime = extractNumber(doc.timeTaken);
+                    const existingTime = extractNumber(existing.timeTaken);
+                    if (docTime > 0 && existingTime > 0 && docTime < existingTime) {
+                        userBestResults.set(doc.userId, doc);
+                    }
+                }
             }
-            // Tie-breaking: if scores equal, maybe use earlier completion?
-            // For now, simplistic overwrite if score is higher, or if equal (later in list means earlier date? No, depends on sort order)
-            // If we sort by score DESC, we still need secondary sort.
-            // Let's assume the first one we see is the best if we sorted by score DESC.
-            // But if multiple attempts have same score, which one to keep?
-            // Usually the one with less time or earlier date.
-            // The DB query sorted by score. If we want second level sort, it's safer to do in memory.
         });
 
-        // Convert map to array
+        // 4. Sort: Score DESC, then timeTaken ASC
         let sortedResults = Array.from(userBestResults.values());
+        sortedResults.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            const timeA = extractNumber(a.timeTaken);
+            const timeB = extractNumber(b.timeTaken);
+            if (timeA > 0 && timeB > 0) return timeA - timeB;
+            return 0;
+        });
 
-        // 3. Sort in memory for precise ranking (Score DESC, Duration/Time ASC)
-        // Note: We don't have 'duration' explicitly in TestResult type in this file yet (it has completedAt).
-        // If we don't have start time, we can't calculate duration from result alone unless result has 'duration' or 'timeTaken'.
-        // TestResult in types/index.ts doesn't have duration.
-        // We will just sort by score DESC.
-        sortedResults.sort((a, b) => b.score - a.score);
+        const totalParticipants = sortedResults.length;
 
-        // 4. Fetch User details
-        // Collect user IDs
+        // 5. Fetch user names
         const userIds = sortedResults.map(r => r.userId);
-
-        // Fetch users in batches or using contains
-        // Appwrite limit is usually 100 per request.
-        // If many users, this loop might be needed.
-        // For efficiency, let's just fetch all users if list is small, or use `getUsers` helper logic.
-        // Assuming we have a helper or can just list users.
-
-        // Let's try to fetch all users (up to reasonable limit) to map names.
-        // Or better: fetch only needed users if count is small.
-        let userMap = new Map<string, string>();
-
-        // Chunk userIds into batches of 100 for queries
-        const chunkSize = 50; // slightly conservative
+        const userMap = new Map<string, string>();
+        const chunkSize = 50;
         for (let i = 0; i < userIds.length; i += chunkSize) {
             const chunk = userIds.slice(i, i + chunkSize);
             if (chunk.length === 0) continue;
-
             try {
                 const usersResponse = await databases.listDocuments(DB_ID, 'users', [
                     Query.equal('$id', chunk)
                 ]);
                 usersResponse.documents.forEach((u: any) => {
-                    userMap.set(u.$id, u.name || u.displayName || 'Anonymous');
+                    userMap.set(u.$id, u.name || u.displayName || 'Student');
                 });
             } catch (e) {
                 console.error("Error fetching users batch:", e);
-                // Fallback: try to fetch individual if batch fails? Or just continue.
             }
         }
 
-        // If map is empty (maybe permissions issue or query not supported), we might have fallback names
+        // 6. Competition ranking + percentile calculation
+        const leaderboard: TestRankEntry[] = [];
+        let currentRank = 1;
 
-        // 5. Build Leaderboard Entries
-        const leaderboard: TestLeaderboardEntry[] = sortedResults.map((doc, index) => {
-            // Calculate additional stats if needed
-            return {
-                rank: index + 1,
+        for (let i = 0; i < sortedResults.length; i++) {
+            const doc = sortedResults[i];
+            const totalQ = doc.totalQuestions || totalQuestionsFromTest;
+            const maxScore = totalQ * 4;
+            const timeTaken = extractNumber(doc.timeTaken);
+
+            // Parse answers to count correct/incorrect
+            let answers: Record<string, number> = {};
+            try {
+                answers = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
+            } catch (e) { answers = {}; }
+
+            const answeredCount = Object.keys(answers).length;
+            // Score = correct*4 - incorrect*1, so: correct = (score + incorrect) / 4 and incorrect = answered - correct
+            // But simpler: correct = count where answer matches correctAnswer... we don't have correctAnswers here
+            // Approximate from score: if score = correct*4 - (answered - correct)*1 = 5*correct - answered
+            // correct = (score + answered) / 5
+            const correctCount = Math.max(0, Math.round((doc.score + answeredCount) / 5));
+            const incorrectCount = answeredCount - correctCount;
+            const unattempted = totalQ - answeredCount;
+
+            // Competition ranking: same score & time gets same rank
+            if (i > 0) {
+                const prev = sortedResults[i - 1];
+                if (doc.score !== prev.score || extractNumber(doc.timeTaken) !== extractNumber(prev.timeTaken)) {
+                    currentRank = i + 1;
+                }
+            }
+
+            // Percentile: % of students who scored LESS than this user
+            const studentsBelow = sortedResults.filter(r => r.score < doc.score).length;
+            const percentile = totalParticipants > 1
+                ? Math.round((studentsBelow / totalParticipants) * 10000) / 100
+                : 100;
+
+            leaderboard.push({
+                rank: currentRank,
                 userId: doc.userId,
                 userName: userMap.get(doc.userId) || 'Unknown User',
                 score: doc.score,
-                completedAt: doc.completedAt,
+                totalMarks: maxScore,
+                correctCount,
+                incorrectCount,
+                unattempted,
+                accuracy: answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0,
+                percentile,
+                timeTaken,
                 isCurrentUser: doc.userId === currentUserId,
-                accuracy: doc.totalQuestions > 0 ? (doc.score / (doc.totalQuestions * 4)) * 100 : 0, // approximation
-                timeTaken: 0 // placeholder
-            };
-        });
+            });
+        }
 
-        // 6. Find current user's rank
         const userRank = leaderboard.find(e => e.userId === currentUserId) || null;
 
         return { leaderboard, userRank };
@@ -899,3 +944,270 @@ export const getTestLeaderboard = async (testId: string, currentUserId?: string)
         return { leaderboard: [], userRank: null };
     }
 };
+
+
+/**
+ * Get complete test performance summary for a user
+ * Used on the post-test result/review page
+ */
+export const getTestPerformanceSummary = async (testId: string, currentUserId: string): Promise<TestPerformanceSummary | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const { leaderboard, userRank } = await getTestLeaderboard(testId, currentUserId);
+
+        if (leaderboard.length === 0) return null;
+
+        // Get test details
+        let testTitle = 'Test';
+        try {
+            const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
+            testTitle = testDoc.title || 'Test';
+        } catch (e) { /* ignore */ }
+
+        // Compute aggregate stats
+        const scores = leaderboard.map(e => e.score);
+        const averageScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        const highestScore = Math.max(...scores);
+
+        return {
+            testId,
+            testTitle,
+            totalScore: userRank?.score || 0,
+            maxScore: userRank?.totalMarks || leaderboard[0]?.totalMarks || 0,
+            rank: userRank?.rank || 0,
+            totalAttemptees: leaderboard.length,
+            percentile: userRank?.percentile || 0,
+            correctCount: userRank?.correctCount || 0,
+            incorrectCount: userRank?.incorrectCount || 0,
+            unattemptedCount: userRank?.unattempted || 0,
+            accuracy: userRank?.accuracy || 0,
+            timeTaken: userRank?.timeTaken || 0,
+            averageScore,
+            highestScore,
+            leaderboard,
+            userEntry: userRank,
+        };
+    } catch (error) {
+        console.error("Error getting test performance summary:", error);
+        return null;
+    }
+};
+
+
+/**
+ * Get question-level analysis for a specific test attempt
+ * Computes global success rates by analyzing all submissions
+ */
+export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Record<number, number>, questionTimes?: Record<number, number>): Promise<QuestionAnalysis[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        // Get test data
+        const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
+        let questions = testDoc.questions;
+        try {
+            while (typeof questions === 'string') questions = JSON.parse(questions);
+        } catch (e) { questions = []; }
+        if (!Array.isArray(questions)) questions = [];
+
+        // Fetch all results for global stats
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.equal('testId', testId),
+            Query.limit(5000)
+        ]);
+
+        // Calculate per-question success rates
+        const questionStats = new Map<number, { correct: number, total: number }>();
+        resultsResponse.documents.forEach((doc: any) => {
+            let ans: Record<string, number> = {};
+            try {
+                ans = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
+            } catch (e) { return; }
+
+            questions.forEach((_: any, qIdx: number) => {
+                const stats = questionStats.get(qIdx) || { correct: 0, total: 0 };
+                if (ans[qIdx.toString()] !== undefined || ans[qIdx] !== undefined) {
+                    stats.total++;
+                    const userAns = ans[qIdx.toString()] ?? ans[qIdx];
+                    if (userAns === questions[qIdx].correctAnswer) {
+                        stats.correct++;
+                    }
+                }
+                questionStats.set(qIdx, stats);
+            });
+        });
+
+        // Build analysis
+        return questions.map((q: any, idx: number) => {
+            const userAnswer = userAnswers[idx];
+            const correctAnswer = q.correctAnswer;
+            const stats = questionStats.get(idx) || { correct: 0, total: 0 };
+
+            let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
+            if (userAnswer !== undefined) {
+                status = userAnswer === correctAnswer ? 'correct' : 'incorrect';
+            }
+
+            return {
+                questionIndex: idx,
+                questionText: q.text || '',
+                userAnswer,
+                correctAnswer,
+                status,
+                timeSpent: questionTimes?.[idx] || 0,
+                globalCorrectPercent: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+            };
+        });
+    } catch (error) {
+        console.error("Error getting question-level analysis:", error);
+        return [];
+    }
+};
+
+
+/**
+ * Admin: Get comprehensive test analytics
+ * Includes score distribution, question success rates, drop-off analysis
+ */
+export const getAdminTestAnalytics = async (testId: string): Promise<AdminTestAnalytics | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        // Get test info
+        const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
+        let questions = testDoc.questions;
+        try {
+            while (typeof questions === 'string') questions = JSON.parse(questions);
+        } catch (e) { questions = []; }
+        if (!Array.isArray(questions)) questions = [];
+
+        const totalQ = questions.length;
+
+        // Get all results
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.equal('testId', testId),
+            Query.limit(5000)
+        ]);
+
+        const docs = resultsResponse.documents;
+        if (docs.length === 0) {
+            return {
+                testId,
+                testTitle: testDoc.title || 'Test',
+                totalAttemptees: 0,
+                averageScore: 0,
+                highestScore: 0,
+                lowestScore: 0,
+                medianScore: 0,
+                averageTimeTaken: 0,
+                scoreDistribution: [],
+                questionSuccessRates: [],
+                dropOffPoints: [],
+            };
+        }
+
+        // Score stats
+        const scores = docs.map((d: any) => d.score || 0).sort((a: number, b: number) => a - b);
+        const sum = scores.reduce((a: number, b: number) => a + b, 0);
+        const avg = Math.round(sum / scores.length);
+        const median = scores.length % 2 === 0
+            ? Math.round((scores[scores.length / 2 - 1] + scores[scores.length / 2]) / 2)
+            : scores[Math.floor(scores.length / 2)];
+
+        // Time stats
+        const times = docs.map((d: any) => extractNumber(d.timeTaken)).filter((t: number) => t > 0);
+        const avgTime = times.length > 0 ? Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length) : 0;
+
+        // Score distribution (buckets)
+        const maxScore = totalQ * 4;
+        const bucketSize = Math.max(1, Math.ceil(maxScore / 8)); // 8 buckets
+        const distribution: { range: string; count: number }[] = [];
+        for (let i = -totalQ; i <= maxScore; i += bucketSize) {
+            const lo = i;
+            const hi = Math.min(i + bucketSize - 1, maxScore);
+            const count = scores.filter((s: number) => s >= lo && s <= hi).length;
+            if (count > 0 || lo >= 0) {
+                distribution.push({ range: `${lo} - ${hi}`, count });
+            }
+        }
+
+        // Question success rates
+        const questionSuccessRates: { questionIndex: number; correctPercent: number }[] = [];
+        const questionAttemptCount: number[] = new Array(totalQ).fill(0);
+
+        questions.forEach((_: any, qIdx: number) => {
+            let correctCount = 0;
+            let attemptCount = 0;
+
+            docs.forEach((doc: any) => {
+                let ans: Record<string, number> = {};
+                try {
+                    ans = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
+                } catch (e) { return; }
+
+                const userAns = ans[qIdx.toString()] ?? ans[qIdx];
+                if (userAns !== undefined) {
+                    attemptCount++;
+                    if (userAns === questions[qIdx].correctAnswer) {
+                        correctCount++;
+                    }
+                }
+            });
+
+            questionAttemptCount[qIdx] = attemptCount;
+            questionSuccessRates.push({
+                questionIndex: qIdx,
+                correctPercent: attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : 0,
+            });
+        });
+
+        // Drop-off points: questions where significantly fewer students attempted
+        const dropOffPoints: { questionIndex: number; dropCount: number }[] = [];
+        for (let i = 1; i < totalQ; i++) {
+            const drop = questionAttemptCount[i - 1] - questionAttemptCount[i];
+            if (drop > 0) {
+                dropOffPoints.push({ questionIndex: i, dropCount: drop });
+            }
+        }
+        dropOffPoints.sort((a, b) => b.dropCount - a.dropCount);
+
+        return {
+            testId,
+            testTitle: testDoc.title || 'Test',
+            totalAttemptees: docs.length,
+            averageScore: avg,
+            highestScore: Math.max(...scores),
+            lowestScore: Math.min(...scores),
+            medianScore: median,
+            averageTimeTaken: avgTime,
+            scoreDistribution: distribution,
+            questionSuccessRates,
+            dropOffPoints: dropOffPoints.slice(0, 10), // Top 10 drop-off points
+        };
+    } catch (error) {
+        console.error("Error getting admin test analytics:", error);
+        return null;
+    }
+};
+
+
+/**
+ * Get all test results for computing admin-level stats across all tests
+ */
+export const getAllTestResults = async (): Promise<TestResult[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.limit(5000),
+            Query.orderDesc('completedAt')
+        ]);
+        return response.documents.map(doc => ({
+            id: doc.$id,
+            ...doc,
+            answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers,
+            timeTaken: extractNumber(doc.timeTaken),
+        })) as unknown as TestResult[];
+    } catch (error) {
+        console.error("Error fetching all test results:", error);
+        return [];
+    }
+};
+

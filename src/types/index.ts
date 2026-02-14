@@ -32,6 +32,66 @@ export interface TestResult {
     totalQuestions: number;
     answers: Record<number, number>; // question index -> selected option index
     completedAt: number;
+    timeTaken?: number; // total time in seconds
+    questionTimes?: Record<number, number>; // question index -> time spent in seconds
+}
+
+export interface TestRankEntry {
+    rank: number;
+    userId: string;
+    userName: string;
+    score: number;
+    totalMarks: number;
+    correctCount: number;
+    incorrectCount: number;
+    unattempted: number;
+    accuracy: number; // percentage
+    percentile: number;
+    timeTaken: number; // seconds
+    isCurrentUser: boolean;
+}
+
+export interface TestPerformanceSummary {
+    testId: string;
+    testTitle: string;
+    totalScore: number;
+    maxScore: number;
+    rank: number;
+    totalAttemptees: number;
+    percentile: number;
+    correctCount: number;
+    incorrectCount: number;
+    unattemptedCount: number;
+    accuracy: number;
+    timeTaken: number;
+    averageScore: number;
+    highestScore: number;
+    leaderboard: TestRankEntry[];
+    userEntry: TestRankEntry | null;
+}
+
+export interface QuestionAnalysis {
+    questionIndex: number;
+    questionText: string;
+    userAnswer: number | undefined;
+    correctAnswer: number;
+    status: 'correct' | 'incorrect' | 'skipped';
+    timeSpent: number; // seconds
+    globalCorrectPercent: number; // % of students who got it right
+}
+
+export interface AdminTestAnalytics {
+    testId: string;
+    testTitle: string;
+    totalAttemptees: number;
+    averageScore: number;
+    highestScore: number;
+    lowestScore: number;
+    medianScore: number;
+    averageTimeTaken: number;
+    scoreDistribution: { range: string; count: number }[];
+    questionSuccessRates: { questionIndex: number; correctPercent: number }[];
+    dropOffPoints: { questionIndex: number; dropCount: number }[];
 }
 
 export interface Book {

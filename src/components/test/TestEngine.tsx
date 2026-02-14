@@ -27,6 +27,10 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+    // Time tracking
+    const [questionTimes, setQuestionTimes] = useState<Record<number, number>>({});
+    const [questionStartTime, setQuestionStartTime] = useState<number>(0);
+    const [testStartTime, setTestStartTime] = useState<number>(0);
 
     useEffect(() => {
         const fetchTest = async () => {
@@ -54,24 +58,53 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         return score;
     };
 
+    // Flush time for current question before submitting or switching
+    const flushCurrentQuestionTime = () => {
+        if (questionStartTime > 0) {
+            const now = Date.now();
+            const elapsed = Math.round((now - questionStartTime) / 1000);
+            setQuestionTimes(prev => ({
+                ...prev,
+                [currentQuestionIndex]: (prev[currentQuestionIndex] || 0) + elapsed
+            }));
+            setQuestionStartTime(now);
+            return elapsed;
+        }
+        return 0;
+    };
+
     const handleSubmit = async () => {
         if (!test || !user) return;
         const score = calculateScore();
+
+        // Calculate final question times (flush current)
+        const finalQuestionTimes = { ...questionTimes };
+        if (questionStartTime > 0) {
+            const elapsed = Math.round((Date.now() - questionStartTime) / 1000);
+            finalQuestionTimes[currentQuestionIndex] = (finalQuestionTimes[currentQuestionIndex] || 0) + elapsed;
+        }
+
+        const totalTimeTaken = testStartTime > 0 ? Math.round((Date.now() - testStartTime) / 1000) : 0;
+
         const result = {
             userId: user.$id,
             testId: testId,
             score: score,
             totalQuestions: test.questions.length,
             answers: answers,
-            completedAt: Math.floor(Date.now() / 1000)
+            completedAt: Math.floor(Date.now() / 1000),
+            timeTaken: totalTimeTaken,
+            questionTimes: finalQuestionTimes,
         };
 
         try {
             await saveTestResult(result);
             trackEvent('test_complete', `/dashboard/tests/${testId}`, `Score: ${score}/${test.questions.length * 4}`);
 
-            // Store answers in sessionStorage for review page
+            // Store answers and question times in sessionStorage for review page
             sessionStorage.setItem(`test_answers_${testId}`, JSON.stringify(answers));
+            sessionStorage.setItem(`test_questionTimes_${testId}`, JSON.stringify(finalQuestionTimes));
+            sessionStorage.setItem(`test_timeTaken_${testId}`, String(totalTimeTaken));
 
             // Redirect to review page with score info
             router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${test.questions.length}`);
@@ -99,6 +132,8 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     const startTest = () => {
         setHasStarted(true);
+        setTestStartTime(Date.now());
+        setQuestionStartTime(Date.now());
         enterFullScreen();
         trackEvent('test_start', `/dashboard/tests/${testId}`, test?.title);
     };
@@ -168,6 +203,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     const handleNext = () => {
         if (test && currentQuestionIndex < test.questions.length - 1) {
+            flushCurrentQuestionTime();
             const nextIndex = currentQuestionIndex + 1;
             setCurrentQuestionIndex(nextIndex);
             setVisited((prev) => new Set(prev).add(nextIndex));
@@ -176,6 +212,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     const handlePrev = () => {
         if (currentQuestionIndex > 0) {
+            flushCurrentQuestionTime();
             setCurrentQuestionIndex((prev) => prev - 1);
             setVisited((prev) => new Set(prev).add(currentQuestionIndex - 1));
         }
@@ -183,7 +220,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     const handleSaveAndNext = () => {
         // Just move next, answer is already in state if selected
-        // Ensure current is marked visited (already done by default logic mostly, but good to ensure)
+        flushCurrentQuestionTime();
         if (test && currentQuestionIndex < test.questions.length - 1) {
             const nextIndex = currentQuestionIndex + 1;
             setCurrentQuestionIndex(nextIndex);
@@ -200,6 +237,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     };
 
     const handleMarkForReviewAndNext = () => {
+        flushCurrentQuestionTime();
         setMarkedForReview((prev) => new Set(prev).add(currentQuestionIndex));
         if (test && currentQuestionIndex < test.questions.length - 1) {
             const nextIndex = currentQuestionIndex + 1;
@@ -209,6 +247,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     };
 
     const jumpToQuestion = (index: number) => {
+        flushCurrentQuestionTime();
         setCurrentQuestionIndex(index);
         setVisited((prev) => new Set(prev).add(index));
     };
