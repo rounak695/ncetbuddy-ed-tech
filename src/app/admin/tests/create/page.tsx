@@ -21,7 +21,9 @@ export default function CreateTestPage() {
         subject: "General",
         questions: [],
         testType: 'pyq', // Default to PYQ
-        pyqSubject: 'non-domain' // Default PYQ subject
+        pyqSubject: 'non-domain', // Default PYQ subject
+        price: 0, // Default free
+        status: 'Published' // Default published
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
         { text: "", options: ["", "", "", ""], correctAnswer: 0 }
@@ -66,7 +68,9 @@ export default function CreateTestPage() {
             createdAt: Math.floor(Date.now() / 1000),
             createdBy: user?.$id || "admin",
             testType: testData.testType || 'pyq',
-            pyqSubject: testData.testType === 'pyq' ? testData.pyqSubject : undefined
+            pyqSubject: testData.testType === 'pyq' ? testData.pyqSubject : undefined,
+            price: testData.price || 0,
+            status: testData.status || 'Published'
         } as any);
 
         if (testId) {
@@ -165,6 +169,43 @@ export default function CreateTestPage() {
                         <option value="Chemistry">Chemistry</option>
                         <option value="Maths">Mathematics</option>
                         <option value="Full Mock">Full Mock Test</option>
+                    </select>
+                </div>
+
+                {/* Price Field - Only for Educator Tests */}
+                {testData.testType === 'educator' && (
+                    <div style={{ marginTop: "1rem" }}>
+                        <Input
+                            label="Price (₹)"
+                            type="number"
+                            placeholder="0"
+                            value={testData.price || 0}
+                            onChange={(e) => setTestData({ ...testData, price: Number(e.target.value) })}
+                        />
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                            Set to 0 for free tests. Students will need to purchase if price &gt; 0.
+                        </p>
+                    </div>
+                )}
+
+                {/* Publish Status */}
+                <div style={{ marginTop: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Status</label>
+                    <select
+                        value={testData.status || 'Published'}
+                        onChange={(e) => setTestData({ ...testData, status: e.target.value as 'Draft' | 'Published' | 'Archived' })}
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            fontSize: "1rem"
+                        }}
+                    >
+                        <option value="Published">Published (Visible to Students)</option>
+                        <option value="Draft">Draft (Hidden)</option>
                     </select>
                 </div>
             </Card>

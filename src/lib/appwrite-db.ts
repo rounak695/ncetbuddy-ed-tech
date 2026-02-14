@@ -1,6 +1,6 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query, Models } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -83,6 +83,17 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
         return true;
     } catch (error) {
         console.error("Error deleting test:", error);
+        return false;
+    }
+};
+
+export const updateTest = async (testId: string, data: Partial<Test>): Promise<boolean> => {
+    try {
+        const { id, ...updateData } = data; // Remove ID from payload if present
+        await databases.updateDocument(DB_ID, 'tests', testId, updateData);
+        return true;
+    } catch (error) {
+        console.error("Error updating test:", error);
         return false;
     }
 };
@@ -187,6 +198,8 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         percentile: number;
         aheadOfPercent: number;
         totalParticipants: number;
+        mockTestPerformances: { testId: string; title: string; score: number; obtainedAt: number }[];
+        pyqPerformance: { totalScore: number; testsAttempted: number };
     } | null;
     totalParticipants: number;
 }> => {
@@ -204,19 +217,70 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         // 2. Fetch all test results
         const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
             Query.limit(5000),
-            Query.select(['userId', 'score'])
+            // We need createdAt to show date in test-wise performance
+            Query.select(['userId', 'score', 'testId', '$createdAt'])
         ]);
 
+        // 2.1 Fetch all tests to determine type (Mock vs PYQ) and get Titles
+        // We fetch only needed fields to optimize
+        const testsResponse = await databases.listDocuments(DB_ID, 'tests', [
+            Query.limit(1000),
+            Query.select(['$id', 'title', 'testType'])
+        ]);
+
+        const testMetadata = new Map<string, { title: string, type: 'pyq' | 'educator' | undefined }>();
+        testsResponse.documents.forEach((doc: any) => {
+            testMetadata.set(doc.$id, { title: doc.title, type: doc.testType });
+        });
+
         // 3. Aggregate scores per user
-        const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
+        interface UserStats {
+            totalScore: number;
+            testsAttempted: number; // Overall
+            mockTests: { testId: string; title: string; score: number; obtainedAt: number }[];
+            pyqTotalScore: number;
+            pyqAttempts: number;
+        }
+
+        const userStats = new Map<string, UserStats>();
 
         resultsResponse.documents.forEach((doc: any) => {
             const uid = doc.userId;
-            const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
-            userStats.set(uid, {
-                totalScore: current.totalScore + (Number(doc.score) || 0),
-                testsAttempted: current.testsAttempted + 1
-            });
+            const score = Number(doc.score) || 0;
+            const testId = doc.testId;
+            const createdAt = new Date(doc.$createdAt).getTime(); // Timestamp
+
+            const meta = testMetadata.get(testId);
+            const isPyq = meta?.type === 'pyq';
+            const testTitle = meta?.title || 'Unknown Test';
+
+            const current = userStats.get(uid) || {
+                totalScore: 0,
+                testsAttempted: 0,
+                mockTests: [],
+                pyqTotalScore: 0,
+                pyqAttempts: 0
+            };
+
+            // Update Overall
+            current.totalScore += score;
+            current.testsAttempted += 1;
+
+            // Update Specifics
+            if (isPyq) {
+                current.pyqTotalScore += score;
+                current.pyqAttempts += 1;
+            } else {
+                // Assume it's a Mock Test (educator or undefined)
+                current.mockTests.push({
+                    testId,
+                    title: testTitle,
+                    score,
+                    obtainedAt: createdAt
+                });
+            }
+
+            userStats.set(uid, current);
         });
 
         // 4. Build leaderboard with only users who attempted tests
@@ -224,13 +288,27 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
             .map(user => {
                 const stats = userStats.get(user.uid);
                 if (!stats || stats.testsAttempted === 0) return null; // Exclude users with 0 attempts
+
+                // Sort mock tests by date desc (most recent first)
+                stats.mockTests.sort((a, b) => b.obtainedAt - a.obtainedAt);
+
                 return {
                     ...user,
                     totalScore: stats.totalScore,
-                    testsAttempted: stats.testsAttempted
+                    testsAttempted: stats.testsAttempted,
+                    mockTestPerformances: stats.mockTests,
+                    pyqPerformance: {
+                        totalScore: stats.pyqTotalScore,
+                        testsAttempted: stats.pyqAttempts
+                    }
                 };
             })
-            .filter(Boolean) as (UserProfile & { totalScore: number; testsAttempted: number })[];
+            .filter(Boolean) as (UserProfile & {
+                totalScore: number;
+                testsAttempted: number;
+                mockTestPerformances: { testId: string; title: string; score: number; obtainedAt: number }[];
+                pyqPerformance: { totalScore: number; testsAttempted: number };
+            })[];
 
         // 5. Sort by total score (descending)
         leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
@@ -265,7 +343,9 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
                 testsAttempted: userProfile.testsAttempted || 0,
                 percentile: 100 - aheadOfPercent, // Traditional percentile (higher is better)
                 aheadOfPercent, // For display: "ahead of X%"
-                totalParticipants
+                totalParticipants,
+                mockTestPerformances: userProfile.mockTestPerformances,
+                pyqPerformance: userProfile.pyqPerformance
             };
         }
 
@@ -648,6 +728,155 @@ export const getFileViewUrl = (bucketId: string, fileId: string) => {
 
 export const getFileDownloadUrl = (bucketId: string, fileId: string) => {
     return storage.getFileDownload(bucketId, fileId);
+};
+
+// --- Purchases (Payment) ---
+
+export const createPurchase = async (purchase: Omit<Purchase, "id" | "createdAt">): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.createDocument(DB_ID, 'purchases', ID.unique(), {
+            ...purchase,
+            createdAt: Math.floor(Date.now() / 1000)
+        });
+        return response.$id;
+    } catch (error) {
+        console.error("Error creating purchase record:", error);
+        return null;
+    }
+};
+
+export const updatePurchaseStatus = async (purchaseId: string, status: 'pending' | 'completed' | 'failed', paymentId?: string) => {
+    try {
+        const data: any = { status };
+        if (paymentId) data.paymentId = paymentId;
+
+        await databases.updateDocument(DB_ID, 'purchases', purchaseId, data);
+    } catch (error) {
+        console.error("Error updating purchase status:", error);
+        throw error;
+    }
+};
+
+export const getPurchaseByPaymentRequestId = async (paymentRequestId: string): Promise<Purchase | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('paymentRequestId', paymentRequestId),
+            Query.limit(1)
+        ]);
+        if (response.documents.length === 0) return null;
+        return { id: response.documents[0].$id, ...response.documents[0] } as unknown as Purchase;
+    } catch (error) {
+        console.error("Error fetching purchase by payment request ID:", error);
+        return null;
+    }
+};
+
+export const getUserPurchases = async (userId: string): Promise<Purchase[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.orderDesc('createdAt')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Purchase[];
+    } catch (error) {
+        console.error("Error fetching user purchases:", error);
+        return [];
+    }
+};
+
+export const hasUserPurchasedTest = async (userId: string, testId: string): Promise<boolean> => {
+    if (!isAppwriteConfigured()) return false;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.equal('testId', testId),
+            Query.equal('status', 'completed')
+        ]);
+        return response.documents.length > 0;
+    } catch (error) {
+        console.error("Error checking test purchase:", error);
+        return false;
+    }
+};
+
+// Check if user has made ANY completed purchase (for premium features)
+export const hasCompletedAnyPurchase = async (userId: string): Promise<boolean> => {
+    if (!isAppwriteConfigured()) return false;
+    try {
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('userId', userId),
+            Query.equal('status', 'completed'),
+            Query.limit(1)
+        ]);
+        return response.documents.length > 0;
+    } catch (error) {
+        console.error("Error checking purchases:", error);
+        return false;
+    }
+};
+
+
+// --- Educator Portal Functions ---
+
+export const getEducatorVideos = async (educatorId: string): Promise<EducatorVideo[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'educator_videos', [
+            Query.equal('educatorId', educatorId),
+            Query.orderDesc('createdAt')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as EducatorVideo[];
+    } catch (error) {
+        console.error("Error fetching educator videos:", error);
+        return [];
+    }
+};
+
+export const createEducatorVideo = async (video: Omit<EducatorVideo, "id">) => {
+    try {
+        await databases.createDocument(DB_ID, 'educator_videos', ID.unique(), video);
+    } catch (error) {
+        console.error("Error creating educator video:", error);
+        throw error;
+    }
+};
+
+export const deleteEducatorVideo = async (id: string) => {
+    try {
+        await databases.deleteDocument(DB_ID, 'educator_videos', id);
+    } catch (error) {
+        console.error("Error deleting educator video:", error);
+        throw error;
+    }
+};
+
+export const getEducatorStats = async (educatorId: string): Promise<EducatorStats> => {
+    if (!isAppwriteConfigured()) return { totalRevenue: 0, totalSales: 0, recentSales: [] };
+
+    try {
+        // Fetch ALL completed purchases (Simulating single-educator platform for MVP)
+        const response = await databases.listDocuments(DB_ID, 'purchases', [
+            Query.equal('status', 'completed'),
+            Query.orderDesc('createdAt'),
+            Query.limit(100)
+        ]);
+
+        const purchases = response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Purchase[];
+        const totalSales = response.total;
+        const totalRevenue = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        return {
+            totalRevenue,
+            totalSales,
+            recentSales: purchases.slice(0, 5)
+        };
+    } catch (error) {
+        console.error("Error fetching educator stats:", error);
+        return { totalRevenue: 0, totalSales: 0, recentSales: [] };
+    }
 };
 
 export const endUserSession = async (sessionId: string) => {
