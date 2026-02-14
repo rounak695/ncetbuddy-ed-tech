@@ -1477,22 +1477,49 @@ export const getAllTestResults = async (): Promise<TestResult[]> => {
 // --- Streak & Daily Goal ---
 
 export const getDailyProgress = async (userId: string): Promise<{ streak: number; lastActiveDate: string; dailyGoal: string; dailyProgress: number; dailyGoalTarget: number }> => {
-    if (!isAppwriteConfigured()) return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
-    try {
-        const user = await getUserProfile(userId);
-        if (!user) return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
+    let appwriteResult = { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
 
-        return {
-            streak: user.streak || 0,
-            lastActiveDate: user.lastActiveDate || '',
-            dailyGoal: user.dailyGoal || 'Solve 5 Questions',
-            dailyProgress: user.dailyProgress || 0,
-            dailyGoalTarget: user.dailyGoalTarget || 5
-        };
-    } catch (error) {
-        console.error("Error fetching daily progress:", error);
-        return { streak: 0, lastActiveDate: '', dailyGoal: 'Solve 5 Questions', dailyProgress: 0, dailyGoalTarget: 5 };
+    // Try Appwrite
+    if (isAppwriteConfigured()) {
+        try {
+            const user = await getUserProfile(userId);
+            if (user) {
+                appwriteResult = {
+                    streak: user.streak || 0,
+                    lastActiveDate: user.lastActiveDate || '',
+                    dailyGoal: user.dailyGoal || 'Solve 5 Questions',
+                    dailyProgress: user.dailyProgress || 0,
+                    dailyGoalTarget: user.dailyGoalTarget || 5
+                };
+            }
+        } catch (error) {
+            console.error("Error fetching daily progress (Appwrite):", error);
+        }
     }
+
+    // Check LocalStorage for fresher data (Optimistic UI)
+    if (typeof window !== 'undefined') {
+        try {
+            const stored = localStorage.getItem(`streak_${userId}`);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Simple merge: prefer LS if date matches today or is more recent
+                const today = new Date().toISOString().split('T')[0];
+                if (parsed.lastActiveDate === today || (appwriteResult.lastActiveDate && parsed.lastActiveDate > appwriteResult.lastActiveDate)) {
+                    // Check if LS data seems more "advanced" (higher progress)?
+                    // For now, let's prioritize LS for streak/progress since update might have failed on backend.
+                    return {
+                        ...appwriteResult,
+                        streak: parsed.streak || appwriteResult.streak,
+                        lastActiveDate: parsed.lastActiveDate || appwriteResult.lastActiveDate,
+                        dailyProgress: parsed.dailyProgress || appwriteResult.dailyProgress
+                    };
+                }
+            }
+        } catch (err) { /* ignore */ }
+    }
+
+    return appwriteResult;
 };
 
 export const updateStreakAndDaily = async (userId: string, progressIncrement: number = 0) => {
@@ -1524,15 +1551,28 @@ export const updateStreakAndDaily = async (userId: string, progressIncrement: nu
 
         dailyProgress += progressIncrement;
 
-        await updateUser(userId, {
-            streak,
-            lastActiveDate: today,
-            dailyProgress
-        });
+        // Always update LocalStorage (Optimistic / Fallback)
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.setItem(`streak_${userId}`, JSON.stringify({ streak, lastActiveDate: today, dailyProgress }));
+            } catch (err) { /* ignore */ }
+        }
+
+        // Try to update backend (might fail if schema/permissions are missing)
+        try {
+            await updateUser(userId, {
+                streak,
+                lastActiveDate: today,
+                dailyProgress
+            });
+        } catch (dbError) {
+            console.error("Backend streak update failed (Schema/permissions issue?):", dbError);
+            // We suppress the error because LS update succeeded, so user sees progress.
+        }
 
         return { streak, dailyProgress };
     } catch (error) {
-        console.error("Error updating streak/daily:", error);
+        console.error("Error calculating streak/daily:", error);
     }
 };
 
