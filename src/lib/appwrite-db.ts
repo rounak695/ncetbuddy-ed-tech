@@ -100,29 +100,54 @@ export const updateTest = async (testId: string, data: Partial<Test>): Promise<b
 
 export const saveTestResult = async (result: Partial<TestResult> & { correctCount?: number, incorrectCount?: number }) => {
     try {
-        // 1. Save the individual test result
+        // 1. Prepare data
         const { correctCount, incorrectCount, ...dataToSave } = result; // Omit these two fields
-        const docData: any = {
-            ...dataToSave,
-            answers: JSON.stringify(dataToSave.answers)
+
+        // Base data compliant with potentially outdated schema
+        const baseDocData: any = {
+            userId: dataToSave.userId,
+            testId: dataToSave.testId,
+            score: dataToSave.score,
+            totalQuestions: dataToSave.totalQuestions,
+            answers: JSON.stringify(dataToSave.answers),
+            completedAt: dataToSave.completedAt,
         };
-        // Add timeTaken if provided
+
+        // Enhanced data with new analytics fields
+        const enhancedDocData: any = { ...baseDocData };
         if (dataToSave.timeTaken !== undefined) {
-            docData.timeTaken = dataToSave.timeTaken;
+            enhancedDocData.timeTaken = dataToSave.timeTaken;
         }
-        // Add questionTimes if provided (stored as JSON string)
         if (dataToSave.questionTimes) {
-            docData.questionTimes = JSON.stringify(dataToSave.questionTimes);
+            enhancedDocData.questionTimes = JSON.stringify(dataToSave.questionTimes);
         }
-        await databases.createDocument(
-            DB_ID,
-            'test-results',
-            ID.unique(),
-            docData
-        );
+
+        try {
+            // Attempt to save with full analytics data
+            await databases.createDocument(
+                DB_ID,
+                'test-results',
+                ID.unique(),
+                enhancedDocData
+            );
+        } catch (initialError: any) {
+            // If schema validation fails (Attribute not found), fallback to basic save
+            // Appwrite returns 400 for validation errors or unknown attributes
+            if (initialError.code === 400 || (initialError.message && (initialError.message.includes('Attribute not found') || initialError.message.includes('unknown') || initialError.message.includes('Invalid document structure')))) {
+                console.warn("Enhanced analytics fields likely missing in schema. Fallback to basic save.");
+                await databases.createDocument(
+                    DB_ID,
+                    'test-results',
+                    ID.unique(),
+                    baseDocData
+                );
+            } else {
+                throw initialError;
+            }
+        }
+
         // Note: We are no longer updating the 'users' collection here because the 
-        // attributes 'totalScore' and 'testsAttempted' might be missing from the schema.
-        // The getLeaderboard function now calculates these values dynamically.
+        // derived stats are calculated dynamically.
     } catch (error) {
         console.error("Error saving test result:", error);
         throw error;

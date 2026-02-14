@@ -65,6 +65,8 @@ const COLLECTIONS = [
             { key: 'totalQuestions', type: 'integer', required: true },
             { key: 'answers', type: 'string', size: 100000, required: true }, // JSON object
             { key: 'completedAt', type: 'integer', required: true },
+            { key: 'timeTaken', type: 'integer', required: false },
+            { key: 'questionTimes', type: 'string', size: 10000, required: false },
         ]
     },
     {
