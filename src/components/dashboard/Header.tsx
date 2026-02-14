@@ -122,7 +122,7 @@ export default function Header() {
 
             <div className="flex items-center gap-3 md:gap-4">
                 {/* Streak Widget */}
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white font-black transform hover:scale-105 transition-transform cursor-pointer group relative">
+                <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white font-black transform hover:scale-105 transition-transform cursor-pointer group relative">
                     <span className="text-lg animate-pulse group-hover:scale-125 transition-transform">🔥</span>
                     <span className="text-sm md:text-base">{streakData.streak}</span>
 
