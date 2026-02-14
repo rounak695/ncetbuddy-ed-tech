@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import { getUserTestResults, getTestById, getUserProfile, getEducator, hasCompletedAnyPurchase } from "@/lib/appwrite-db";
 import { TestResult, Test, UserProfile, Educator } from "@/types";
 import Link from "next/link";
+import ProAnalyticsDashboard from "@/components/analytics/ProAnalyticsDashboard";
 
 export default function AnalyticsPage() {
     const { user } = useAuth();
     const [isPremium, setIsPremium] = useState(false);
     const [checkingAccess, setCheckingAccess] = useState(true);
     const [results, setResults] = useState<TestResult[]>([]);
+    const [testDetailsMap, setTestDetailsMap] = useState<Map<string, Test>>(new Map());
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [educator, setEducator] = useState<Educator | null>(null);
 
@@ -119,20 +121,21 @@ export default function AnalyticsPage() {
                 }
 
                 const uniqueTestIds = Array.from(new Set(userResults.map(r => r.testId)));
-                const testDetailsMap = new Map<string, Test>();
+                const newTestDetailsMap = new Map<string, Test>();
                 await Promise.all(uniqueTestIds.map(async (tid) => {
                     try {
                         const t = await getTestById(tid);
-                        if (t) testDetailsMap.set(tid, t);
+                        if (t) newTestDetailsMap.set(tid, t);
                     } catch (e) {
                         console.error(`Failed to fetch test ${tid}`, e);
                     }
                 }));
+                setTestDetailsMap(newTestDetailsMap);
 
                 const subjectStats = new Map<string, { totalScore: number; maxScore: number }>();
 
                 userResults.forEach(res => {
-                    const test = testDetailsMap.get(res.testId);
+                    const test = newTestDetailsMap.get(res.testId);
                     const subject = test?.subject || "General";
 
                     const current = subjectStats.get(subject) || { totalScore: 0, maxScore: 0 };
@@ -162,7 +165,7 @@ export default function AnalyticsPage() {
 
                 const recentResults = userResults.slice(0, 5);
                 const graphData = recentResults.map(res => {
-                    const test = testDetailsMap.get(res.testId);
+                    const test = newTestDetailsMap.get(res.testId);
                     return {
                         title: test?.title || `Test`,
                         score: res.score,
@@ -255,7 +258,9 @@ export default function AnalyticsPage() {
                     <div className="blur-sm pointer-events-none select-none opacity-30">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                             {[1, 2, 3, 4].map((i) => (
-                                <Card key={i} className="p-8 border-4 border-black bg-white h-40"></Card>
+                                <Card key={i} className="p-8 border-4 border-black bg-white h-40">
+                                    <div />
+                                </Card>
                             ))}
                         </div>
                     </div>
@@ -496,6 +501,14 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Pro Analytics Section (Enhanced) */}
+            <ProAnalyticsDashboard
+                isPremium={isPremium}
+                userResults={results}
+                testDetailsMap={testDetailsMap}
+                subjectInsights={subjectInsights}
+            />
         </div>
     );
 }
