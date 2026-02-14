@@ -44,19 +44,25 @@ export default function AnalyticsPage() {
             if (!user) return;
 
             try {
+                // 1. Fetch User Profile first (to check for manual premium grant)
+                const profile = await getUserProfile(user.$id);
+                setUserProfile(profile);
+
+                // 2. Check Purchase History
                 const hasPurchased = await hasCompletedAnyPurchase(user.$id);
-                setIsPremium(hasPurchased);
+
+                // 3. Centralized Premium Check: Manual Grant OR Purchase History
+                const hasAccess = (profile?.premiumStatus === true) || hasPurchased;
+
+                setIsPremium(hasAccess);
                 setCheckingAccess(false);
 
-                if (!hasPurchased) {
+                if (!hasAccess) {
                     setLoading(false);
                     return;
                 }
 
                 // Fetch full analytics only for premium users
-                const profile = await getUserProfile(user.$id);
-                setUserProfile(profile);
-
                 if (profile?.enrolledEducatorId) {
                     try {
                         const edu = await getEducator(profile.enrolledEducatorId);
