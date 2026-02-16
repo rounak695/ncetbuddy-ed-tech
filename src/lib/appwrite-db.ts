@@ -542,7 +542,18 @@ export const getUsers = async (): Promise<UserProfile[]> => {
 
 export const updateUser = async (uid: string, data: Partial<UserProfile>) => {
     try {
+        // Update 'users' collection (Legacy/Primary)
         await databases.updateDocument(DB_ID, 'users', uid, data);
+
+        // Try updating 'user_profiles' as well (New/Preferred)
+        try {
+            await databases.updateDocument(DB_ID, 'user_profiles', uid, data);
+        } catch (e: any) {
+            // Ignore if document not found in user_profiles
+            if (e.code !== 404) {
+                console.warn("Failed to update user_profiles mirror:", e);
+            }
+        }
     } catch (error) {
         console.error("Error updating user:", error);
         throw error;
