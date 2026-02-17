@@ -8,7 +8,7 @@ export const Differentiation = () => {
                         <span className="text-primary">Fundamentally Different</span>
                     </h2>
                     <p className="text-black font-bold max-w-2xl mx-auto uppercase tracking-widest text-xs opacity-60">
-                        Most platforms help students practice. NCET Buddy helps educators run real exams at scale.
+                        Most platforms help you practice. NCET Buddy helps you win.
                     </p>
                 </div>
 
@@ -16,57 +16,55 @@ export const Differentiation = () => {
                     {/* Contrast Strip 1 */}
                     <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
                         <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
-                            Built for educators — <span className="text-primary">not just aspirants</span>
+                            AI-Powered Strategy — <span className="text-primary">Not Just Questions</span>
                         </h3>
                         <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
-                            NCET Buddy is designed for teachers to run real examinations, not merely upload practice questions.
+                            Our Smart Planner doesn't just list tests; it tells you exactly what to solve today to improve your weakest areas.
                         </p>
                         <p className="text-black/50 font-medium text-sm md:text-base italic">
-                            Unlike typical prep apps which are built primarily for student practice.
+                            Unlike typical apps that leave you guessing what to study next.
                         </p>
                     </div>
 
                     {/* Contrast Strip 2 */}
                     <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
                         <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
-                            Your identity. <span className="text-primary">Your exam.</span>
+                            Real Exam Temperament — <span className="text-primary">Strict NTA Interface</span>
                         </h3>
                         <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
-                            Every exam carries the educator’s brand, authority, and ownership — not the platform’s.
+                            We replicate the exact NTA exam environment (timers, navigation, marking scheme) to kill exam anxiety.
                         </p>
                         <p className="text-black/50 font-medium text-sm md:text-base italic">
-                            Most apps hide educators behind a generic platform identity.
+                            Most other platforms optimize for casual mobile quizzes, not serious exam simulation.
                         </p>
                     </div>
 
                     {/* Contrast Strip 3 */}
                     <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
                         <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
-                            Real exam pressure <span className="text-primary">by design</span>
+                            Community & Support — <span className="text-primary">Never Study Alone</span>
                         </h3>
                         <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
-                            NTA-like interface, strict attempt control, and discipline-first exam flow.
+                            Get your doubts resolved by peers and toppers in our dedicated Doubt Forum.
                         </p>
                         <p className="text-black/50 font-medium text-sm md:text-base italic">
-                            Practice platforms optimise comfort, not realism.
+                            Don't struggle in isolation. Learn from the best.
                         </p>
                     </div>
 
                     {/* Contrast Strip 4 */}
                     <div className="border-l-4 border-black pl-6 md:pl-8 py-2">
                         <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-3">
-                            Infrastructure, <span className="text-primary">not content resale</span>
+                            Deep Insights — <span className="text-primary">Actionable Data</span>
                         </h3>
                         <p className="text-lg md:text-xl font-bold text-black mb-2 leading-tight">
-                            NCET Buddy provides examination infrastructure — not courses or content bundles.
+                            Understand your accuracy, time-spent per question, and subject-wise strength with our advanced analytics.
                         </p>
                         <p className="text-black/50 font-medium text-sm md:text-base italic">
-                            Typical apps monetise content, not exam systems.
+                            Move beyond simple scores. Know why you lost marks.
                         </p>
                     </div>
                 </div>
-
-
             </div>
         </section>
     );

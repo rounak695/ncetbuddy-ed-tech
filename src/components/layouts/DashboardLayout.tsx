@@ -40,6 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { href: "/dashboard/planner", label: "Smart Planner", icon: "📅" },
         { href: "/dashboard/analytics", label: "Analytics", icon: "📊" },
         { href: "/dashboard/leaderboard", label: "Leaderboard", icon: "🏆" },
+        { href: "/dashboard/forum", label: "Discussions", icon: "💬" },
         { href: "/dashboard/profile", label: "Profile", icon: "👤" },
     ];
 

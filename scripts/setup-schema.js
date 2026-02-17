@@ -8,7 +8,7 @@ const sdk = require('node-appwrite');
 const client = new sdk.Client();
 const databases = new sdk.Databases(client);
 
-const ENDPOINT = 'https://sgp.cloud.appwrite.io/v1'; // Update region if needed
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://nyc.cloud.appwrite.io/v1'; // Update region if needed
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
 
@@ -155,6 +155,31 @@ const COLLECTIONS = [
             { key: 'authorId', type: 'string', size: 255, required: false },
             { key: 'thumbnailUrl', type: 'string', size: 1000, required: false },
             { key: 'createdAt', type: 'integer', required: false },
+        ]
+    },
+    {
+        id: 'forum_posts',
+        name: 'Forum Posts',
+        attributes: [
+            { key: 'userId', type: 'string', size: 255, required: true },
+            { key: 'authorName', type: 'string', size: 255, required: true },
+            { key: 'title', type: 'string', size: 500, required: true },
+            { key: 'content', type: 'string', size: 5000, required: true },
+            { key: 'category', type: 'string', size: 100, required: true },
+            { key: 'upvotes', type: 'integer', required: false, default: 0 },
+            { key: 'views', type: 'integer', required: false, default: 0 },
+            { key: 'createdAt', type: 'integer', required: true },
+        ]
+    },
+    {
+        id: 'forum_comments',
+        name: 'Forum Comments',
+        attributes: [
+            { key: 'postId', type: 'string', size: 255, required: true },
+            { key: 'userId', type: 'string', size: 255, required: true },
+            { key: 'authorName', type: 'string', size: 255, required: true },
+            { key: 'content', type: 'string', size: 2000, required: true },
+            { key: 'createdAt', type: 'integer', required: true },
         ]
     }
 ];
