@@ -74,27 +74,28 @@ export const Differentiation = () => {
                         {/* Desktop Connections - Hidden on Mobile */}
                         <g className="hidden lg:block">
                             {/* TL */}
-                            <motion.path d="M50% 50% L15% 15%" fill="none" stroke="black" strokeWidth="3" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
+                            <motion.path d="M50% 50% L15% 15%" fill="none" stroke="black" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-30" />
                             {/* TR */}
-                            <motion.path d="M50% 50% L85% 15%" fill="none" stroke="black" strokeWidth="3" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
+                            <motion.path d="M50% 50% L85% 15%" fill="none" stroke="black" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-30" />
                             {/* BL */}
-                            <motion.path d="M50% 50% L15% 85%" fill="none" stroke="black" strokeWidth="3" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
+                            <motion.path d="M50% 50% L15% 85%" fill="none" stroke="black" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-30" />
                             {/* BR */}
-                            <motion.path d="M50% 50% L85% 85%" fill="none" stroke="black" strokeWidth="3" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
+                            <motion.path d="M50% 50% L85% 85%" fill="none" stroke="black" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-30" />
 
-                            <circle cx="50%" cy="50%" r="35%" fill="none" stroke="black" strokeWidth="2" strokeDasharray="12 12" className="opacity-10" />
+                            {/* Outer Circle Ring */}
+                            <circle cx="50%" cy="50%" r="35%" fill="none" stroke="black" strokeWidth="1" strokeDasharray="8 8" className="opacity-10" />
                         </g>
 
                         {/* Mobile Connections - Hidden on Desktop */}
                         <g className="lg:hidden">
                             {/* Vertical Line */}
-                            <line x1="50%" y1="10%" x2="50%" y2="90%" stroke="black" strokeWidth="3" strokeDasharray="8 8" className="opacity-20" />
+                            <line x1="50%" y1="10%" x2="50%" y2="90%" stroke="black" strokeWidth="2" strokeDasharray="6 6" className="opacity-20" />
 
                             {/* Connector Lines to Cards */}
-                            <motion.path d="M50% 50% L50% 12%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
-                            <motion.path d="M50% 50% L50% 32%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
-                            <motion.path d="M50% 50% L50% 68%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
-                            <motion.path d="M50% 50% L50% 88%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} />
+                            <motion.path d="M50% 50% L50% 12%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-20" />
+                            <motion.path d="M50% 50% L50% 32%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-20" />
+                            <motion.path d="M50% 50% L50% 68%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-20" />
+                            <motion.path d="M50% 50% L50% 88%" fill="none" stroke="black" strokeWidth="2" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1 }} className="opacity-20" />
                         </g>
                     </svg>
 
@@ -173,7 +174,7 @@ const FeatureCard = ({ feature, align = "center" }: { feature: any, align?: "lef
                     <h3 className="text-xl font-black uppercase italic tracking-tighter mb-2 leading-none">
                         {feature.title}
                     </h3>
-                    <p className="text-sm font-bold opacity-60 leading-relaxed">
+                    <p className="text-base font-medium opacity-80 leading-relaxed text-black/80">
                         {feature.description}
                     </p>
                 </div>

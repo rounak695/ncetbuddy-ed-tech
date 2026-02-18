@@ -17,12 +17,13 @@ export const LandingCarousel = () => {
                     <div className="inline-block px-4 py-1.5 bg-white border-2 border-black rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-bounce text-black">
                         🚀 #1 Platform for NCET Aspirants
                     </div>
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black">
                         Crack NCET <br className="hidden md:block" />
-                        <span className="bg-black text-primary px-4 py-2 italic transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2 hover:scale-105 transition-transform">
+                        <span className="bg-black text-primary px-4 py-2 transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2 hover:scale-105 transition-transform">
                             With Confidence
                         </span>
                     </h1>
+
                     <p className="text-xl md:text-2xl text-black font-bold max-w-2xl mx-auto leading-tight opacity-80">
                         The smartest way to prepare. <br className="hidden md:block" />
                         AI Study Planner, Real NTA Mocks, and a supportive community.
@@ -34,9 +35,9 @@ export const LandingCarousel = () => {
             id: "ai-roadmap",
             content: (
                 <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-28 pb-32">
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black">
                         Your Personal <br className="hidden md:block" />
-                        <span className="bg-white text-black border-4 border-black px-4 py-2 italic transform rotate-1 inline-block shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] mt-2">
+                        <span className="bg-white text-black border-4 border-black px-4 py-2 transform rotate-1 inline-block shadow-[8px_8px_0px_0px_rgba(255,208,47,1)] mt-2">
                             Success Roadmap
                         </span>
                     </h1>
@@ -50,9 +51,9 @@ export const LandingCarousel = () => {
             id: "community",
             content: (
                 <div className="flex flex-col items-center justify-center h-full px-4 max-w-5xl mx-auto text-center pt-28 pb-32">
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black uppercase">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[0.9] text-black">
                         Never Prepare <br className="hidden md:block" />
-                        <span className="bg-primary text-black px-4 py-2 italic transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2">
+                        <span className="bg-primary text-black px-4 py-2 transform -rotate-2 inline-block shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mt-2">
                             Alone
                         </span>
                     </h1>
@@ -126,10 +127,10 @@ export const LandingCarousel = () => {
                     <div
                         key={slide.id}
                         className={`absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center ${index === activeIndex
-                                ? "opacity-100 translate-x-0"
-                                : index < activeIndex
-                                    ? "opacity-0 -translate-x-full"
-                                    : "opacity-0 translate-x-full"
+                            ? "opacity-100 translate-x-0"
+                            : index < activeIndex
+                                ? "opacity-0 -translate-x-full"
+                                : "opacity-0 translate-x-full"
                             }`}
                         style={{
                             // Override the class translation if needed for JS animation, but using classes for simplicity/performance

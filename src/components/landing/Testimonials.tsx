@@ -39,12 +39,13 @@ export const Testimonials = () => {
                                 </div>
                                 <div className="relative">
                                     <span className="absolute -top-4 -left-2 text-6xl text-primary/20 font-serif leading-none">"</span>
-                                    <p className="text-black font-bold text-sm md:text-base italic opacity-70 leading-relaxed group-hover:opacity-100 transition-opacity relative z-10">
+                                    <p className="text-black font-medium text-sm md:text-base leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity relative z-10">
                                         {testimonial.review}
                                     </p>
                                     <span className="absolute -bottom-6 -right-2 text-6xl text-primary/20 font-serif leading-none rotate-180">"</span>
                                 </div>
                             </div>
+
                         ))}
                     </div>
                 </div>
