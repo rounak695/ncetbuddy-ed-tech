@@ -4,9 +4,10 @@ import { ForumCategory } from "@/types";
 
 const categories: { value: ForumCategory | 'all'; label: string; icon: string }[] = [
     { value: 'all', label: 'All', icon: '🔥' },
-    { value: 'general', label: 'General', icon: '💬' },
-    { value: 'doubts', label: 'Doubts', icon: '❓' },
-    { value: 'tips', label: 'Tips', icon: '💡' },
+    { value: 'General', label: 'General', icon: '💬' },
+    { value: 'Doubt', label: 'Doubts', icon: '❓' },
+    { value: 'Exam Update', label: 'Exam Updates', icon: '📢' },
+    { value: 'Strategy', label: 'Strategy', icon: '💡' },
 ];
 
 interface CategoryFilterProps {

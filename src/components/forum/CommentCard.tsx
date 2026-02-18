@@ -14,13 +14,9 @@ function timeAgo(timestamp: number): string {
 
 interface CommentCardProps {
     comment: ForumComment;
-    currentUserId?: string;
-    onLike?: (commentId: string) => void;
 }
 
-export default function CommentCard({ comment, currentUserId, onLike }: CommentCardProps) {
-    const isLiked = currentUserId ? comment.likes.includes(currentUserId) : false;
-
+export default function CommentCard({ comment }: CommentCardProps) {
     return (
         <div className="flex gap-3 p-4 rounded-2xl border-2 border-black/5 hover:border-black/15 hover:bg-primary/5 transition-all group">
             <div className="w-9 h-9 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-sm font-black text-black flex-shrink-0 shadow-sm">
@@ -31,12 +27,7 @@ export default function CommentCard({ comment, currentUserId, onLike }: CommentC
                     <span className="text-sm font-black text-black">{comment.authorName || 'Anonymous'}</span>
                     <span className="text-[10px] text-black/40 font-bold uppercase tracking-widest">{timeAgo(comment.createdAt)}</span>
                 </div>
-                <p className="text-sm text-black/70 font-medium leading-relaxed whitespace-pre-wrap break-words">{comment.body}</p>
-                <button onClick={() => { if (onLike && comment.id) onLike(comment.id); }}
-                    className={`mt-2 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-90 ${isLiked ? 'text-red-500' : 'text-black/30 hover:text-red-500'}`}>
-                    <span className="text-xs">{isLiked ? '❤️' : '🤍'}</span>
-                    {comment.likes.length > 0 && comment.likes.length}
-                </button>
+                <p className="text-sm text-black/70 font-medium leading-relaxed whitespace-pre-wrap break-words">{comment.content}</p>
             </div>
         </div>
     );

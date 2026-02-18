@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useParams } from "next/navigation";
 import { ForumPost, ForumComment as ForumCommentType } from "@/types";
-import { getForumPostById, getForumComments, createForumComment, likeForumPost, likeForumComment } from "@/lib/appwrite-db";
+import { getForumPostById, getForumComments, createForumComment, upvoteForumPost } from "@/lib/appwrite-db";
 import CommentCard from "@/components/forum/CommentCard";
 import Link from "next/link";
 
 const categoryConfig: Record<string, { label: string; icon: string; color: string }> = {
-    general: { label: 'General', icon: '💬', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-    doubts: { label: 'Doubt', icon: '❓', color: 'bg-red-100 text-red-800 border-red-300' },
-    tips: { label: 'Tip', icon: '💡', color: 'bg-green-100 text-green-800 border-green-300' },
+    'General': { label: 'General', icon: '💬', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+    'Doubt': { label: 'Doubt', icon: '❓', color: 'bg-red-100 text-red-800 border-red-300' },
+    'Exam Update': { label: 'Exam Update', icon: '📢', color: 'bg-orange-100 text-orange-800 border-orange-300' },
+    'Strategy': { label: 'Strategy', icon: '💡', color: 'bg-green-100 text-green-800 border-green-300' },
 };
 
 function timeAgo(timestamp: number): string {
@@ -56,29 +57,20 @@ export default function PostDetailPage() {
         setSubmitting(true);
         try {
             await createForumComment({
-                postId, authorId: user.$id, authorName: user.name || 'Anonymous',
-                body: commentText.trim(), likes: [], createdAt: Math.floor(Date.now() / 1000),
+                postId, userId: user.$id, authorName: user.name || 'Anonymous',
+                content: commentText.trim(),
             });
             setCommentText('');
-            const [updatedPost, updatedComments] = await Promise.all([
-                getForumPostById(postId), getForumComments(postId),
-            ]);
-            setPost(updatedPost);
+            const updatedComments = await getForumComments(postId);
             setComments(updatedComments);
         } catch (error) { console.error("Error submitting comment:", error); }
         finally { setSubmitting(false); }
     };
 
-    const handleLikePost = async () => {
-        if (!user || !post?.id) return;
-        const newLikes = await likeForumPost(post.id, user.$id);
-        setPost(prev => prev ? { ...prev, likes: newLikes } : null);
-    };
-
-    const handleLikeComment = async (commentId: string) => {
-        if (!user) return;
-        const newLikes = await likeForumComment(commentId, user.$id);
-        setComments(prev => prev.map(c => c.id === commentId ? { ...c, likes: newLikes } : c));
+    const handleUpvote = async () => {
+        if (!post?.id) return;
+        const newUpvotes = await upvoteForumPost(post.id);
+        setPost(prev => prev ? { ...prev, upvotes: newUpvotes } : null);
     };
 
     if (loading) {
@@ -110,8 +102,7 @@ export default function PostDetailPage() {
         );
     }
 
-    const cat = categoryConfig[post.category] || categoryConfig.general;
-    const isLiked = user ? post.likes.includes(user.$id) : false;
+    const cat = categoryConfig[post.category] || categoryConfig['General'];
 
     return (
         <div className="pb-24 min-h-full">
@@ -125,7 +116,7 @@ export default function PostDetailPage() {
                         <span className="text-[10px] md:text-xs text-black/40 font-bold uppercase tracking-widest">{timeAgo(post.createdAt)}</span>
                     </div>
                     <h1 className="text-lg md:text-xl font-black text-black leading-snug mb-3">{post.title}</h1>
-                    <p className="text-sm md:text-base text-black/70 font-medium leading-relaxed whitespace-pre-wrap">{post.body}</p>
+                    <p className="text-sm md:text-base text-black/70 font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
                     <div className="flex items-center justify-between pt-5 mt-5 border-t border-border">
                         <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-sm font-black text-black shadow-sm">{post.authorName?.charAt(0)?.toUpperCase() || '?'}</div>
@@ -134,13 +125,10 @@ export default function PostDetailPage() {
                                 <span className="text-[10px] text-black/40 font-bold uppercase tracking-widest">Author</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <button onClick={handleLikePost}
-                                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 transition-all font-bold text-sm active:scale-90 ${isLiked ? 'bg-red-50 border-red-200 text-red-500' : 'border-black/10 text-secondary hover:border-red-200 hover:bg-red-50 hover:text-red-500'}`}>
-                                <span>{isLiked ? '❤️' : '🤍'}</span>{post.likes.length}
-                            </button>
-                            <div className="flex items-center gap-1.5 text-sm font-bold text-secondary"><span>💬</span>{post.commentCount}</div>
-                        </div>
+                        <button onClick={handleUpvote}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-black/10 text-secondary hover:border-primary hover:bg-primary/10 hover:text-black transition-all font-bold text-sm active:scale-90">
+                            <span>🔥</span>{post.upvotes}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -165,7 +153,7 @@ export default function PostDetailPage() {
                     {comments.length === 0 ? (
                         <div className="text-center py-10"><span className="text-3xl block mb-2">🤫</span><p className="text-sm font-bold text-secondary">No comments yet. Be the first to reply!</p></div>
                     ) : comments.map((comment) => (
-                        <CommentCard key={comment.id} comment={comment} currentUserId={user?.$id} onLike={handleLikeComment} />
+                        <CommentCard key={comment.id} comment={comment} />
                     ))}
                 </div>
             </div>

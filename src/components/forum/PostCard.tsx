@@ -4,9 +4,10 @@ import Link from "next/link";
 import { ForumPost } from "@/types";
 
 const categoryConfig: Record<string, { label: string; icon: string; color: string }> = {
-    general: { label: 'General', icon: '💬', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-    doubts: { label: 'Doubt', icon: '❓', color: 'bg-red-100 text-red-800 border-red-300' },
-    tips: { label: 'Tip', icon: '💡', color: 'bg-green-100 text-green-800 border-green-300' },
+    'General': { label: 'General', icon: '💬', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+    'Doubt': { label: 'Doubt', icon: '❓', color: 'bg-red-100 text-red-800 border-red-300' },
+    'Exam Update': { label: 'Exam Update', icon: '📢', color: 'bg-orange-100 text-orange-800 border-orange-300' },
+    'Strategy': { label: 'Strategy', icon: '💡', color: 'bg-green-100 text-green-800 border-green-300' },
 };
 
 function timeAgo(timestamp: number): string {
@@ -21,13 +22,11 @@ function timeAgo(timestamp: number): string {
 
 interface PostCardProps {
     post: ForumPost;
-    currentUserId?: string;
-    onLike?: (postId: string) => void;
+    onUpvote?: (postId: string) => void;
 }
 
-export default function PostCard({ post, currentUserId, onLike }: PostCardProps) {
-    const cat = categoryConfig[post.category] || categoryConfig.general;
-    const isLiked = currentUserId ? post.likes.includes(currentUserId) : false;
+export default function PostCard({ post, onUpvote }: PostCardProps) {
+    const cat = categoryConfig[post.category] || categoryConfig['General'];
 
     return (
         <div className="group relative p-1 rounded-3xl bg-gray-100 hover:bg-primary/10 transition-all duration-300">
@@ -45,7 +44,7 @@ export default function PostCard({ post, currentUserId, onLike }: PostCardProps)
                         {post.title}
                     </h3>
                     <p className="text-xs md:text-sm text-secondary mt-1.5 line-clamp-2 font-medium leading-relaxed">
-                        {post.body}
+                        {post.content}
                     </p>
                 </Link>
                 <div className="flex items-center justify-between pt-3 border-t border-border">
@@ -56,15 +55,14 @@ export default function PostCard({ post, currentUserId, onLike }: PostCardProps)
                         <span className="text-xs font-bold text-secondary">{post.authorName || 'Anonymous'}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button onClick={(e) => { e.preventDefault(); if (onLike && post.id) onLike(post.id); }}
-                            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-90 ${isLiked ? 'text-red-500' : 'text-secondary hover:text-red-500'}`}>
-                            <span className="text-sm">{isLiked ? '❤️' : '🤍'}</span>
-                            {post.likes.length > 0 && post.likes.length}
+                        <button onClick={(e) => { e.preventDefault(); if (onUpvote && post.id) onUpvote(post.id); }}
+                            className="flex items-center gap-1.5 text-xs font-bold text-secondary hover:text-primary transition-all active:scale-90">
+                            <span className="text-sm">🔥</span>
+                            {post.upvotes > 0 && post.upvotes}
                         </button>
                         <Link href={`/dashboard/forum/${post.id}`}
                             className="flex items-center gap-1.5 text-xs font-bold text-secondary hover:text-foreground transition-colors">
                             <span className="text-sm">💬</span>
-                            {post.commentCount > 0 && post.commentCount}
                         </Link>
                     </div>
                 </div>

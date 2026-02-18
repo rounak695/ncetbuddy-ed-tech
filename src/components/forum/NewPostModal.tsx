@@ -6,24 +6,24 @@ import { ForumCategory } from "@/types";
 interface NewPostModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: { title: string; body: string; category: ForumCategory }) => Promise<void>;
+    onSubmit: (data: { title: string; content: string; category: ForumCategory }) => Promise<void>;
 }
 
 export default function NewPostModal({ isOpen, onClose, onSubmit }: NewPostModalProps) {
     const [title, setTitle] = useState('');
-    const [body, setBody] = useState('');
-    const [category, setCategory] = useState<ForumCategory>('general');
+    const [content, setContent] = useState('');
+    const [category, setCategory] = useState<ForumCategory>('General');
     const [submitting, setSubmitting] = useState(false);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title.trim() || !body.trim()) return;
+        if (!title.trim() || !content.trim()) return;
         setSubmitting(true);
         try {
-            await onSubmit({ title: title.trim(), body: body.trim(), category });
-            setTitle(''); setBody(''); setCategory('general'); onClose();
+            await onSubmit({ title: title.trim(), content: content.trim(), category });
+            setTitle(''); setContent(''); setCategory('General'); onClose();
         } catch (error) { console.error("Error submitting post:", error); }
         finally { setSubmitting(false); }
     };
@@ -39,10 +39,15 @@ export default function NewPostModal({ isOpen, onClose, onSubmit }: NewPostModal
                 <form onSubmit={handleSubmit} className="p-5 md:p-6 space-y-5">
                     <div>
                         <label className="text-xs font-black text-black uppercase tracking-widest mb-2 block opacity-50">Category</label>
-                        <div className="flex gap-2">
-                            {([{ value: 'general', icon: '💬', label: 'General' }, { value: 'doubts', icon: '❓', label: 'Doubts' }, { value: 'tips', icon: '💡', label: 'Tips' }] as const).map((cat) => (
+                        <div className="flex gap-2 flex-wrap">
+                            {([
+                                { value: 'General' as const, icon: '💬', label: 'General' },
+                                { value: 'Doubt' as const, icon: '❓', label: 'Doubt' },
+                                { value: 'Exam Update' as const, icon: '📢', label: 'Exam Update' },
+                                { value: 'Strategy' as const, icon: '💡', label: 'Strategy' },
+                            ]).map((cat) => (
                                 <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
-                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-xs font-black uppercase tracking-tight
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-xs font-black uppercase tracking-tight
                                         ${category === cat.value ? 'bg-primary border-black text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]' : 'border-black/10 bg-white text-black/60 hover:border-black/20'}`}>
                                     <span>{cat.icon}</span>{cat.label}
                                 </button>
@@ -56,10 +61,10 @@ export default function NewPostModal({ isOpen, onClose, onSubmit }: NewPostModal
                     </div>
                     <div>
                         <label className="text-xs font-black text-black uppercase tracking-widest mb-2 block opacity-50">Description</label>
-                        <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Share your thoughts, doubts, or tips..." rows={4} required
+                        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Share your thoughts, doubts, or tips..." rows={4} required
                             className="w-full px-4 py-3 rounded-xl border-2 border-black/10 bg-white text-black font-medium text-sm placeholder:text-black/30 focus:border-black focus:outline-none focus:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all resize-none" />
                     </div>
-                    <button type="submit" disabled={submitting || !title.trim() || !body.trim()}
+                    <button type="submit" disabled={submitting || !title.trim() || !content.trim()}
                         className="w-full py-4 bg-black text-white font-black uppercase tracking-wider rounded-2xl border-2 border-black hover:bg-primary hover:text-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(255,208,47,1)] disabled:shadow-none text-sm">
                         {submitting ? 'Posting...' : '🚀 Post Discussion'}
                     </button>

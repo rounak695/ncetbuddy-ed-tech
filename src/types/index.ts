@@ -250,26 +250,25 @@ export interface UserAnalytics { // Aggregated stats for a user
     sessions: number;
 }
 
-export type ForumCategory = 'general' | 'doubts' | 'tips';
+export type ForumCategory = 'General' | 'Doubt' | 'Exam Update' | 'Strategy';
 
 export interface ForumPost {
     id?: string;
-    authorId: string;
+    userId: string;
     authorName: string;
     title: string;
-    body: string;
+    content: string;
     category: ForumCategory;
-    likes: string[];
-    commentCount: number;
+    upvotes: number;
+    views: number;
     createdAt: number;
 }
 
 export interface ForumComment {
     id?: string;
     postId: string;
-    authorId: string;
+    userId: string;
     authorName: string;
-    body: string;
-    likes: string[];
+    content: string;
     createdAt: number;
 }

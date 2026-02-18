@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ForumPost, ForumCategory } from "@/types";
-import { getForumPosts, createForumPost, likeForumPost } from "@/lib/appwrite-db";
+import { getForumPosts, createForumPost, upvoteForumPost } from "@/lib/appwrite-db";
 import CategoryFilter from "@/components/forum/CategoryFilter";
 import PostCard from "@/components/forum/PostCard";
 import NewPostModal from "@/components/forum/NewPostModal";
@@ -27,20 +27,18 @@ export default function ForumPage() {
 
     useEffect(() => { fetchPosts(); }, [activeCategory]);
 
-    const handleCreatePost = async (data: { title: string; body: string; category: ForumCategory }) => {
+    const handleCreatePost = async (data: { title: string; content: string; category: ForumCategory }) => {
         if (!user) return;
         await createForumPost({
-            authorId: user.$id, authorName: user.name || 'Anonymous',
-            title: data.title, body: data.body, category: data.category,
-            likes: [], commentCount: 0, createdAt: Math.floor(Date.now() / 1000),
+            userId: user.$id, authorName: user.name || 'Anonymous',
+            title: data.title, content: data.content, category: data.category,
         });
         await fetchPosts();
     };
 
-    const handleLike = async (postId: string) => {
-        if (!user) return;
-        const newLikes = await likeForumPost(postId, user.$id);
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikes } : p));
+    const handleUpvote = async (postId: string) => {
+        const newUpvotes = await upvoteForumPost(postId);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, upvotes: newUpvotes } : p));
     };
 
     return (
@@ -81,7 +79,7 @@ export default function ForumPage() {
                         <p className="text-sm text-secondary font-medium mt-1 max-w-xs">Be the first to start a conversation! Click &quot;New Discussion&quot; above.</p>
                     </div>
                 ) : posts.map((post) => (
-                    <PostCard key={post.id} post={post} currentUserId={user?.$id} onLike={handleLike} />
+                    <PostCard key={post.id} post={post} onUpvote={handleUpvote} />
                 ))}
             </div>
             <NewPostModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleCreatePost} />
