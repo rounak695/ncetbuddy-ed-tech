@@ -12,16 +12,22 @@ export default function ForumPage() {
     const { user } = useAuth();
     const [posts, setPosts] = useState<ForumPost[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeCategory, setActiveCategory] = useState<ForumCategory | 'all'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchPosts = async () => {
         setLoading(true);
+        setError(null);
         try {
             const category = activeCategory === 'all' ? undefined : activeCategory;
             const data = await getForumPosts(category);
             setPosts(data);
-        } catch (error) { console.error("Error loading posts:", error); }
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error("Error loading posts:", msg);
+            setError(msg);
+        }
         finally { setLoading(false); }
     };
 
@@ -29,11 +35,20 @@ export default function ForumPage() {
 
     const handleCreatePost = async (data: { title: string; content: string; category: ForumCategory }) => {
         if (!user) return;
-        await createForumPost({
-            userId: user.$id, authorName: user.name || 'Anonymous',
-            title: data.title, content: data.content, category: data.category,
-        });
-        await fetchPosts();
+        try {
+            const result = await createForumPost({
+                userId: user.$id, authorName: user.name || 'Anonymous',
+                title: data.title, content: data.content, category: data.category,
+            });
+            if (!result) {
+                alert("Failed to create post. Check browser console for details.");
+                return;
+            }
+            await fetchPosts();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            alert("Error creating post: " + msg);
+        }
     };
 
     const handleUpvote = async (postId: string) => {
@@ -54,6 +69,13 @@ export default function ForumPage() {
                 </button>
             </div>
             <div className="mb-6"><CategoryFilter active={activeCategory} onChange={setActiveCategory} /></div>
+
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-2xl text-red-700 text-sm font-bold">
+                    ⚠️ Error: {error}
+                </div>
+            )}
+
             <div className="space-y-4">
                 {loading ? (
                     <div className="space-y-4">

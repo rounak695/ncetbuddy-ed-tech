@@ -1630,7 +1630,7 @@ export const createForumPost = async (post: Omit<ForumPost, 'id' | 'createdAt' |
             upvotes: 0, views: 0, createdAt: Math.floor(Date.now() / 1000),
         });
         return response.$id;
-    } catch (error) { console.error("Error creating forum post:", error); return null; }
+    } catch (error) { console.error("Error creating forum post:", error); throw error; }
 };
 
 export const deleteForumPost = async (postId: string): Promise<boolean> => {
