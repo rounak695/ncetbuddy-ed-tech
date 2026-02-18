@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
-import { getForumPosts, ForumPost } from "@/lib/appwrite-forum";
+import { getForumPosts, ForumPost, ForumComment, getPostComments, createComment } from "@/lib/appwrite-forum";
 import { CreatePostModal } from "@/components/forum/CreatePostModal";
 
-// Extended type for UI specific fields if needed, 
-// strictly speaking we should use the type from lib
+// Extended type for UI specific fields if needed
 interface UIForumPost extends ForumPost {
     isHot?: boolean;
     commentCount?: number;
@@ -17,19 +15,26 @@ interface UIForumPost extends ForumPost {
 export default function ForumPage() {
     const { user } = useAuth();
     const [posts, setPosts] = useState<UIForumPost[]>([]);
+    const [selectedPost, setSelectedPost] = useState<UIForumPost | null>(null);
+    const [comments, setComments] = useState<ForumComment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState("All");
+    const [loadingComments, setLoadingComments] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newComment, setNewComment] = useState("");
+
+    // Refs for scrolling
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const fetchedPosts = await getForumPosts(filter);
-            // Transform to UI format if needed (e.g. add isHot logic)
+            // Fetch all posts (removed category filter)
+            const fetchedPosts = await getForumPosts();
+
             const uiPosts = fetchedPosts.map(post => ({
                 ...post,
-                isHot: post.upvotes > 5, // Simple logic for "Hot"
-                commentCount: 0 // We'd need to fetch comment counts separately or add to post document
+                isHot: post.upvotes > 5,
+                commentCount: 0
             }));
             setPosts(uiPosts);
         } catch (error) {
@@ -39,211 +44,303 @@ export default function ForumPage() {
         }
     };
 
+    // Initial load
     useEffect(() => {
         fetchPosts();
-    }, [filter]); // Re-fetch when filter changes
+    }, []);
 
-    const categories = [
-        { id: "All", label: "All Topics", icon: "🌐" },
-        { id: "Strategy", label: "Strategy", icon: "🧠" },
-        { id: "Doubt", label: "Doubts", icon: "❓" },
-        { id: "Exam Update", label: "Updates", icon: "📢" },
-        { id: "General", label: "General", icon: "💬" }
-    ];
+    // Fetch comments when a post is selected
+    useEffect(() => {
+        if (selectedPost) {
+            setLoadingComments(true);
+            getPostComments(selectedPost.id)
+                .then(data => {
+                    setComments(data);
+                })
+                .catch(err => console.error(err))
+                .finally(() => setLoadingComments(false));
+        }
+    }, [selectedPost]);
 
-    const getCategoryColor = (cat: string) => {
-        switch (cat) {
-            case 'Strategy': return 'bg-purple-100 text-purple-700 border-purple-200';
-            case 'Doubt': return 'bg-red-100 text-red-700 border-red-200';
-            case 'Exam Update': return 'bg-blue-100 text-blue-700 border-blue-200';
-            default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    // Scroll to bottom when comments change or post changes
+    useEffect(() => {
+        if (selectedPost) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [comments, selectedPost]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComment.trim() || !selectedPost || !user) return;
+
+        const commentContent = newComment;
+        setNewComment(""); // Optimistic clear
+
+        try {
+            await createComment({
+                postId: selectedPost.id,
+                userId: user.$id,
+                authorName: user.name || "Anonymous",
+                content: commentContent
+            });
+
+            // Refresh comments
+            const updatedComments = await getPostComments(selectedPost.id);
+            setComments(updatedComments);
+        } catch (err) {
+            console.error("Failed to send comment:", err);
+            // Optionally restore text if failed
         }
     };
 
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
     return (
-        <div className="min-h-screen bg-[#fafafa] pb-20">
+        // Wrapper with negative margin to counteract dashboard padding and fill height
+        <div className="flex h-[calc(100vh-6rem)] md:h-[calc(100vh-5rem)] -m-4 md:-m-8 md:mt-[-2rem] bg-white overflow-hidden relative">
             <CreatePostModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onPostCreated={fetchPosts}
             />
 
-            {/* Hero Section */}
-            <div className="bg-white border-b-2 border-black pb-10 pt-8 px-6 md:px-12 mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-10 opacity-5 select-none pointer-events-none">
-                    <span className="text-9xl">💬</span>
-                </div>
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-                    <div>
-                        <div className="inline-block px-3 py-1 bg-primary border-2 border-black rounded-lg text-xs font-black uppercase tracking-widest mb-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            Community Hub
+            {/* Left Sidebar - Chat List */}
+            <div className={`
+                flex-col w-full md:w-[400px] border-r border-gray-200 bg-white z-10
+                ${selectedPost ? 'hidden md:flex' : 'flex'}
+            `}>
+                {/* Header */}
+                <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex justify-between items-center h-16 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                            {/* User Avatar Placeholder */}
+                            <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-bold">
+                                {user?.name?.charAt(0) || 'U'}
+                            </div>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-black uppercase italic tracking-tighter mb-2">
-                            Discussions
-                        </h1>
-                        <p className="text-lg text-black/60 font-medium max-w-xl">
-                            Ask questions, share strategies, and celebrate wins with the top regular students of India.
-                        </p>
+                        <h1 className="font-bold text-gray-800">Discussions</h1>
                     </div>
-
-                    <div className="flex gap-4">
-                        <Link href="/dashboard/profile">
-                            <Button variant="outline" className="hidden md:flex bg-white text-black border-2 border-black font-bold items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
-                                👤 My Profile
-                            </Button>
-                        </Link>
+                    <div className="flex gap-3">
                         <Button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-black text-white border-2 border-black font-black uppercase tracking-wide px-8 py-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] hover:-translate-y-1 transition-all flex items-center gap-2"
+                            className="bg-inherit hover:bg-black/10 text-black border-none shadow-none p-2 rounded-full w-10 h-10 flex items-center justify-center font-bold text-xl"
+                            title="New Discussion"
                         >
-                            <span>✍️</span> Start Discussion
+                            ➕
                         </Button>
                     </div>
                 </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-                {/* Left Sidebar - Navigation/Filters (Desktop) */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-2xl border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sticky top-24">
-                        <h3 className="font-black text-black uppercase tracking-widest text-xs mb-4 ml-2 opacity-50">Filter by Topic</h3>
-                        <div className="space-y-2">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setFilter(cat.id)}
-                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all border-2
-                                        ${filter === cat.id
-                                            ? "bg-primary border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-x-1"
-                                            : "bg-transparent border-transparent text-black/60 hover:bg-black/5 hover:text-black"
-                                        }`}
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="text-xl">{cat.icon}</span>
-                                        {cat.label}
-                                    </span>
-                                    {filter === cat.id && <span className="text-xs">●</span>}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-black to-gray-900 rounded-2xl border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] text-white hidden lg:block">
-                        <h3 className="font-black uppercase tracking-widest text-xs mb-4 text-primary">Community Rules</h3>
-                        <ul className="space-y-3 text-sm font-medium text-white/80">
-                            <li className="flex gap-2"><span>✅</span> <span>Be respectful to everyone.</span></li>
-                            <li className="flex gap-2"><span>✅</span> <span>No spam or self-promotion.</span></li>
-                            <li className="flex gap-2"><span>✅</span> <span>Keep discussions relevant.</span></li>
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Main Feed */}
-                <div className="lg:col-span-3 space-y-6">
-                    {/* Search Bar (Visual Only) */}
+                {/* Search Bar */}
+                <div className="p-2 border-b border-gray-200 bg-white">
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search discussions..."
-                            className="w-full bg-white border-2 border-black rounded-xl px-5 py-4 pl-12 font-bold text-black placeholder:text-black/30 outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                            placeholder="Search or start new chat"
+                            className="w-full bg-[#f0f2f5] rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00a884]"
                         />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl opacity-30">🔍</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
                     </div>
+                </div>
 
+                {/* List of Chats */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {loading ? (
-                        <div className="text-center py-20">
-                            <div className="animate-spin text-4xl mb-4">⌛</div>
-                            <p className="font-black text-black/40 uppercase tracking-widest">Loading Discussions...</p>
+                        <div className="flex items-center justify-center h-20 text-gray-400">Loading...</div>
+                    ) : posts.length === 0 ? (
+                        <div className="text-center p-8 text-gray-500">
+                            No discussions yet. Start one!
                         </div>
-                    ) : posts.length > 0 ? (
+                    ) : (
                         posts.map(post => (
-                            <div key={post.id} className="group relative bg-white border-2 border-black rounded-2xl p-6 md:p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all cursor-pointer">
-                                {post.isHot && (
-                                    <div className="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full border-2 border-black shadow-sm transform rotate-3">
-                                        🔥 Hot Topic
+                            <div
+                                key={post.id}
+                                onClick={() => setSelectedPost(post)}
+                                className={`
+                                    flex cursor-pointer p-3 border-b border-gray-100 hover:bg-[#f5f6f6] transition-colors
+                                    ${selectedPost?.id === post.id ? 'bg-[#f0f2f5]' : 'bg-white'}
+                                `}
+                            >
+                                {/* Avatar */}
+                                <div className="shrink-0 mr-3">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                                        {post.authorName ? post.authorName.charAt(0).toUpperCase() : '?'}
                                     </div>
-                                )}
+                                </div>
 
-                                <div className="flex gap-4">
-                                    {/* Vote Column */}
-                                    <div className="flex flex-col items-center gap-1">
-                                        <button className="p-2 rounded-lg hover:bg-gray-100 text-black/40 hover:text-primary transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                                            </svg>
-                                        </button>
-                                        <span className="font-black text-lg">{post.upvotes}</span>
-                                        <button className="p-2 rounded-lg hover:bg-gray-100 text-black/40 hover:text-red-500 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* Content Column */}
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-primary to-yellow-300 border border-black flex items-center justify-center text-[10px] font-black">
-                                                    {post.authorName ? post.authorName.charAt(0) : 'A'}
-                                                </div>
-                                                <span className="text-xs font-bold text-black">{post.authorName || 'Anonymous'}</span>
-                                            </div>
-                                            <span className="text-black/20 font-black text-xs">•</span>
-                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border ${getCategoryColor(post.category)}`}>
-                                                {post.category}
-                                            </span>
-                                            <span className="text-black/40 text-xs font-medium ml-auto">
-                                                {new Date(post.createdAt * 1000).toLocaleDateString()}
-                                            </span>
-                                        </div>
-
-                                        <h3 className="text-xl md:text-2xl font-black text-black mb-2 leading-tight group-hover:text-primary transition-colors">
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h3 className="text-gray-900 font-medium truncate text-base">
                                             {post.title}
                                         </h3>
-                                        <p className="text-black/60 font-medium leading-relaxed mb-4 line-clamp-3">
+                                        <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                                            {formatDate(post.createdAt)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-gray-600 text-sm truncate pr-2">
+                                            <span className="font-semibold text-gray-800 mr-1">{post.authorName}:</span>
                                             {post.content}
                                         </p>
-
-                                        <div className="flex items-center gap-4 border-t-2 border-black/5 pt-4">
-                                            <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black transition-colors">
-                                                <span className="text-lg">💬</span> {post.commentCount || 0} Comments
-                                            </button>
-                                            <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black transition-colors">
-                                                <span className="text-lg">📢</span> Share
-                                            </button>
-                                            <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black transition-colors ml-auto">
-                                                <span className="text-lg">🔖</span> Save
-                                            </button>
-                                        </div>
+                                        {post.isHot && (
+                                            <span className="shrink-0 bg-red-500 text-white text-[10px] items-center justify-center flex h-4 w-4 rounded-full">🔥</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ))
-                    ) : (
-                        <div className="p-12 text-center border-4 border-dashed border-black/10 rounded-3xl">
-                            <p className="text-black/40 font-black uppercase tracking-widest mb-4">No discussions found.</p>
-                            <Button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                variant="outline"
-                                className="border-2 border-black font-bold"
-                            >
-                                Be the first to post!
-                            </Button>
-                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Floating Mobile Action Button */}
-            <div className="md:hidden fixed bottom-6 right-6 z-50">
-                <Button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="w-16 h-16 rounded-full bg-black text-primary border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center text-3xl hover:scale-110 active:scale-90 transition-all"
-                >
-                    ➕
-                </Button>
+            {/* Right Panel - Chat Area */}
+            <div className={`
+                flex-col flex-1 bg-[#efeae2] relative
+                ${!selectedPost ? 'hidden md:flex' : 'flex'}
+            `}>
+                {/* Chat Background Pattern Overlay */}
+                <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                    style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')" }}>
+                </div>
+
+                {selectedPost ? (
+                    <>
+                        {/* Header */}
+                        <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0 z-10 h-16">
+                            <div className="flex items-center gap-4">
+                                {/* Back Button (Mobile only) */}
+                                <button
+                                    onClick={() => setSelectedPost(null)}
+                                    className="md:hidden text-2xl text-[#54656f]"
+                                >
+                                    ←
+                                </button>
+
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold cursor-pointer">
+                                    {selectedPost.authorName?.charAt(0).toUpperCase()}
+                                </div>
+
+                                <div className="flex flex-col cursor-pointer">
+                                    <span className="text-gray-900 font-medium line-clamp-1">{selectedPost.title}</span>
+                                    <span className="text-xs text-gray-500">
+                                        {selectedPost.authorName} • {selectedPost.category}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-[#54656f]">
+                                <button title="Search" className="hidden sm:block">🔍</button>
+                                <button title="Menu">⋮</button>
+                            </div>
+                        </div>
+
+                        {/* Messages List */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 z-10 custom-scrollbar">
+
+                            {/* Sticky Date/Info Divider (Optional) */}
+                            <div className="flex justify-center mb-4">
+                                <span className="bg-white/90 shadow-sm px-3 py-1 rounded-lg text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Discussion started
+                                </span>
+                            </div>
+
+                            {/* The Original Post (as the first message) */}
+                            <div className="flex flex-col space-y-1 max-w-[85%] md:max-w-[70%]">
+                                <div className={`px-4 py-2 rounded-lg shadow-sm bg-white text-gray-900 rounded-tl-none`}>
+                                    <div className="font-bold text-sm text-[#d97c2e] mb-1">{selectedPost.authorName}</div>
+                                    <div className="whitespace-pre-wrap break-words text-sm md:text-base">
+                                        {selectedPost.content}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 text-right mt-1 gap-1 flex justify-end items-center">
+                                        {formatDate(selectedPost.createdAt)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Comments */}
+                            {comments.map((comment) => {
+                                const isMe = comment.userId === user?.$id;
+                                return (
+                                    <div key={comment.id} className={`flex flex-col space-y-1 max-w-[85%] md:max-w-[70%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                                        <div className={`px-4 py-2 rounded-lg shadow-sm text-gray-900 break-words text-sm md:text-base
+                                            ${isMe
+                                                ? 'bg-[#d9fdd3] rounded-tr-none'
+                                                : 'bg-white rounded-tl-none'
+                                            }
+                                        `}>
+                                            {!isMe && (
+                                                <div className="font-bold text-sm text-[#d97c2e] mb-1">{comment.authorName}</div>
+                                            )}
+                                            <div className="whitespace-pre-wrap">{comment.content}</div>
+                                            <div className="text-[10px] text-gray-500 text-right mt-1 flex justify-end items-center gap-1">
+                                                {formatDate(comment.createdAt)}
+                                                {isMe && <span className="text-blue-500">✓✓</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Loading Indicator for comments */}
+                            {loadingComments && comments.length === 0 && (
+                                <div className="flex justify-center py-4">
+                                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
+
+                            {/* Invisible div to scroll to */}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input Area */}
+                        <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-4 z-10 shrink-0">
+                            <button className="text-2xl text-[#54656f] hidden sm:block">😊</button>
+                            <button className="text-2xl text-[#54656f]">📎</button>
+                            <form className="flex-1 flex gap-2" onSubmit={handleSendMessage}>
+                                <input
+                                    type="text"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    placeholder="Type a message"
+                                    className="flex-1 py-3 px-4 rounded-lg border-none focus:outline-none focus:ring-1 focus:ring-white/50 text-sm md:text-base font-normal shadow-sm"
+                                />
+                                {newComment.trim() ? (
+                                    <button
+                                        type="submit"
+                                        className="text-[#54656f] hover:text-[#00a884] transition-colors p-2"
+                                    >
+                                        <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="" version="1.1" x="0px" y="0px" enableBackground="new 0 0 24 24"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.623,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
+                                    </button>
+                                ) : (
+                                    <button type="button" className="text-[#54656f] p-2">
+                                        🎤
+                                    </button>
+                                )}
+                            </form>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 z-10">
+                        <div className="w-64 h-64 mb-8 opacity-90">
+                            {/* Placeholder Image using an emoji or simple SVG */}
+                            <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center text-9xl shadow-inner">
+                                💬
+                            </div>
+                        </div>
+                        <h2 className="text-3xl text-gray-800 font-light mb-4">NCET Buddy Web</h2>
+                        <p className="text-gray-500 text-sm max-w-md">
+                            Select a discussion to start chatting. <br />
+                            Ask questions, share strategies, and connect with other students.
+                        </p>
+                        <div className="mt-8 text-xs text-gray-400">
+                            🔒 End-to-end encrypted (just kidding, but it is secure!)
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
