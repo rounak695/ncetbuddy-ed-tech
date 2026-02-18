@@ -249,3 +249,27 @@ export interface UserAnalytics { // Aggregated stats for a user
     engagementLevel: 'High' | 'Medium' | 'Low';
     sessions: number;
 }
+
+export type ForumCategory = 'general' | 'doubts' | 'tips';
+
+export interface ForumPost {
+    id?: string;
+    authorId: string;
+    authorName: string;
+    title: string;
+    body: string;
+    category: ForumCategory;
+    likes: string[];
+    commentCount: number;
+    createdAt: number;
+}
+
+export interface ForumComment {
+    id?: string;
+    postId: string;
+    authorId: string;
+    authorName: string;
+    body: string;
+    likes: string[];
+    createdAt: number;
+}

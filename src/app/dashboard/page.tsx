@@ -68,6 +68,20 @@ export default function DashboardPage() {
                         </div>
                     </Link>
                 </Section>
+
+                <Section title="Community">
+                    <Link href="/dashboard/forum" className="block w-full">
+                        <div className="w-full bg-card border border-dashed border-border rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center text-center hover:bg-primary/5 transition-all cursor-pointer group hover:border-primary/50 shadow-lg shadow-black/5">
+                            <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <span className="text-2xl md:text-3xl">💬</span>
+                            </div>
+                            <div className="font-bold text-lg md:text-xl text-foreground group-hover:text-black transition-colors">Discussion Forum</div>
+                            <p className="text-xs md:text-sm text-secondary mt-2 max-w-md font-medium">
+                                Ask doubts, share tips, and connect with fellow students preparing together.
+                            </p>
+                        </div>
+                    </Link>
+                </Section>
             </div>
         </div>
     );

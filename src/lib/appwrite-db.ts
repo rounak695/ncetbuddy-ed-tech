@@ -1,6 +1,6 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query, Models } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics, ForumPost, ForumComment, ForumCategory } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -1598,3 +1598,95 @@ export const setUserDailyGoal = async (userId: string, target: number, goalText:
         console.error("Error setting daily goal:", error);
     }
 };
+
+// --- Discussion Forum ---
+
+export const getForumPosts = async (category?: ForumCategory): Promise<ForumPost[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const queries: string[] = [Query.orderDesc('createdAt'), Query.limit(50)];
+        if (category) queries.push(Query.equal('category', category));
+        const response = await databases.listDocuments(DB_ID, 'forum-posts', queries);
+        return response.documents.map(doc => ({
+            id: doc.$id, ...doc,
+            likes: Array.isArray(doc.likes) ? doc.likes : [],
+        })) as unknown as ForumPost[];
+    } catch (error) { console.error("Error fetching forum posts:", error); return []; }
+};
+
+export const getForumPostById = async (id: string): Promise<ForumPost | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const doc = await databases.getDocument(DB_ID, 'forum-posts', id);
+        return { id: doc.$id, ...doc, likes: Array.isArray(doc.likes) ? doc.likes : [] } as unknown as ForumPost;
+    } catch (error) { console.error("Error fetching forum post:", error); return null; }
+};
+
+export const createForumPost = async (post: Omit<ForumPost, 'id'>): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.createDocument(DB_ID, 'forum-posts', ID.unique(), {
+            authorId: post.authorId, authorName: post.authorName,
+            title: post.title, body: post.body, category: post.category,
+            likes: [], commentCount: 0, createdAt: Math.floor(Date.now() / 1000),
+        });
+        return response.$id;
+    } catch (error) { console.error("Error creating forum post:", error); return null; }
+};
+
+export const deleteForumPost = async (postId: string): Promise<boolean> => {
+    try { await databases.deleteDocument(DB_ID, 'forum-posts', postId); return true; }
+    catch (error) { console.error("Error deleting forum post:", error); return false; }
+};
+
+export const likeForumPost = async (postId: string, userId: string): Promise<string[]> => {
+    try {
+        const doc = await databases.getDocument(DB_ID, 'forum-posts', postId);
+        const currentLikes: string[] = Array.isArray(doc.likes) ? doc.likes : [];
+        const newLikes = currentLikes.includes(userId)
+            ? currentLikes.filter(id => id !== userId) : [...currentLikes, userId];
+        await databases.updateDocument(DB_ID, 'forum-posts', postId, { likes: newLikes });
+        return newLikes;
+    } catch (error) { console.error("Error toggling like on forum post:", error); return []; }
+};
+
+export const getForumComments = async (postId: string): Promise<ForumComment[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'forum-comments', [
+            Query.equal('postId', postId), Query.orderAsc('createdAt'), Query.limit(100)
+        ]);
+        return response.documents.map(doc => ({
+            id: doc.$id, ...doc, likes: Array.isArray(doc.likes) ? doc.likes : [],
+        })) as unknown as ForumComment[];
+    } catch (error) { console.error("Error fetching forum comments:", error); return []; }
+};
+
+export const createForumComment = async (comment: Omit<ForumComment, 'id'>): Promise<string | null> => {
+    if (!isAppwriteConfigured()) return null;
+    try {
+        const response = await databases.createDocument(DB_ID, 'forum-comments', ID.unique(), {
+            postId: comment.postId, authorId: comment.authorId, authorName: comment.authorName,
+            body: comment.body, likes: [], createdAt: Math.floor(Date.now() / 1000),
+        });
+        try {
+            const postDoc = await databases.getDocument(DB_ID, 'forum-posts', comment.postId);
+            await databases.updateDocument(DB_ID, 'forum-posts', comment.postId, {
+                commentCount: (Number(postDoc.commentCount) || 0) + 1
+            });
+        } catch (e) { console.warn("Could not update comment count:", e); }
+        return response.$id;
+    } catch (error) { console.error("Error creating forum comment:", error); return null; }
+};
+
+export const likeForumComment = async (commentId: string, userId: string): Promise<string[]> => {
+    try {
+        const doc = await databases.getDocument(DB_ID, 'forum-comments', commentId);
+        const currentLikes: string[] = Array.isArray(doc.likes) ? doc.likes : [];
+        const newLikes = currentLikes.includes(userId)
+            ? currentLikes.filter(id => id !== userId) : [...currentLikes, userId];
+        await databases.updateDocument(DB_ID, 'forum-comments', commentId, { likes: newLikes });
+        return newLikes;
+    } catch (error) { console.error("Error toggling like on forum comment:", error); return []; }
+};
+
