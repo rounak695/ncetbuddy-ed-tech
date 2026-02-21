@@ -28,6 +28,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const [hasStarted, setHasStarted] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [activeSubject, setActiveSubject] = useState<string>("");
+    const [optionalSubjectChoice, setOptionalSubjectChoice] = useState<string | null>(null);
     // Time tracking
     const [questionTimes, setQuestionTimes] = useState<Record<number, number>>({});
     const [questionStartTime, setQuestionStartTime] = useState<number>(0);
@@ -48,30 +49,49 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     const isFullSyllabus = test?.isFullSyllabus && test?.subjectAllocations && test.subjectAllocations.length > 0;
 
+    // Optional Subject Logic (Maths vs Biology)
+    const hasMaths = test?.subjectAllocations?.find(a => a.subject.toLowerCase().includes("math"))?.subject;
+    const hasBiology = test?.subjectAllocations?.find(a => a.subject.toLowerCase().includes("bio"))?.subject;
+    const requiresOptionalChoice = isFullSyllabus && hasMaths && hasBiology;
+
+    // Determine the subject to ignore based on user choice
+    const omittedSubject = requiresOptionalChoice
+        ? (optionalSubjectChoice === hasMaths ? hasBiology : optionalSubjectChoice === hasBiology ? hasMaths : null)
+        : null;
+
+    // Active allocations excluding the omitted subject
+    const activeAllocations = test?.subjectAllocations?.filter(a => a.subject !== omittedSubject);
+
     useEffect(() => {
         if (isFullSyllabus && test?.questions[currentQuestionIndex]?.subject) {
             const currentSubj = test.questions[currentQuestionIndex].subject;
-            if (currentSubj !== activeSubject) {
+            if (currentSubj !== activeSubject && currentSubj !== omittedSubject) {
                 setActiveSubject(currentSubj as string);
             }
-        } else if (isFullSyllabus && test?.subjectAllocations && !activeSubject) {
-            setActiveSubject(test.subjectAllocations[0].subject);
+        } else if (isFullSyllabus && activeAllocations && activeAllocations.length > 0 && !activeSubject) {
+            setActiveSubject(activeAllocations[0].subject);
         }
-    }, [currentQuestionIndex, isFullSyllabus, test, activeSubject]);
+    }, [currentQuestionIndex, isFullSyllabus, test, activeSubject, activeAllocations, omittedSubject]);
 
     const getSubjectQuestionIndices = (subject: string) => {
         if (!test) return [];
-        return test.questions.map((q, idx) => q.subject === subject ? idx : -1).filter(idx => idx !== -1);
+        return test.questions.map((q, idx) => q.subject === subject && q.subject !== omittedSubject ? idx : -1).filter(idx => idx !== -1);
     };
 
     const currentPaletteIndices = isFullSyllabus && activeSubject
         ? getSubjectQuestionIndices(activeSubject)
         : test?.questions.map((_, i) => i) || [];
 
+    const validGlobalIndices = test
+        ? test.questions.map((q, idx) => q.subject !== omittedSubject ? idx : -1).filter(idx => idx !== -1)
+        : [];
+
     const calculateScore = () => {
         if (!test) return 0;
         let score = 0;
         test.questions.forEach((q, index) => {
+            if (q.subject === omittedSubject) return; // Ignore omitted optional subject
+
             if (answers[index] === q.correctAnswer) {
                 score += 4;
             } else if (answers[index] !== undefined) {
@@ -108,12 +128,13 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         }
 
         const totalTimeTaken = testStartTime > 0 ? Math.round((Date.now() - testStartTime) / 1000) : 0;
+        const totalValidQuestions = validGlobalIndices.length > 0 ? validGlobalIndices.length : test.questions.length;
 
         const result = {
             userId: user.$id,
             testId: testId,
             score: score,
-            totalQuestions: test.questions.length,
+            totalQuestions: totalValidQuestions,
             answers: answers,
             completedAt: Math.floor(Date.now() / 1000),
             timeTaken: totalTimeTaken,
@@ -130,7 +151,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             sessionStorage.setItem(`test_timeTaken_${testId}`, String(totalTimeTaken));
 
             // Redirect to review page with score info
-            router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${test.questions.length}`);
+            router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${totalValidQuestions}`);
         } catch (error) {
             console.error("Error submitting test:", error);
             alert("Error submitting test. Please try again.");
@@ -225,29 +246,39 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     };
 
     const handleNext = () => {
-        if (test && currentQuestionIndex < test.questions.length - 1) {
+        if (test) {
             flushCurrentQuestionTime();
-            const nextIndex = currentQuestionIndex + 1;
-            setCurrentQuestionIndex(nextIndex);
-            setVisited((prev) => new Set(prev).add(nextIndex));
+            const currIdxInValid = validGlobalIndices.indexOf(currentQuestionIndex);
+            if (currIdxInValid >= 0 && currIdxInValid < validGlobalIndices.length - 1) {
+                const nextIndex = validGlobalIndices[currIdxInValid + 1];
+                setCurrentQuestionIndex(nextIndex);
+                setVisited((prev) => new Set(prev).add(nextIndex));
+            }
         }
     };
 
     const handlePrev = () => {
-        if (currentQuestionIndex > 0) {
+        if (test) {
             flushCurrentQuestionTime();
-            setCurrentQuestionIndex((prev) => prev - 1);
-            setVisited((prev) => new Set(prev).add(currentQuestionIndex - 1));
+            const currIdxInValid = validGlobalIndices.indexOf(currentQuestionIndex);
+            if (currIdxInValid > 0) {
+                const prevIndex = validGlobalIndices[currIdxInValid - 1];
+                setCurrentQuestionIndex(prevIndex);
+                setVisited((prev) => new Set(prev).add(prevIndex));
+            }
         }
     };
 
     const handleSaveAndNext = () => {
         // Just move next, answer is already in state if selected
         flushCurrentQuestionTime();
-        if (test && currentQuestionIndex < test.questions.length - 1) {
-            const nextIndex = currentQuestionIndex + 1;
-            setCurrentQuestionIndex(nextIndex);
-            setVisited((prev) => new Set(prev).add(nextIndex));
+        if (test) {
+            const currIdxInValid = validGlobalIndices.indexOf(currentQuestionIndex);
+            if (currIdxInValid >= 0 && currIdxInValid < validGlobalIndices.length - 1) {
+                const nextIndex = validGlobalIndices[currIdxInValid + 1];
+                setCurrentQuestionIndex(nextIndex);
+                setVisited((prev) => new Set(prev).add(nextIndex));
+            }
         }
     };
 
@@ -262,10 +293,13 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const handleMarkForReviewAndNext = () => {
         flushCurrentQuestionTime();
         setMarkedForReview((prev) => new Set(prev).add(currentQuestionIndex));
-        if (test && currentQuestionIndex < test.questions.length - 1) {
-            const nextIndex = currentQuestionIndex + 1;
-            setCurrentQuestionIndex(nextIndex);
-            setVisited((prev) => new Set(prev).add(nextIndex));
+        if (test) {
+            const currIdxInValid = validGlobalIndices.indexOf(currentQuestionIndex);
+            if (currIdxInValid >= 0 && currIdxInValid < validGlobalIndices.length - 1) {
+                const nextIndex = validGlobalIndices[currIdxInValid + 1];
+                setCurrentQuestionIndex(nextIndex);
+                setVisited((prev) => new Set(prev).add(nextIndex));
+            }
         }
     };
 
@@ -314,9 +348,46 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                         <li><strong>Strict Mode:</strong> This test is proctored. Switching tabs, minimizing the window, or exiting full screen will result in <strong>immediate auto-submission</strong>.</li>
                         <li>Please ensure you have a stable internet connection.</li>
                     </ul>
+
+                    {requiresOptionalChoice && (
+                        <div className="mb-6 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                            <h3 className="font-semibold text-lg mb-3">Select your domain subject:</h3>
+                            <p className="text-sm text-gray-600 mb-4">This full mock test contains both Mathematics and Biology. Please select the subject you wish to attempt. The other subject will be omitted from your test and scoring.</p>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded border hover:border-blue-400 w-full transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="optionalSubject"
+                                        value={hasMaths}
+                                        checked={optionalSubjectChoice === hasMaths}
+                                        onChange={() => setOptionalSubjectChoice(hasMaths || null)}
+                                        className="w-5 h-5 text-blue-600"
+                                    />
+                                    <span className="font-medium">{hasMaths}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-3 rounded border hover:border-blue-400 w-full transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="optionalSubject"
+                                        value={hasBiology}
+                                        checked={optionalSubjectChoice === hasBiology}
+                                        onChange={() => setOptionalSubjectChoice(hasBiology || null)}
+                                        className="w-5 h-5 text-blue-600"
+                                    />
+                                    <span className="font-medium">{hasBiology}</span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-center">
-                        <Button variant="primary" style={{ backgroundColor: "#FFD02F", color: "black", fontSize: '1.2rem', padding: '10px 30px' }} onClick={startTest}>
-                            I am ready to begin
+                        <Button
+                            variant="primary"
+                            style={{ backgroundColor: "#FFD02F", color: "black", fontSize: '1.2rem', padding: '10px 30px', opacity: requiresOptionalChoice && !optionalSubjectChoice ? 0.5 : 1 }}
+                            onClick={startTest}
+                            disabled={!!(requiresOptionalChoice && !optionalSubjectChoice)}
+                        >
+                            {requiresOptionalChoice && !optionalSubjectChoice ? "Select a subject to begin" : "I am ready to begin"}
                         </Button>
                     </div>
                 </div>
@@ -354,9 +425,9 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             <div className={styles.body}>
                 {/* Main Question Area */}
                 <div className={styles.mainArea}>
-                    {isFullSyllabus && test.subjectAllocations && (
+                    {isFullSyllabus && activeAllocations && (
                         <div style={{ display: 'flex', borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9', overflowX: 'auto' }}>
-                            {test.subjectAllocations.map(alloc => (
+                            {activeAllocations.map(alloc => (
                                 <button
                                     key={alloc.subject}
                                     style={{
@@ -442,7 +513,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                             <button
                                 className={styles.actionBtn}
                                 onClick={handlePrev}
-                                disabled={currentQuestionIndex === 0}
+                                disabled={validGlobalIndices.indexOf(currentQuestionIndex) === 0}
                             >
                                 Back
                             </button>
