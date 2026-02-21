@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import { Card } from "@/components/ui/Card";
+import { Network } from "lucide-react";
 
 ChartJS.register(
     RadialLinearScale,
@@ -29,7 +30,7 @@ export default function SubjectRadar({ subjectData }: SubjectRadarProps) {
     if (subjectData.length < 3) {
         return (
             <Card className="p-8 border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col items-center justify-center text-center">
-                <div className="text-4xl mb-4 opacity-20">🕸️</div>
+                <div className="mb-4 opacity-20"><Network size={40} className="mx-auto" /></div>
                 <p className="text-sm font-black text-black uppercase opacity-40 italic">
                     Attempt tests in at least 3 different subjects to unlock Radar View
                 </p>

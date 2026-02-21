@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { getUserTestResults, getTests, hasCompletedAnyPurchase, getUserProfile } from "@/lib/appwrite-db";
 import { Test, TestResult } from "@/types";
+import { Brain, Target, Lock, Rocket, Gem, AlertTriangle } from "lucide-react";
 
 interface SubjectPerformance {
     subject: string;
@@ -136,8 +137,8 @@ export default function SmartPlannerPage() {
         <div className="space-y-8 animate-in fade-in duration-500 pb-20">
             {/* Header */}
             <div>
-                <h1 className="text-4xl font-black text-black uppercase italic tracking-tighter mb-2">
-                    AI Smart Planner 🧠
+                <h1 className="text-4xl font-black text-black uppercase italic tracking-tighter mb-2 flex items-center gap-3">
+                    AI Smart Planner <Brain size={36} />
                 </h1>
                 <p className="text-black/60 font-bold uppercase tracking-wide">
                     Your personalized roadmap to crack NCET
@@ -146,8 +147,8 @@ export default function SmartPlannerPage() {
 
             {/* Today's Focus Card (The "Money" Shot) */}
             <Card className="p-8 md:p-12 border-4 border-black bg-gradient-to-br from-primary/20 to-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-9xl pointer-events-none">
-                    🎯
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                    <Target size={200} />
                 </div>
 
                 <div className="relative z-10">
@@ -168,16 +169,16 @@ export default function SmartPlannerPage() {
                             <Link href={`/dashboard/tests/${recommendation.primaryTest.id}`}>
                                 <Button className="w-full md:w-auto text-lg px-10 py-6 border-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
                                     {isLocked ? (
-                                        <><span>🔒</span> Unlock Test (₹{recommendation.primaryTest.price})</>
+                                        <><Lock size={18} /> Unlock Test (₹{recommendation.primaryTest.price})</>
                                     ) : (
-                                        <><span>🚀</span> Start Now</>
+                                        <><Rocket size={18} /> Start Now</>
                                     )}
                                 </Button>
                             </Link>
                             {/* Upsell / Info Badge */}
                             {!recommendation.primaryTest.testType || recommendation.primaryTest.testType === 'educator' ? (
                                 <div className="flex items-center gap-2 px-6 py-3 border-4 border-black/10 rounded-xl bg-white/50 backdrop-blur-sm">
-                                    <span className="text-xl">💎</span>
+                                    <Gem size={20} className="text-blue-500" />
                                     <span className="font-bold text-xs uppercase tracking-widest opacity-60">High Yield Premium Test</span>
                                 </div>
                             ) : null}
@@ -211,8 +212,8 @@ export default function SmartPlannerPage() {
                                             Accuracy: {sub.accuracy}%
                                         </p>
                                     </div>
-                                    <div className="text-red-500 font-black text-2xl group-hover:text-primary">
-                                        ⚠️
+                                    <div className="text-red-500 font-black group-hover:text-primary">
+                                        <AlertTriangle size={24} />
                                     </div>
                                 </Card>
                             ))

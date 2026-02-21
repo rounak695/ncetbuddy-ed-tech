@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Zap, BookOpen, Image as ImageIcon, ClipboardList } from "lucide-react";
 
 // Utility for gradients (Updated for light theme)
 const gradients = {
@@ -14,8 +15,8 @@ const FormulaCardContent = ({ title, items }: { title: string, items: string }) 
 
         <div className="relative z-10 flex flex-col justify-between h-full">
             <div className="flex justify-between items-start">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white border border-border flex items-center justify-center text-lg md:text-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
-                    ⚡
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white border border-border flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                    <Zap size={18} className="text-yellow-500" />
                 </div>
             </div>
 
@@ -78,8 +79,8 @@ const BookCardContent = ({ title, subtitle, image }: { title: string, subtitle: 
             </div>
 
             <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl md:text-5xl drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
-                    {image ? '🖼️' : '📚'}
+                <span className="drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300 text-primary/60">
+                    {image ? <ImageIcon size={48} /> : <BookOpen size={48} />}
                 </span>
             </div>
 
@@ -133,8 +134,8 @@ const TestCardContent = ({ title, tag, isNew }: { title: string, tag?: string, i
         )}
 
         <div className="flex gap-4 items-start mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl group-hover:bg-primary transition-all duration-300 border border-border group-hover:border-primary">
-                📝
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all duration-300 border border-border group-hover:border-primary">
+                <ClipboardList size={24} className="text-primary group-hover:text-black transition-colors" />
             </div>
             <div>
                 <h3 className="font-bold text-foreground text-[15px] leading-snug group-hover:text-black transition-colors">

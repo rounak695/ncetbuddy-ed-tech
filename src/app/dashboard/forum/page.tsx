@@ -1,110 +1,348 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { ForumPost, ForumCategory } from "@/types";
-import { getForumPosts, createForumPost, upvoteForumPost } from "@/lib/appwrite-db";
-import CategoryFilter from "@/components/forum/CategoryFilter";
-import PostCard from "@/components/forum/PostCard";
-import NewPostModal from "@/components/forum/NewPostModal";
+import { Button } from "@/components/ui/Button";
+import { getForumPosts, ForumPost, ForumComment, getPostComments, createComment } from "@/lib/appwrite-forum";
+import { CreatePostModal } from "@/components/forum/CreatePostModal";
+import { Plus, Search, Flame, Smile, Paperclip, Mic, MessageCircle, Lock, ArrowLeft } from "lucide-react";
+
+// Extended type for UI specific fields if needed
+interface UIForumPost extends ForumPost {
+    isHot?: boolean;
+    commentCount?: number;
+}
 
 export default function ForumPage() {
     const { user } = useAuth();
-    const [posts, setPosts] = useState<ForumPost[]>([]);
+    const [posts, setPosts] = useState<UIForumPost[]>([]);
+    const [selectedPost, setSelectedPost] = useState<UIForumPost | null>(null);
+    const [comments, setComments] = useState<ForumComment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [activeCategory, setActiveCategory] = useState<ForumCategory | 'all'>('all');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newComment, setNewComment] = useState("");
+
+    // Refs for scrolling
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const fetchPosts = async () => {
         setLoading(true);
-        setError(null);
         try {
-            const category = activeCategory === 'all' ? undefined : activeCategory;
-            const data = await getForumPosts(category);
-            setPosts(data);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.error("Error loading posts:", msg);
-            setError(msg);
+            // Fetch all posts (removed category filter)
+            const fetchedPosts = await getForumPosts();
+
+            const uiPosts = fetchedPosts.map(post => ({
+                ...post,
+                isHot: post.upvotes > 5,
+                commentCount: 0
+            }));
+            setPosts(uiPosts);
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+        } finally {
+            setLoading(false);
         }
-        finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchPosts(); }, [activeCategory]);
+    // Initial load
+    useEffect(() => {
+        fetchPosts();
+    }, []);
 
-    const handleCreatePost = async (data: { title: string; content: string; category: ForumCategory }) => {
-        if (!user) return;
+    // Fetch comments when a post is selected
+    useEffect(() => {
+        if (selectedPost) {
+            setLoadingComments(true);
+            getPostComments(selectedPost.id)
+                .then(data => {
+                    setComments(data);
+                })
+                .catch(err => console.error(err))
+                .finally(() => setLoadingComments(false));
+        }
+    }, [selectedPost]);
+
+    // Scroll to bottom when comments change or post changes
+    useEffect(() => {
+        if (selectedPost) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [comments, selectedPost]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComment.trim() || !selectedPost || !user) return;
+
+        const commentContent = newComment;
+        setNewComment(""); // Optimistic clear
+
         try {
-            const result = await createForumPost({
-                userId: user.$id, authorName: user.name || 'Anonymous',
-                title: data.title, content: data.content, category: data.category,
+            await createComment({
+                postId: selectedPost.id,
+                userId: user.$id,
+                authorName: user.name || "Anonymous",
+                content: commentContent
             });
-            if (!result) {
-                alert("Failed to create post. Check browser console for details.");
-                return;
-            }
-            await fetchPosts();
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            alert("Error creating post: " + msg);
+
+            // Refresh comments
+            const updatedComments = await getPostComments(selectedPost.id);
+            setComments(updatedComments);
+        } catch (err) {
+            console.error("Failed to send comment:", err);
+            // Optionally restore text if failed
         }
     };
 
-    const handleUpvote = async (postId: string) => {
-        const newUpvotes = await upvoteForumPost(postId);
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, upvotes: newUpvotes } : p));
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-        <div className="pb-24 min-h-full">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
-                <div>
-                    <h1 className="text-xl md:text-2xl font-black text-black uppercase tracking-tighter">💬 Discussion Forum</h1>
-                    <p className="text-xs md:text-sm text-secondary font-medium mt-1">Ask doubts, share tips, and connect with fellow students.</p>
-                </div>
-                <button onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary border-2 border-black rounded-2xl font-black text-sm uppercase tracking-tight text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all active:scale-95">
-                    <span className="text-lg">✍️</span> New Discussion
-                </button>
-            </div>
-            <div className="mb-6"><CategoryFilter active={activeCategory} onChange={setActiveCategory} /></div>
+        // Wrapper with negative margin to counteract dashboard padding and fill height
+        <div className="flex h-[calc(100vh-6rem)] md:h-[calc(100vh-5rem)] -m-4 md:-m-8 md:mt-[-2rem] bg-white overflow-hidden relative">
+            <CreatePostModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onPostCreated={fetchPosts}
+            />
 
-            {error && (
-                <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-2xl text-red-700 text-sm font-bold">
-                    ⚠️ Error: {error}
+            {/* Left Sidebar - Chat List */}
+            <div className={`
+                flex-col w-full md:w-[400px] border-r border-gray-200 bg-white z-10
+                ${selectedPost ? 'hidden md:flex' : 'flex'}
+            `}>
+                {/* Header */}
+                <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex justify-between items-center h-16 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                            {/* User Avatar Placeholder */}
+                            <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white font-bold">
+                                {user?.name?.charAt(0) || 'U'}
+                            </div>
+                        </div>
+                        <h1 className="font-bold text-gray-800">Discussions</h1>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-inherit hover:bg-black/10 text-black border-none shadow-none p-2 rounded-full w-10 h-10 flex items-center justify-center font-bold text-xl"
+                            title="New Discussion"
+                        >
+                            <Plus size={22} />
+                        </Button>
+                    </div>
                 </div>
-            )}
 
-            <div className="space-y-4">
-                {loading ? (
-                    <div className="space-y-4">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="p-1 rounded-3xl bg-gray-100 animate-pulse">
-                                <div className="bg-white rounded-[20px] p-5 border border-border">
-                                    <div className="h-4 bg-gray-200 rounded-full w-24 mb-4" />
-                                    <div className="h-5 bg-gray-200 rounded-full w-3/4 mb-2" />
-                                    <div className="h-4 bg-gray-200 rounded-full w-full mb-2" />
-                                    <div className="h-4 bg-gray-200 rounded-full w-2/3" />
-                                    <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border">
-                                        <div className="h-7 w-7 bg-gray-200 rounded-full" />
-                                        <div className="h-3 bg-gray-200 rounded-full w-20" />
+                {/* Search Bar */}
+                <div className="p-2 border-b border-gray-200 bg-white">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Search or start new chat"
+                            className="w-full bg-[#f0f2f5] rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00a884]"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+                    </div>
+                </div>
+
+                {/* List of Chats */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {loading ? (
+                        <div className="flex items-center justify-center h-20 text-gray-400">Loading...</div>
+                    ) : posts.length === 0 ? (
+                        <div className="text-center p-8 text-gray-500">
+                            No discussions yet. Start one!
+                        </div>
+                    ) : (
+                        posts.map(post => (
+                            <div
+                                key={post.id}
+                                onClick={() => setSelectedPost(post)}
+                                className={`
+                                    flex cursor-pointer p-3 border-b border-gray-100 hover:bg-[#f5f6f6] transition-colors
+                                    ${selectedPost?.id === post.id ? 'bg-[#f0f2f5]' : 'bg-white'}
+                                `}
+                            >
+                                {/* Avatar */}
+                                <div className="shrink-0 mr-3">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                                        {post.authorName ? post.authorName.charAt(0).toUpperCase() : '?'}
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h3 className="text-gray-900 font-medium truncate text-base">
+                                            {post.title}
+                                        </h3>
+                                        <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                                            {formatDate(post.createdAt)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-gray-600 text-sm truncate pr-2">
+                                            <span className="font-semibold text-gray-800 mr-1">{post.authorName}:</span>
+                                            {post.content}
+                                        </p>
+                                        {post.isHot && (
+                                            <span className="shrink-0 bg-red-500 text-white text-[10px] items-center justify-center flex h-4 w-4 rounded-full"><Flame size={10} /></span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : posts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4"><span className="text-4xl">🦗</span></div>
-                        <h3 className="text-lg font-black text-black uppercase tracking-tight">No discussions yet</h3>
-                        <p className="text-sm text-secondary font-medium mt-1 max-w-xs">Be the first to start a conversation! Click &quot;New Discussion&quot; above.</p>
-                    </div>
-                ) : posts.map((post) => (
-                    <PostCard key={post.id} post={post} onUpvote={handleUpvote} />
-                ))}
+                        ))
+                    )}
+                </div>
             </div>
-            <NewPostModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleCreatePost} />
+
+            {/* Right Panel - Chat Area */}
+            <div className={`
+                flex-col flex-1 bg-[#efeae2] relative
+                ${!selectedPost ? 'hidden md:flex' : 'flex'}
+            `}>
+                {/* Chat Background Pattern Overlay */}
+                <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                    style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')" }}>
+                </div>
+
+                {selectedPost ? (
+                    <>
+                        {/* Header */}
+                        <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0 z-10 h-16">
+                            <div className="flex items-center gap-4">
+                                {/* Back Button (Mobile only) */}
+                                <button
+                                    onClick={() => setSelectedPost(null)}
+                                    className="md:hidden text-2xl text-[#54656f]"
+                                >
+                                    <ArrowLeft size={22} />
+                                </button>
+
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold cursor-pointer">
+                                    {selectedPost.authorName?.charAt(0).toUpperCase()}
+                                </div>
+
+                                <div className="flex flex-col cursor-pointer">
+                                    <span className="text-gray-900 font-medium line-clamp-1">{selectedPost.title}</span>
+                                    <span className="text-xs text-gray-500">
+                                        {selectedPost.authorName} • {selectedPost.category}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-[#54656f]">
+                                <button title="Search" className="hidden sm:block"><Search size={20} /></button>
+                                <button title="Menu">⋮</button>
+                            </div>
+                        </div>
+
+                        {/* Messages List */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 z-10 custom-scrollbar">
+
+                            {/* Sticky Date/Info Divider (Optional) */}
+                            <div className="flex justify-center mb-4">
+                                <span className="bg-white/90 shadow-sm px-3 py-1 rounded-lg text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Discussion started
+                                </span>
+                            </div>
+
+                            {/* The Original Post (as the first message) */}
+                            <div className="flex flex-col space-y-1 max-w-[85%] md:max-w-[70%]">
+                                <div className={`px-4 py-2 rounded-lg shadow-sm bg-white text-gray-900 rounded-tl-none`}>
+                                    <div className="font-bold text-sm text-[#d97c2e] mb-1">{selectedPost.authorName}</div>
+                                    <div className="whitespace-pre-wrap break-words text-sm md:text-base">
+                                        {selectedPost.content}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 text-right mt-1 gap-1 flex justify-end items-center">
+                                        {formatDate(selectedPost.createdAt)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Comments */}
+                            {comments.map((comment) => {
+                                const isMe = comment.userId === user?.$id;
+                                return (
+                                    <div key={comment.id} className={`flex flex-col space-y-1 max-w-[85%] md:max-w-[70%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                                        <div className={`px-4 py-2 rounded-lg shadow-sm text-gray-900 break-words text-sm md:text-base
+                                            ${isMe
+                                                ? 'bg-[#d9fdd3] rounded-tr-none'
+                                                : 'bg-white rounded-tl-none'
+                                            }
+                                        `}>
+                                            {!isMe && (
+                                                <div className="font-bold text-sm text-[#d97c2e] mb-1">{comment.authorName}</div>
+                                            )}
+                                            <div className="whitespace-pre-wrap">{comment.content}</div>
+                                            <div className="text-[10px] text-gray-500 text-right mt-1 flex justify-end items-center gap-1">
+                                                {formatDate(comment.createdAt)}
+                                                {isMe && <span className="text-blue-500">✓✓</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Loading Indicator for comments */}
+                            {loadingComments && comments.length === 0 && (
+                                <div className="flex justify-center py-4">
+                                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
+
+                            {/* Invisible div to scroll to */}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input Area */}
+                        <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-4 z-10 shrink-0">
+                            <button className="text-[#54656f] hidden sm:block"><Smile size={24} /></button>
+                            <button className="text-[#54656f]"><Paperclip size={24} /></button>
+                            <form className="flex-1 flex gap-2" onSubmit={handleSendMessage}>
+                                <input
+                                    type="text"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    placeholder="Type a message"
+                                    className="flex-1 py-3 px-4 rounded-lg border-none focus:outline-none focus:ring-1 focus:ring-white/50 text-sm md:text-base font-normal shadow-sm"
+                                />
+                                {newComment.trim() ? (
+                                    <button
+                                        type="submit"
+                                        className="text-[#54656f] hover:text-[#00a884] transition-colors p-2"
+                                    >
+                                        <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" className="" version="1.1" x="0px" y="0px" enableBackground="new 0 0 24 24"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.623,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
+                                    </button>
+                                ) : (
+                                    <button type="button" className="text-[#54656f] p-2">
+                                        <Mic size={24} />
+                                    </button>
+                                )}
+                            </form>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 z-10">
+                        <div className="w-64 h-64 mb-8 opacity-90">
+                            {/* Placeholder Image using an emoji or simple SVG */}
+                            <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center shadow-inner">
+                                <MessageCircle size={120} className="text-gray-300" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl text-gray-800 font-light mb-4">NCET Buddy Web</h2>
+                        <p className="text-gray-500 text-sm max-w-md">
+                            Select a discussion to start chatting. <br />
+                            Ask questions, share strategies, and connect with other students.
+                        </p>
+                        <div className="mt-8 text-xs text-gray-400 flex items-center gap-1">
+                            <Lock size={12} /> End-to-end encrypted (just kidding, but it is secure!)
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

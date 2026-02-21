@@ -7,6 +7,7 @@ import SubjectRadar from "./SubjectRadar";
 import TimeAnalysis from "./TimeAnalysis";
 import RankPredictor from "./RankPredictor";
 import { Test, TestResult } from "@/types";
+import { Rocket } from "lucide-react";
 
 interface ProAnalyticsDashboardProps {
     userResults: TestResult[];
@@ -39,7 +40,7 @@ export default function ProAnalyticsDashboard({ userResults, testDetailsMap, sub
     return (
         <section className="animate-in fade-in slide-in-from-bottom-5 duration-700">
             <div className="flex items-center gap-3 mb-8">
-                <span className="text-3xl">🚀</span>
+                <Rocket size={32} className="text-black" />
                 <div>
                     <h2 className="text-3xl font-black text-black uppercase tracking-tighter italic">Pro Insights</h2>
                     <p className="text-sm text-black/60 font-bold uppercase tracking-widest">Deep dive into your performance metrics</p>

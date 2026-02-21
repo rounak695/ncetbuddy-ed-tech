@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { getNotifications, getDailyProgress, updateStreakAndDaily, setUserDailyGoal } from "@/lib/appwrite-db";
 import { Notification } from "@/types";
+import { UserCircle, Flame, PartyPopper, Bell, BellOff, AlertTriangle, Info } from "lucide-react";
 
 export default function Header() {
     const { user } = useAuth();
@@ -106,15 +107,15 @@ export default function Header() {
             <div className="flex items-center gap-3 md:gap-4">
                 <Link href="/dashboard/profile" className="relative group">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary p-[2px] shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                        <div className="w-full h-full rounded-2xl bg-card flex items-center justify-center text-lg md:text-xl border border-white/20">
-                            👤
+                        <div className="w-full h-full rounded-2xl bg-card flex items-center justify-center border border-white/20">
+                            <UserCircle size={28} className="text-primary" />
                         </div>
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-card rounded-full shadow-sm"></div>
                 </Link>
                 <div>
                     <h2 className="text-base md:text-lg font-bold text-foreground leading-tight">
-                        Welcome back, {user?.name?.split(' ')[0] || "Student"}! 👋
+                        Welcome back, {user?.name?.split(' ')[0] || "Student"}!
                     </h2>
                     <p className="text-xs md:text-sm text-secondary font-medium hidden sm:block">Let's continue your learning journey.</p>
                 </div>
@@ -123,7 +124,7 @@ export default function Header() {
             <div className="flex items-center gap-3 md:gap-4">
                 {/* Streak Widget */}
                 <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white font-black transform hover:scale-105 transition-transform cursor-pointer group relative">
-                    <span className="text-lg animate-pulse group-hover:scale-125 transition-transform">🔥</span>
+                    <Flame size={20} className="animate-pulse group-hover:scale-125 transition-transform" />
                     <span className="text-sm md:text-base">{streakData.streak}</span>
 
                     {/* Hover Tooltip for Daily Goal */}
@@ -181,7 +182,7 @@ export default function Header() {
                                     ></div>
                                 </div>
                                 {streakData.dailyProgress >= streakData.dailyGoalTarget ? (
-                                    <p className="text-[10px] font-bold text-green-600 mt-2 text-center uppercase animate-pulse">🎉 Goal Reached!</p>
+                                    <p className="text-[10px] font-bold text-green-600 mt-2 text-center uppercase animate-pulse flex items-center justify-center gap-1"><PartyPopper size={12} /> Goal Reached!</p>
                                 ) : (
                                     <p className="text-[10px] font-bold text-gray-400 mt-2 text-center">Keep going!</p>
                                 )}
@@ -196,7 +197,7 @@ export default function Header() {
                         onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                         className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl bg-white border border-border hover:bg-black/5 hover:border-black transition-all relative group shadow-sm active:scale-95"
                     >
-                        <span className="text-xl md:text-2xl group-hover:scale-110 transition-transform">🔔</span>
+                        <Bell size={22} className="group-hover:scale-110 transition-transform" />
                         {unreadCount > 0 && (
                             <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-red-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                                 {unreadCount}
@@ -215,7 +216,7 @@ export default function Header() {
                                 {notifications.length === 0 ? (
                                     <div className="p-8 text-center text-gray-400 font-bold italic">
                                         No new notifications
-                                        <div className="text-2xl mt-2">🔕</div>
+                                        <div className="flex justify-center mt-2"><BellOff size={28} /></div>
                                     </div>
                                 ) : (
                                     notifications.map((notif) => (
@@ -225,7 +226,7 @@ export default function Header() {
                                                     w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                                                     ${notif.type === 'alert' ? 'bg-red-400' : notif.type === 'success' ? 'bg-green-400' : 'bg-blue-400'}
                                                 `}>
-                                                    {notif.type === 'alert' ? '⚠️' : notif.type === 'success' ? '🎉' : 'ℹ️'}
+                                                    {notif.type === 'alert' ? <AlertTriangle size={16} /> : notif.type === 'success' ? <PartyPopper size={16} /> : <Info size={16} />}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-black text-sm text-black group-hover:text-primary-dark transition-colors">{notif.title}</h4>

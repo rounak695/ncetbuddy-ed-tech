@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Book } from "@/types";
 import { getBooks, createBook, deleteBook, updateBook } from "@/lib/appwrite-db";
+import { FileText } from "lucide-react";
 
 export default function BooksManagerPage() {
     const [books, setBooks] = useState<Book[]>([]);
@@ -136,8 +137,8 @@ export default function BooksManagerPage() {
                 {books.map((book) => (
                     <Card key={book.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                            <div style={{ width: "50px", height: "50px", borderRadius: "8px", backgroundColor: book.thumbnailColor, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>
-                                📄
+                            <div style={{ width: "50px", height: "50px", borderRadius: "8px", backgroundColor: book.thumbnailColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <FileText size={24} color="white" />
                             </div>
                             <div>
                                 <h3 style={{ fontSize: "1.1rem" }}>{book.title}</h3>

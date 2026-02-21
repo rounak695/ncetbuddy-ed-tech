@@ -1,35 +1,29 @@
+import { CalendarDays, ClipboardList, MessageCircle, BarChart2 } from "lucide-react";
+
 export const Features = () => {
     const features = [
         {
             title: "AI Smart Planner",
             description: "No more confusion on what to study. Our AI analyzes your weak areas and creates a personalized daily roadmap.",
-            icon: (
-                <span className="text-3xl">📅</span>
-            ),
+            icon: (<CalendarDays size={28} />),
             color: "bg-blue-500/10 text-blue-400"
         },
         {
             title: "Real NTA Mocks",
             description: "Practice on the exact same interface as the real exam. 10+ Full Syllabus Mocks & Chapter-wise Tests.",
-            icon: (
-                <span className="text-3xl">📝</span>
-            ),
+            icon: (<ClipboardList size={28} />),
             color: "bg-purple-500/10 text-purple-400"
         },
         {
             title: "Doubt Forum",
             description: "Stuck on a problem? Ask the community, discuss strategies, and get solutions from top rankers.",
-            icon: (
-                <span className="text-3xl">💬</span>
-            ),
+            icon: (<MessageCircle size={28} />),
             color: "bg-green-500/10 text-green-400"
         },
         {
             title: "Deep Analytics",
             description: "Track your accuracy, time management per question, and compare your live rank on the leaderboard.",
-            icon: (
-                <span className="text-3xl">📊</span>
-            ),
+            icon: (<BarChart2 size={28} />),
             color: "bg-orange-500/10 text-orange-400"
         }
     ];

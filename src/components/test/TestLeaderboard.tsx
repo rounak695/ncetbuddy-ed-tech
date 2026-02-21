@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTestLeaderboard } from "@/lib/appwrite-db";
 import { TestRankEntry } from "@/types";
+import { Trophy } from "lucide-react";
 
 interface TestLeaderboardProps {
     testId: string;
@@ -46,7 +47,7 @@ export const TestLeaderboard: React.FC<TestLeaderboardProps> = ({ testId, curren
         return (
             <div className="bg-white border-3 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div className="bg-black text-white px-5 py-3">
-                    <h3 className="font-black uppercase text-sm tracking-wider">🏆 Test Leaderboard</h3>
+                    <h3 className="font-black uppercase text-sm tracking-wider flex items-center gap-2"><Trophy size={16} className="text-primary" /> Test Leaderboard</h3>
                 </div>
                 <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
@@ -59,7 +60,7 @@ export const TestLeaderboard: React.FC<TestLeaderboardProps> = ({ testId, curren
         return (
             <div className="bg-white border-3 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div className="bg-black text-white px-5 py-3">
-                    <h3 className="font-black uppercase text-sm tracking-wider">🏆 Test Leaderboard</h3>
+                    <h3 className="font-black uppercase text-sm tracking-wider flex items-center gap-2"><Trophy size={16} className="text-primary" /> Test Leaderboard</h3>
                 </div>
                 <div className="text-center py-10">
                     <p className="text-sm font-bold text-black/40">
@@ -74,7 +75,7 @@ export const TestLeaderboard: React.FC<TestLeaderboardProps> = ({ testId, curren
         <div className="bg-white border-3 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
             {/* Header */}
             <div className="bg-black text-white px-5 py-3 flex items-center justify-between">
-                <h3 className="font-black uppercase text-sm tracking-wider">🏆 Test Leaderboard</h3>
+                <h3 className="font-black uppercase text-sm tracking-wider flex items-center gap-2"><Trophy size={16} className="text-primary" /> Test Leaderboard</h3>
                 <span className="text-xs font-bold opacity-60">{leaderboard.length} students</span>
             </div>
 

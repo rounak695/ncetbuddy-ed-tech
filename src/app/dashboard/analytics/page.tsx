@@ -7,6 +7,7 @@ import { getUserTestResults, getTestById, getUserProfile, getEducator, hasComple
 import { TestResult, Test, UserProfile, Educator } from "@/types";
 import Link from "next/link";
 import ProAnalyticsDashboard from "@/components/analytics/ProAnalyticsDashboard";
+import { Lock, Unlock, BarChart2, TrendingUp, Target, Zap, Brain, Flame, FileText, Star } from "lucide-react";
 
 export default function AnalyticsPage() {
     const { user } = useAuth();
@@ -216,11 +217,13 @@ export default function AnalyticsPage() {
                 {/* Locked Premium Card */}
                 <Card className="relative p-12 md:p-16 border-4 border-black bg-gradient-to-br from-primary/20 to-white shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     {/* Lock Icon Background */}
-                    <div className="absolute top-8 right-8 text-[120px] opacity-5">🔒</div>
+                    <div className="absolute top-8 right-8 opacity-5">
+                        <Lock size={120} />
+                    </div>
 
                     <div className="relative z-10 space-y-8 text-center max-w-2xl mx-auto">
                         <div className="inline-block p-6 bg-black rounded-3xl border-4 border-primary shadow-[4px_4px_0px_0px_rgba(255,208,47,1)]">
-                            <span className="text-6xl">📊</span>
+                            <BarChart2 size={64} className="text-primary" />
                         </div>
 
                         <h2 className="text-4xl font-black text-black uppercase italic leading-tight">
@@ -234,13 +237,13 @@ export default function AnalyticsPage() {
                         {/* Feature Grid */}
                         <div className="grid grid-cols-2 gap-4 mt-8">
                             {[
-                                { icon: "📈", label: "Performance Tracking" },
-                                { icon: "🎯", label: "Subject Deep-Dive" },
-                                { icon: "⚡", label: "Speed Analytics" },
-                                { icon: "🧠", label: "Smart Recommendations" },
+                                { icon: <TrendingUp size={28} className="text-primary" />, label: "Performance Tracking" },
+                                { icon: <Target size={28} className="text-primary" />, label: "Subject Deep-Dive" },
+                                { icon: <Zap size={28} className="text-primary" />, label: "Speed Analytics" },
+                                { icon: <Brain size={28} className="text-primary" />, label: "Smart Recommendations" },
                             ].map((feature, i) => (
                                 <div key={i} className="p-4 bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                                    <div className="text-3xl mb-2">{feature.icon}</div>
+                                    <div className="mb-2 flex justify-center">{feature.icon}</div>
                                     <p className="text-xs font-black text-black uppercase">{feature.label}</p>
                                 </div>
                             ))}
@@ -248,9 +251,9 @@ export default function AnalyticsPage() {
 
                         <Link
                             href="/dashboard/tests"
-                            className="inline-block mt-8 px-12 py-5 bg-black text-primary border-4 border-black rounded-2xl font-black uppercase text-lg shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all tracking-wider"
+                            className="inline-block mt-8 px-12 py-5 bg-black text-primary border-4 border-black rounded-2xl font-black uppercase text-lg shadow-[6px_6px_0px_0px_rgba(255,208,47,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all tracking-wider flex items-center gap-2 justify-center"
                         >
-                            🔓 Unlock Now - Browse Tests
+                            <Unlock size={20} /> Unlock Now - Browse Tests
                         </Link>
 
                         <p className="text-xs text-black/40 font-bold uppercase tracking-widest">
@@ -300,8 +303,8 @@ export default function AnalyticsPage() {
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-black text-black uppercase tracking-tight italic">Performance Overview</h1>
-                        <span className="px-4 py-1.5 bg-primary border-2 border-black rounded-lg text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            ⭐ Premium
+                        <span className="px-4 py-1.5 bg-primary border-2 border-black rounded-lg text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                            <Star size={12} /> Premium
                         </span>
                     </div>
                     <p className="text-sm md:text-base text-black font-bold opacity-60 uppercase tracking-wider">
@@ -415,7 +418,7 @@ export default function AnalyticsPage() {
                         <Card className="p-0 overflow-hidden border-4 border-black bg-white rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                             <div className="p-6 border-b-4 border-black bg-primary/10">
                                 <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
-                                    <span className="text-lg">🔥</span> Your Strengths
+                                    <Flame size={16} className="text-orange-500" /> Your Strengths
                                 </h4>
                                 {subjectInsights.strongest.length === 0 ? (
                                     <div className="text-xs font-bold text-black/40 uppercase tracking-widest text-center py-4">Attempt more tests to unlock insights</div>
@@ -437,7 +440,7 @@ export default function AnalyticsPage() {
                             </div>
                             <div className="p-6 bg-white">
                                 <h4 className="font-black text-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
-                                    <span className="text-lg">⚡</span> Needs Improvement
+                                    <Zap size={16} className="text-yellow-500" /> Needs Improvement
                                 </h4>
                                 {subjectInsights.weakest.length === 0 && subjectInsights.strongest.length === 0 ? (
                                     <div className="text-xs font-bold text-black/40 uppercase tracking-widest text-center py-4">Detailed analysis arriving soon</div>

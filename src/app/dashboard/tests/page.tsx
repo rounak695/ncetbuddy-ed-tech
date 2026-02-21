@@ -25,13 +25,14 @@ import { useEffect, useState } from "react";
 import { getTests, getUserPurchases } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PenLine, BookOpen, Microscope, Briefcase, Target, GraduationCap, Users } from "lucide-react";
 
-const PYQ_SUBJECTS: { id: PYQSubject; label: string; icon: string; description: string }[] = [
-    { id: 'languages', label: 'Languages', icon: '📝', description: 'English, Hindi & Regional' },
-    { id: 'humanities', label: 'Humanities', icon: '📚', description: 'History, Geography & More' },
-    { id: 'science', label: 'Science', icon: '🔬', description: 'Physics, Chemistry, Biology, Maths' },
-    { id: 'commerce', label: 'Commerce', icon: '💼', description: 'Economics, Accounts & Business' },
-    { id: 'non-domain', label: 'Non-Domain', icon: '🎯', description: 'General Knowledge & Aptitude' }
+const PYQ_SUBJECTS: { id: PYQSubject; label: string; icon: React.ReactNode; description: string }[] = [
+    { id: 'languages', label: 'Languages', icon: <PenLine size={36} />, description: 'English, Hindi & Regional' },
+    { id: 'humanities', label: 'Humanities', icon: <BookOpen size={36} />, description: 'History, Geography & More' },
+    { id: 'science', label: 'Science', icon: <Microscope size={36} />, description: 'Physics, Chemistry, Biology, Maths' },
+    { id: 'commerce', label: 'Commerce', icon: <Briefcase size={36} />, description: 'Economics, Accounts & Business' },
+    { id: 'non-domain', label: 'Non-Domain', icon: <Target size={36} />, description: 'General Knowledge & Aptitude' }
 ];
 
 function EducatorTestsList() {
@@ -131,7 +132,7 @@ function EducatorTestsList() {
         // Fallback to empty state
         return (
             <div className="text-center py-16 bg-white rounded-2xl border-2 border-black">
-                <div className="text-5xl mb-4">👨‍🏫</div>
+                <div className="text-5xl mb-4"><Users size={52} className="mx-auto text-black/30" /></div>
                 <h3 className="text-lg font-bold text-foreground mb-2">
                     No educator mock tests available yet.
                 </h3>
@@ -151,7 +152,7 @@ function EducatorTestsList() {
                     <Card key={test.id} className="group hover:border-primary/50 transition-all duration-300 shadow-lg h-full flex flex-col">
                         <div className="flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-4xl">🎓</span>
+                                <GraduationCap size={40} className="text-primary" />
                                 <span className="px-3 py-1 text-xs font-bold text-white bg-green-600 rounded-full">
                                     ₹{test.price || 'PAID'}
                                 </span>
@@ -211,7 +212,7 @@ export default function TestsPage() {
                             <Card className="group hover:border-primary/50 transition-all duration-300 shadow-lg cursor-pointer h-full">
                                 <div className="flex flex-col h-full">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-4xl">{subject.icon}</span>
+                                        <span className="text-primary">{subject.icon}</span>
                                         <span className="px-3 py-1 text-xs font-bold text-black bg-primary rounded-full">
                                             FREE
                                         </span>

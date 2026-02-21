@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getTests, getBooks, getUsers, getUserPurchases } from "@/lib/appwrite-db";
 import { databases, DB_ID } from "@/lib/server/appwrite-admin";
 import { Purchase } from "@/types";
+import { BookOpen, ClipboardList, Users, Bell } from "lucide-react";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -135,25 +136,25 @@ export default function AdminDashboard() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
                 <Link href="/admin/books">
                     <Card style={{ cursor: "pointer", transition: "transform 0.2s", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>📚</span>
+                        <span style={{ marginBottom: "1rem", color: "var(--primary)" }}><BookOpen size={36} /></span>
                         <h3>Upload Notes</h3>
                     </Card>
                 </Link>
                 <Link href="/admin/tests/create">
                     <Card style={{ cursor: "pointer", transition: "transform 0.2s", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>📝</span>
+                        <span style={{ marginBottom: "1rem", color: "var(--primary)" }}><ClipboardList size={36} /></span>
                         <h3>Create Test</h3>
                     </Card>
                 </Link>
                 <Link href="/admin/users">
                     <Card style={{ cursor: "pointer", transition: "transform 0.2s", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>👥</span>
+                        <span style={{ marginBottom: "1rem", color: "var(--primary)" }}><Users size={36} /></span>
                         <h3>Manage Users</h3>
                     </Card>
                 </Link>
                 <Link href="/admin/notifications">
                     <Card style={{ cursor: "pointer", transition: "transform 0.2s", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-                        <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔔</span>
+                        <span style={{ marginBottom: "1rem", color: "var(--primary)" }}><Bell size={36} /></span>
                         <h3>Send Notification</h3>
                     </Card>
                 </Link>

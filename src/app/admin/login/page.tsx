@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Lock } from "lucide-react";
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -42,7 +43,10 @@ export default function AdminLoginPage() {
         }}>
             <Card style={{ width: "100%", maxWidth: "400px", padding: "2rem" }}>
                 <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-                    <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🔐 Admin Login</h1>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                        <Lock size={24} />
+                        <h1 style={{ fontSize: "1.5rem", margin: 0 }}>Admin Login</h1>
+                    </div>
                     <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
                         Enter your credentials to access the admin panel
                     </p>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { getTestPerformanceSummary } from "@/lib/appwrite-db";
 import { TestPerformanceSummary } from "@/types";
+import { Trophy, Star, Dumbbell, ThumbsUp, TrendingUp, Target, BookOpen, RefreshCw, BarChart2 } from "lucide-react";
 
 function formatTime(seconds: number): string {
     if (!seconds || seconds <= 0) return '—';
@@ -16,15 +17,15 @@ function formatTime(seconds: number): string {
     return `${s}s`;
 }
 
-function getGrade(percentage: number): { grade: string; label: string; color: string; emoji: string } {
-    if (percentage >= 90) return { grade: 'A+', label: 'Outstanding!', color: '#10B981', emoji: '🏆' };
-    if (percentage >= 80) return { grade: 'A', label: 'Excellent', color: '#059669', emoji: '🌟' };
-    if (percentage >= 70) return { grade: 'B+', label: 'Very Good', color: '#3B82F6', emoji: '💪' };
-    if (percentage >= 60) return { grade: 'B', label: 'Good', color: '#2563EB', emoji: '👍' };
-    if (percentage >= 50) return { grade: 'C+', label: 'Above Average', color: '#F59E0B', emoji: '📈' };
-    if (percentage >= 40) return { grade: 'C', label: 'Average', color: '#D97706', emoji: '🎯' };
-    if (percentage >= 30) return { grade: 'D', label: 'Below Average', color: '#EF4444', emoji: '📚' };
-    return { grade: 'F', label: 'Needs Improvement', color: '#DC2626', emoji: '🔄' };
+function getGrade(percentage: number): { grade: string; label: string; color: string; icon: React.ReactNode } {
+    if (percentage >= 90) return { grade: 'A+', label: 'Outstanding!', color: '#10B981', icon: <Trophy size={48} className="text-yellow-500" /> };
+    if (percentage >= 80) return { grade: 'A', label: 'Excellent', color: '#059669', icon: <Star size={48} className="text-yellow-400" /> };
+    if (percentage >= 70) return { grade: 'B+', label: 'Very Good', color: '#3B82F6', icon: <Dumbbell size={48} className="text-blue-400" /> };
+    if (percentage >= 60) return { grade: 'B', label: 'Good', color: '#2563EB', icon: <ThumbsUp size={48} className="text-blue-500" /> };
+    if (percentage >= 50) return { grade: 'C+', label: 'Above Average', color: '#F59E0B', icon: <TrendingUp size={48} className="text-amber-500" /> };
+    if (percentage >= 40) return { grade: 'C', label: 'Average', color: '#D97706', icon: <Target size={48} className="text-amber-600" /> };
+    if (percentage >= 30) return { grade: 'D', label: 'Below Average', color: '#EF4444', icon: <BookOpen size={48} className="text-red-400" /> };
+    return { grade: 'F', label: 'Needs Improvement', color: '#DC2626', icon: <RefreshCw size={48} className="text-red-600" /> };
 }
 
 function ResultContent() {
@@ -87,9 +88,9 @@ function ResultContent() {
                     {/* Background decoration */}
                     <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-yellow-300 to-primary"></div>
 
-                    {/* Grade & Emoji */}
-                    <div className="mb-4">
-                        <span className="text-5xl">{gradeInfo.emoji}</span>
+                    {/* Grade & Icon */}
+                    <div className="mb-4 flex justify-center">
+                        {gradeInfo.icon}
                     </div>
 
                     <div className="mb-1">
@@ -185,9 +186,9 @@ function ResultContent() {
                     <Button
                         onClick={() => router.push(`/dashboard/tests/review?testId=${testId}&score=${score}&total=${total}`)}
                         variant="outline"
-                        className="flex-1 justify-center border-2 border-black text-black hover:bg-black hover:text-white font-black py-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm"
+                        className="flex-1 justify-center border-2 border-black text-black hover:bg-black hover:text-white font-black py-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm flex items-center gap-2"
                     >
-                        📊 Full Analysis
+                        <BarChart2 size={16} /> Full Analysis
                     </Button>
                     <Button
                         onClick={() => router.push("/dashboard/tests")}

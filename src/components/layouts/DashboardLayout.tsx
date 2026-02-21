@@ -4,6 +4,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+    Home, PlayCircle, Radio, PenLine, CalendarDays, BarChart2,
+    Trophy, MessageCircle, UserCircle, Menu, X
+} from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
@@ -33,15 +37,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     const navItems = [
-        { href: "/dashboard", label: "Dashboard", icon: "🏠" },
-        { href: "/dashboard/videos", label: "Videos", icon: "▶️" },
-        { href: "/dashboard/live-classes", label: "Live Classes", icon: "🔴" },
-        { href: "/dashboard/tests", label: "Mock Tests", icon: "✍️" },
-        { href: "/dashboard/planner", label: "Smart Planner", icon: "📅" },
-        { href: "/dashboard/analytics", label: "Analytics", icon: "📊" },
-        { href: "/dashboard/leaderboard", label: "Leaderboard", icon: "🏆" },
-        { href: "/dashboard/forum", label: "Discussions", icon: "💬" },
-        { href: "/dashboard/profile", label: "Profile", icon: "👤" },
+        { href: "/dashboard", label: "Dashboard", icon: <Home size={20} /> },
+        { href: "/dashboard/videos", label: "Videos", icon: <PlayCircle size={20} /> },
+        { href: "/dashboard/live-classes", label: "Live Classes", icon: <Radio size={20} /> },
+        { href: "/dashboard/tests", label: "Mock Tests", icon: <PenLine size={20} /> },
+        { href: "/dashboard/planner", label: "Smart Planner", icon: <CalendarDays size={20} /> },
+        { href: "/dashboard/analytics", label: "Analytics", icon: <BarChart2 size={20} /> },
+        { href: "/dashboard/leaderboard", label: "Leaderboard", icon: <Trophy size={20} /> },
+        { href: "/dashboard/forum", label: "Discussions", icon: <MessageCircle size={20} /> },
+        { href: "/dashboard/profile", label: "Profile", icon: <UserCircle size={20} /> },
     ];
 
     const isAttemptPage = pathname === "/dashboard/tests/attempt";
@@ -88,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         }
                                     `}
                                 >
-                                    <span className={`text-xl transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                    <span className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                                         {item.icon}
                                     </span>
                                     <span className="font-black text-sm uppercase tracking-tight">{item.label}</span>
@@ -131,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="p-2 border-2 border-black rounded-xl bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
                     >
-                        {isMobileMenuOpen ? "✕" : "☰"}
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </header>
 
@@ -148,7 +152,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     : "border-black bg-white text-black font-black"
                                     }`}
                             >
-                                <span className="text-2xl">{item.icon}</span>
+                                <span className="flex items-center">{item.icon}</span>
                                 <span className="text-lg font-black uppercase tracking-tight">{item.label}</span>
                             </Link>
                         ))}

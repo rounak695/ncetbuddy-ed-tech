@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
+import { Wand2 } from "lucide-react";
 
 interface RankPredictorProps {
     userStanding: {
@@ -16,7 +17,7 @@ export default function RankPredictor({ userStanding }: RankPredictorProps) {
     if (!userStanding || userStanding.testsAttempted < 3) {
         return (
             <Card className="p-6 md:p-8 border-4 border-black bg-primary shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col items-center justify-center text-center">
-                <div className="text-4xl mb-4">🔮</div>
+                <div className="mb-4"><Wand2 size={40} className="text-black/40 mx-auto" /></div>
                 <h3 className="text-xl font-black text-black uppercase italic mb-2">Rank Predictor</h3>
                 <p className="text-xs font-bold text-black/60 uppercase tracking-widest max-w-[200px]">
                     Attempt at least 3 tests to unlock your predicted All India Rank.
