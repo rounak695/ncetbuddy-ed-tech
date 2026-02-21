@@ -23,11 +23,65 @@ export default function CreateTestPage() {
         testType: 'pyq', // Default to PYQ
         pyqSubject: 'non-domain', // Default PYQ subject
         price: 0, // Default free
-        status: 'Published' // Default published
+        status: 'Published', // Default published
+        isFullSyllabus: false,
+        subjectAllocations: []
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
         { text: "", options: ["", "", "", ""], correctAnswer: 0 }
     ]);
+
+    // For Full Syllabus allocations
+    const [newSubjectName, setNewSubjectName] = useState("");
+    const [newSubjectCount, setNewSubjectCount] = useState<number | "">("");
+
+    const handleAddSubjectAllocation = () => {
+        if (!newSubjectName || !newSubjectCount) return;
+        const count = Number(newSubjectCount);
+        if (count <= 0) return;
+
+        const currentAllocations = testData.subjectAllocations || [];
+        setTestData({
+            ...testData,
+            subjectAllocations: [...currentAllocations, { subject: newSubjectName, count }]
+        });
+        setNewSubjectName("");
+        setNewSubjectCount("");
+    };
+
+    const handleRemoveSubjectAllocation = (index: number) => {
+        const currentAllocations = testData.subjectAllocations || [];
+        const newAllocations = [...currentAllocations];
+        newAllocations.splice(index, 1);
+        setTestData({
+            ...testData,
+            subjectAllocations: newAllocations
+        });
+    };
+
+    const generateFullSyllabusQuestions = () => {
+        if (!testData.subjectAllocations || testData.subjectAllocations.length === 0) {
+            alert("Please add at least one subject allocation first.");
+            return;
+        }
+
+        if (questions.length > 1 || (questions.length === 1 && questions[0].text !== "")) {
+            if (!confirm("This will overwrite your existing questions. Are you sure?")) return;
+        }
+
+        const newQuestions: Omit<Question, "id">[] = [];
+        testData.subjectAllocations.forEach(alloc => {
+            for (let i = 0; i < alloc.count; i++) {
+                newQuestions.push({
+                    text: "",
+                    options: ["", "", "", ""],
+                    correctAnswer: 0,
+                    subject: alloc.subject
+                });
+            }
+        });
+        setQuestions(newQuestions);
+    };
 
     const addQuestion = () => {
         setQuestions([...questions, { text: "", options: ["", "", "", ""], correctAnswer: 0 }]);
@@ -70,7 +124,9 @@ export default function CreateTestPage() {
             testType: testData.testType || 'pyq',
             pyqSubject: testData.testType === 'pyq' ? testData.pyqSubject : undefined,
             price: testData.price || 0,
-            status: testData.status || 'Published'
+            status: testData.status || 'Published',
+            isFullSyllabus: testData.isFullSyllabus || false,
+            subjectAllocations: testData.isFullSyllabus ? testData.subjectAllocations : undefined
         } as any);
 
         if (testId) {
@@ -153,7 +209,14 @@ export default function CreateTestPage() {
                     <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject (Optional)</label>
                     <select
                         value={testData.subject || "General"}
-                        onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
+                        onChange={(e) => {
+                            const isFullMock = e.target.value === "Full Mock";
+                            setTestData({
+                                ...testData,
+                                subject: e.target.value,
+                                isFullSyllabus: isFullMock
+                            });
+                        }}
                         style={{
                             width: "100%",
                             padding: "0.75rem",
@@ -171,6 +234,49 @@ export default function CreateTestPage() {
                         <option value="Full Mock">Full Mock Test</option>
                     </select>
                 </div>
+
+                {/* Full Syllabus Allocations */}
+                {testData.isFullSyllabus && (
+                    <div style={{ marginTop: "1rem", padding: "1rem", border: "1px dashed var(--border)", borderRadius: "8px" }}>
+                        <h4 style={{ marginBottom: "1rem" }}>Subject Allocations for Full Syllabus</h4>
+
+                        {(testData.subjectAllocations || []).map((alloc, idx) => (
+                            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", padding: "0.5rem", backgroundColor: "var(--bg-secondary)", borderRadius: "4px" }}>
+                                <span>{alloc.subject} ({alloc.count} questions)</span>
+                                <Button variant="outline" style={{ color: "var(--error)", borderColor: "var(--error)", padding: "0.25rem 0.5rem", fontSize: "0.8rem" }} onClick={() => handleRemoveSubjectAllocation(idx)}>Remove</Button>
+                            </div>
+                        ))}
+
+                        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", alignItems: "flex-end" }}>
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    label="Subject Name"
+                                    placeholder="e.g., Physics"
+                                    value={newSubjectName}
+                                    onChange={(e) => setNewSubjectName(e.target.value)}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    label="Question Count"
+                                    type="number"
+                                    placeholder="e.g., 30"
+                                    value={newSubjectCount}
+                                    onChange={(e) => setNewSubjectCount(e.target.value ? Number(e.target.value) : "")}
+                                />
+                            </div>
+                            <Button variant="secondary" onClick={handleAddSubjectAllocation}>
+                                Add
+                            </Button>
+                        </div>
+
+                        <div style={{ marginTop: "1rem" }}>
+                            <Button variant="outline" onClick={generateFullSyllabusQuestions} style={{ width: "100%" }}>
+                                Generate Question Forms based on Allocations
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Price Field - Only for Educator Tests */}
                 {testData.testType === 'educator' && (
@@ -276,7 +382,7 @@ export default function CreateTestPage() {
             {questions.map((q, qIndex) => (
                 <Card key={qIndex} style={{ marginBottom: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                        <h4>Question {qIndex + 1}</h4>
+                        <h4>Question {qIndex + 1} {q.subject && <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", backgroundColor: "var(--bg-secondary)", padding: "0.2rem 0.5rem", borderRadius: "4px", marginLeft: "0.5rem" }}>{q.subject}</span>}</h4>
                         <Button
                             variant="outline"
                             style={{ color: "var(--error)", borderColor: "var(--error)" }}

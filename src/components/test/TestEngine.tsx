@@ -27,6 +27,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+    const [activeSubject, setActiveSubject] = useState<string>("");
     // Time tracking
     const [questionTimes, setQuestionTimes] = useState<Record<number, number>>({});
     const [questionStartTime, setQuestionStartTime] = useState<number>(0);
@@ -44,6 +45,28 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
         };
         fetchTest();
     }, [testId]);
+
+    const isFullSyllabus = test?.isFullSyllabus && test?.subjectAllocations && test.subjectAllocations.length > 0;
+
+    useEffect(() => {
+        if (isFullSyllabus && test?.questions[currentQuestionIndex]?.subject) {
+            const currentSubj = test.questions[currentQuestionIndex].subject;
+            if (currentSubj !== activeSubject) {
+                setActiveSubject(currentSubj as string);
+            }
+        } else if (isFullSyllabus && test?.subjectAllocations && !activeSubject) {
+            setActiveSubject(test.subjectAllocations[0].subject);
+        }
+    }, [currentQuestionIndex, isFullSyllabus, test, activeSubject]);
+
+    const getSubjectQuestionIndices = (subject: string) => {
+        if (!test) return [];
+        return test.questions.map((q, idx) => q.subject === subject ? idx : -1).filter(idx => idx !== -1);
+    };
+
+    const currentPaletteIndices = isFullSyllabus && activeSubject
+        ? getSubjectQuestionIndices(activeSubject)
+        : test?.questions.map((_, i) => i) || [];
 
     const calculateScore = () => {
         if (!test) return 0;
@@ -331,9 +354,34 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
             <div className={styles.body}>
                 {/* Main Question Area */}
                 <div className={styles.mainArea}>
+                    {isFullSyllabus && test.subjectAllocations && (
+                        <div style={{ display: 'flex', borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9', overflowX: 'auto' }}>
+                            {test.subjectAllocations.map(alloc => (
+                                <button
+                                    key={alloc.subject}
+                                    style={{
+                                        padding: '10px 20px',
+                                        border: 'none',
+                                        backgroundColor: activeSubject === alloc.subject ? '#fff' : 'transparent',
+                                        borderTop: activeSubject === alloc.subject ? '3px solid #007bff' : '3px solid transparent',
+                                        fontWeight: activeSubject === alloc.subject ? 'bold' : 'normal',
+                                        cursor: 'pointer',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    onClick={() => {
+                                        setActiveSubject(alloc.subject);
+                                        const firstIdx = getSubjectQuestionIndices(alloc.subject)[0];
+                                        if (firstIdx !== undefined) jumpToQuestion(firstIdx);
+                                    }}
+                                >
+                                    {alloc.subject}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     <div className={styles.questionHeader}>
                         <div className={styles.sectionBar}>
-                            Section: General
+                            Section: {isFullSyllabus ? activeSubject : (test.subject || "General")}
                         </div>
                         <div style={{ fontWeight: 'bold', color: '#d9534f' }}>
                             Marks: +4, -1
@@ -342,7 +390,9 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
                     <div className={styles.scrollableContent}>
                         <div className={styles.questionText}>
-                            <h3 style={{ marginBottom: "10px", fontWeight: "bold" }}>Question {currentQuestionIndex + 1}:</h3>
+                            <h3 style={{ marginBottom: "10px", fontWeight: "bold" }}>
+                                Question {isFullSyllabus ? (currentPaletteIndices.indexOf(currentQuestionIndex) + 1) : (currentQuestionIndex + 1)}:
+                            </h3>
                             <LatexRenderer>{currentQuestion.text}</LatexRenderer>
                             {currentQuestion.imageUrl && (
                                 <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
@@ -452,13 +502,13 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
                         <div className={styles.paletteArea}>
                             <div className={styles.paletteGrid}>
-                                {test.questions.map((_, index) => (
+                                {currentPaletteIndices.map((globalIndex, localIndex) => (
                                     <button
-                                        key={index}
-                                        className={`${styles.pBtn} ${getPaletteClass(index)}`}
-                                        onClick={() => jumpToQuestion(index)}
+                                        key={globalIndex}
+                                        className={`${styles.pBtn} ${getPaletteClass(globalIndex)}`}
+                                        onClick={() => jumpToQuestion(globalIndex)}
                                     >
-                                        {index + 1}
+                                        {isFullSyllabus ? localIndex + 1 : globalIndex + 1}
                                     </button>
                                 ))}
                             </div>

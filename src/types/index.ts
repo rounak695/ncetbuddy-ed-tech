@@ -4,6 +4,7 @@ export interface Question {
     imageUrl?: string;
     options: string[];
     correctAnswer: number;
+    subject?: string; // e.g., "Physics", "Chemistry" for full syllabus mock tests
 }
 
 export type PYQSubject = 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain';
@@ -23,6 +24,10 @@ export interface Test {
     testType?: 'pyq' | 'educator'; // PYQ = platform-owned free content, Educator = educator-owned premium content
     pyqSubject?: 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain'; // For PYQ categorization
     price?: number; // Cost of the test in INR (0 for free)
+
+    // Full Syllabus feature
+    isFullSyllabus?: boolean;
+    subjectAllocations?: { subject: string; count: number }[];
 }
 
 export interface Purchase {
