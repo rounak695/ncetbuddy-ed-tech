@@ -28,12 +28,16 @@ export default function CreateTestPage() {
         subjectAllocations: []
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
-        { text: "", options: ["", "", "", ""], correctAnswer: 0 }
+        { text: "", options: ["", "", "", ""], correctAnswer: 0, subject: "General" }
     ]);
 
     // For Full Syllabus allocations
     const [newSubjectName, setNewSubjectName] = useState("");
     const [newSubjectCount, setNewSubjectCount] = useState<number | "">("");
+
+    // Admin UI States
+    const [activeAdminSubject, setActiveAdminSubject] = useState<string>("General");
+    const [expandedQuestionIndex, setExpandedQuestionIndex] = useState<number | null>(0);
 
     const handleAddSubjectAllocation = () => {
         if (!newSubjectName || !newSubjectCount) return;
@@ -81,10 +85,15 @@ export default function CreateTestPage() {
             }
         });
         setQuestions(newQuestions);
+        if (testData.subjectAllocations.length > 0) {
+            setActiveAdminSubject(testData.subjectAllocations[0].subject);
+        }
     };
 
     const addQuestion = () => {
-        setQuestions([...questions, { text: "", options: ["", "", "", ""], correctAnswer: 0 }]);
+        const targetSubject = testData.isFullSyllabus ? activeAdminSubject : testData.subject || "General";
+        setQuestions([...questions, { text: "", options: ["", "", "", ""], correctAnswer: 0, subject: targetSubject }]);
+        setExpandedQuestionIndex(questions.length); // Open the newly added question
     };
 
     const removeQuestion = (index: number) => {
@@ -379,75 +388,150 @@ export default function CreateTestPage() {
                     </div>
                 </div>
             </div>
-            {questions.map((q, qIndex) => (
-                <Card key={qIndex} style={{ marginBottom: "1.5rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                        <h4>Question {qIndex + 1} {q.subject && <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", backgroundColor: "var(--bg-secondary)", padding: "0.2rem 0.5rem", borderRadius: "4px", marginLeft: "0.5rem" }}>{q.subject}</span>}</h4>
-                        <Button
-                            variant="outline"
-                            style={{ color: "var(--error)", borderColor: "var(--error)" }}
-                            onClick={() => removeQuestion(qIndex)}
+
+            {/* Admin Subject Tabs */}
+            {testData.isFullSyllabus && testData.subjectAllocations && testData.subjectAllocations.length > 0 && (
+                <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', overflowX: 'auto' }}>
+                    {testData.subjectAllocations.map(alloc => (
+                        <button
+                            key={alloc.subject}
+                            style={{
+                                padding: '10px 20px',
+                                border: 'none',
+                                backgroundColor: activeAdminSubject === alloc.subject ? 'var(--bg-secondary)' : 'transparent',
+                                borderTop: activeAdminSubject === alloc.subject ? '3px solid var(--primary)' : '3px solid transparent',
+                                fontWeight: activeAdminSubject === alloc.subject ? 'bold' : 'normal',
+                                color: activeAdminSubject === alloc.subject ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                            }}
+                            onClick={() => {
+                                setActiveAdminSubject(alloc.subject);
+                                setExpandedQuestionIndex(null); // Close accordion on switch
+                            }}
+                            type="button"
                         >
-                            Remove
-                        </Button>
-                    </div>
+                            {alloc.subject}
+                        </button>
+                    ))}
+                </div>
+            )}
 
-                    <div style={{ marginBottom: "1rem" }}>
-                        <Input
-                            label="Question Text"
-                            placeholder="Enter question here (supports LaTeX e.g., $E=mc^2$)"
-                            value={q.text}
-                            onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
-                        />
-                        {q.text && (
-                            <div style={{ marginTop: "0.5rem", padding: "0.75rem", background: "var(--bg-secondary)", borderRadius: "8px", border: "1px solid var(--border)" }}>
-                                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Preview:</p>
-                                <LatexRenderer>{q.text}</LatexRenderer>
-                            </div>
-                        )}
-                    </div>
+            {/* Questions List (Filtered & Accordion) */}
+            {questions.map((q, qIndex) => {
+                // Filter logic
+                if (testData.isFullSyllabus && q.subject !== activeAdminSubject) return null;
 
-                    <Input
-                        label="Image URL (Optional)"
-                        placeholder="https://example.com/image.png"
-                        value={q.imageUrl || ""}
-                        onChange={(e) => updateQuestion(qIndex, "imageUrl", e.target.value)}
-                    />
+                const isExpanded = expandedQuestionIndex === qIndex;
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
-                        {q.options.map((opt: string, oIndex: number) => (
-                            <div key={oIndex}>
-                                <Input
-                                    label={`Option ${String.fromCharCode(65 + oIndex)}`}
-                                    placeholder={`Option ${oIndex + 1}`}
-                                    value={opt}
-                                    onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                                />
-                                {opt && (
-                                    <div style={{ marginTop: "0.25rem", padding: "0.5rem", background: "var(--bg-secondary)", borderRadius: "6px", border: "1px solid var(--border)" }}>
-                                        <p style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: "0.1rem" }}>Preview:</p>
-                                        <LatexRenderer>{opt}</LatexRenderer>
-                                    </div>
+                return (
+                    <Card key={qIndex} style={{ marginBottom: "1rem" }}>
+                        {/* Accordion Header */}
+                        <div
+                            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", paddingBottom: isExpanded ? "1rem" : "0", borderBottom: isExpanded ? "1px solid var(--border)" : "none" }}
+                            onClick={() => setExpandedQuestionIndex(isExpanded ? null : qIndex)}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                                <h4 style={{ margin: 0 }}>Question {qIndex + 1}</h4>
+                                {q.text ? (
+                                    <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "400px" }}>
+                                        {q.text}
+                                    </span>
+                                ) : (
+                                    <span style={{ fontSize: "0.9rem", color: "var(--action)", fontStyle: "italic" }}>
+                                        Empty Question
+                                    </span>
                                 )}
                             </div>
-                        ))}
-                    </div>
 
-                    <div style={{ marginTop: "1rem" }}>
-                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Correct Option</label>
-                        <select
-                            style={{ padding: "0.75rem", borderRadius: "8px", background: "var(--surface)", color: "white", border: "1px solid #333", width: "100%" }}
-                            value={q.correctAnswer}
-                            onChange={(e) => updateQuestion(qIndex, "correctAnswer", Number(e.target.value))}
-                        >
-                            <option value={0}>Option A</option>
-                            <option value={1}>Option B</option>
-                            <option value={2}>Option C</option>
-                            <option value={3}>Option D</option>
-                        </select>
-                    </div>
-                </Card>
-            ))}
+                            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                                {q.subject && !testData.isFullSyllabus && (
+                                    <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", backgroundColor: "var(--bg-secondary)", padding: "0.2rem 0.5rem", borderRadius: "4px" }}>
+                                        {q.subject}
+                                    </span>
+                                )}
+                                <span style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+                                    ▼
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Accordion Body */}
+                        {isExpanded && (
+                            <div style={{ paddingTop: "1rem" }}>
+                                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+                                    <Button
+                                        variant="outline"
+                                        style={{ color: "var(--error)", borderColor: "var(--error)", padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeQuestion(qIndex);
+                                        }}
+                                        type="button"
+                                    >
+                                        Remove Question
+                                    </Button>
+                                </div>
+
+                                <div style={{ marginBottom: "1rem" }}>
+                                    <Input
+                                        label="Question Text"
+                                        placeholder="Enter question here (supports LaTeX e.g., $E=mc^2$)"
+                                        value={q.text}
+                                        onChange={(e) => updateQuestion(qIndex, "text", e.target.value)}
+                                    />
+                                    {q.text && (
+                                        <div style={{ marginTop: "0.5rem", padding: "0.75rem", background: "var(--bg-secondary)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                                            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.25rem" }}>Preview:</p>
+                                            <LatexRenderer>{q.text}</LatexRenderer>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <Input
+                                    label="Image URL (Optional)"
+                                    placeholder="https://example.com/image.png"
+                                    value={q.imageUrl || ""}
+                                    onChange={(e) => updateQuestion(qIndex, "imageUrl", e.target.value)}
+                                />
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+                                    {q.options.map((opt: string, oIndex: number) => (
+                                        <div key={oIndex}>
+                                            <Input
+                                                label={`Option ${String.fromCharCode(65 + oIndex)}`}
+                                                placeholder={`Option ${oIndex + 1}`}
+                                                value={opt}
+                                                onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                            />
+                                            {opt && (
+                                                <div style={{ marginTop: "0.25rem", padding: "0.5rem", background: "var(--bg-secondary)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                                                    <p style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: "0.1rem" }}>Preview:</p>
+                                                    <LatexRenderer>{opt}</LatexRenderer>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ marginTop: "1rem" }}>
+                                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Correct Option</label>
+                                    <select
+                                        style={{ padding: "0.75rem", borderRadius: "8px", background: "var(--surface)", color: "white", border: "1px solid #333", width: "100%" }}
+                                        value={q.correctAnswer}
+                                        onChange={(e) => updateQuestion(qIndex, "correctAnswer", Number(e.target.value))}
+                                    >
+                                        <option value={0}>Option A</option>
+                                        <option value={1}>Option B</option>
+                                        <option value={2}>Option C</option>
+                                        <option value={3}>Option D</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                );
+            })}
 
             <div style={{ display: "flex", gap: "1rem", marginBottom: "4rem" }}>
                 <Button variant="secondary" onClick={addQuestion} style={{ flex: 1 }}>+ Add Question</Button>
