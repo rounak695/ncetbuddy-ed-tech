@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { getForumPosts, ForumPost, ForumComment, getPostComments, createComment } from "@/lib/appwrite-forum";
+import { getForumPosts, getForumComments, createForumComment } from "@/lib/appwrite-db";
+import { ForumPost, ForumComment } from "@/types";
 import { CreatePostModal } from "@/components/forum/CreatePostModal";
 import { Plus, Search, Flame, Smile, Paperclip, Mic, MessageCircle, Lock, ArrowLeft } from "lucide-react";
 
@@ -52,9 +53,9 @@ export default function ForumPage() {
 
     // Fetch comments when a post is selected
     useEffect(() => {
-        if (selectedPost) {
+        if (selectedPost?.id) {
             setLoadingComments(true);
-            getPostComments(selectedPost.id)
+            getForumComments(selectedPost.id)
                 .then(data => {
                     setComments(data);
                 })
@@ -78,15 +79,15 @@ export default function ForumPage() {
         setNewComment(""); // Optimistic clear
 
         try {
-            await createComment({
-                postId: selectedPost.id,
+            await createForumComment({
+                postId: selectedPost.id!,
                 userId: user.$id,
                 authorName: user.name || "Anonymous",
                 content: commentContent
             });
 
             // Refresh comments
-            const updatedComments = await getPostComments(selectedPost.id);
+            const updatedComments = await getForumComments(selectedPost.id!);
             setComments(updatedComments);
         } catch (err) {
             console.error("Failed to send comment:", err);
