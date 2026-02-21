@@ -21,10 +21,21 @@ export const getTests = async (): Promise<Test[]> => {
                 console.error("Error parsing questions for test:", doc.$id, e);
                 questions = [];
             }
+            let subjectAllocations = doc.subjectAllocations;
+            try {
+                if (typeof subjectAllocations === 'string') {
+                    subjectAllocations = JSON.parse(subjectAllocations);
+                }
+            } catch (e) {
+                console.error("Error parsing subjectAllocations for test:", doc.$id, e);
+                subjectAllocations = [];
+            }
+
             return {
                 id: doc.$id,
                 ...doc,
-                questions: Array.isArray(questions) ? questions : []
+                questions: Array.isArray(questions) ? questions : [],
+                subjectAllocations: Array.isArray(subjectAllocations) ? subjectAllocations : doc.isFullSyllabus ? subjectAllocations : undefined
             };
         }) as unknown as Test[];
     } catch (error) {
@@ -50,10 +61,21 @@ export const getTestById = async (id: string): Promise<Test | null> => {
             console.error("Error parsing questions for test:", doc.$id, e);
             questions = [];
         }
+        let subjectAllocations = doc.subjectAllocations;
+        try {
+            if (typeof subjectAllocations === 'string') {
+                subjectAllocations = JSON.parse(subjectAllocations);
+            }
+        } catch (e) {
+            console.error("Error parsing subjectAllocations for test:", doc.$id, e);
+            subjectAllocations = [];
+        }
+
         return {
             id: doc.$id,
             ...doc,
-            questions: Array.isArray(questions) ? questions : []
+            questions: Array.isArray(questions) ? questions : [],
+            subjectAllocations: Array.isArray(subjectAllocations) ? subjectAllocations : doc.isFullSyllabus ? subjectAllocations : undefined
         } as unknown as Test;
     } catch (error) {
         console.error("Error fetching test:", error);
@@ -64,9 +86,11 @@ export const getTestById = async (id: string): Promise<Test | null> => {
 export const createTest = async (test: Omit<Test, "id">): Promise<string | null> => {
     if (!isAppwriteConfigured()) return null;
     try {
+        const { questions, subjectAllocations, ...restOfTest } = test;
         const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), {
-            ...test,
-            questions: JSON.stringify(test.questions),
+            ...restOfTest,
+            questions: JSON.stringify(questions),
+            subjectAllocations: subjectAllocations ? JSON.stringify(subjectAllocations) : undefined,
             createdAt: Math.floor(Date.now() / 1000),
             isVisible: test.isVisible !== undefined ? test.isVisible : true // Default to visible
         });
