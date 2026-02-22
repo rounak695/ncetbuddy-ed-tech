@@ -1509,6 +1509,230 @@ export const getAllTestResults = async (): Promise<TestResult[]> => {
     }
 };
 
+// --- Admin: Student Performance for Mentorship ---
+
+export interface StudentPerformanceData {
+    userId: string;
+    userName: string;
+    email: string;
+    testsAttempted: number;
+    overallScore: number;
+    averageAccuracy: number;
+    testPerformances: {
+        testId: string;
+        testTitle: string;
+        subject: string;
+        score: number;
+        maxScore: number;
+        rank: number;
+        totalAttemptees: number;
+        accuracy: number;
+        timeTaken: number;
+        completedAt: number;
+        correctCount: number;
+        incorrectCount: number;
+        unattempted: number;
+    }[];
+    sectionWise: {
+        section: string;
+        totalQuestions: number;
+        correctCount: number;
+        accuracy: number;
+    }[];
+    weakSections: string[];
+}
+
+export const getAdminStudentPerformance = async (): Promise<StudentPerformanceData[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        // 1. Fetch all users
+        const usersResponse = await databases.listDocuments(DB_ID, 'users', [
+            Query.limit(500)
+        ]);
+        const users = usersResponse.documents;
+
+        // 2. Fetch all test results
+        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+            Query.limit(5000),
+            Query.orderDesc('completedAt')
+        ]);
+        const allResults = resultsResponse.documents;
+
+        // 3. Fetch all tests (for titles, subjects, questions)
+        const testsResponse = await databases.listDocuments(DB_ID, 'tests', [
+            Query.limit(1000)
+        ]);
+        const testsMap = new Map<string, any>();
+        testsResponse.documents.forEach((doc: any) => {
+            let questions = doc.questions;
+            try {
+                while (typeof questions === 'string') questions = JSON.parse(questions);
+            } catch (e) { questions = []; }
+            if (!Array.isArray(questions)) questions = [];
+            testsMap.set(doc.$id, {
+                title: doc.title || 'Unknown Test',
+                subject: doc.subject || doc.pyqSubject || 'General',
+                questions,
+            });
+        });
+
+        // 4. Group results by testId for ranking
+        const resultsByTest = new Map<string, any[]>();
+        allResults.forEach((doc: any) => {
+            const arr = resultsByTest.get(doc.testId) || [];
+            arr.push(doc);
+            resultsByTest.set(doc.testId, arr);
+        });
+
+        // Pre-compute ranks per test (sorted by score DESC, timeTaken ASC)
+        const testRanks = new Map<string, Map<string, { rank: number; total: number }>>();
+        resultsByTest.forEach((results, testId) => {
+            // Deduplicate: keep best score per user for this test
+            const bestPerUser = new Map<string, any>();
+            results.forEach(r => {
+                const existing = bestPerUser.get(r.userId);
+                if (!existing || r.score > existing.score) {
+                    bestPerUser.set(r.userId, r);
+                } else if (r.score === existing.score) {
+                    const t1 = extractNumber(r.timeTaken);
+                    const t2 = extractNumber(existing.timeTaken);
+                    if (t1 > 0 && t2 > 0 && t1 < t2) bestPerUser.set(r.userId, r);
+                }
+            });
+
+            const sorted = Array.from(bestPerUser.values()).sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return extractNumber(a.timeTaken) - extractNumber(b.timeTaken);
+            });
+
+            const rankMap = new Map<string, { rank: number; total: number }>();
+            let currentRank = 1;
+            sorted.forEach((doc, i) => {
+                if (i > 0) {
+                    const prev = sorted[i - 1];
+                    if (doc.score !== prev.score) currentRank = i + 1;
+                }
+                rankMap.set(doc.userId, { rank: currentRank, total: sorted.length });
+            });
+            testRanks.set(testId, rankMap);
+        });
+
+        // 5. Group results by user
+        const resultsByUser = new Map<string, any[]>();
+        allResults.forEach((doc: any) => {
+            const arr = resultsByUser.get(doc.userId) || [];
+            arr.push(doc);
+            resultsByUser.set(doc.userId, arr);
+        });
+
+        // 6. Build per-user performance data
+        const studentPerformances: StudentPerformanceData[] = [];
+
+        users.forEach((user: any) => {
+            const userId = user.$id;
+            const userResults = resultsByUser.get(userId);
+            if (!userResults || userResults.length === 0) return; // Skip users with no tests
+
+            const testPerformances: StudentPerformanceData['testPerformances'] = [];
+            const sectionStats = new Map<string, { total: number; correct: number }>();
+
+            userResults.forEach((result: any) => {
+                const testMeta = testsMap.get(result.testId);
+                if (!testMeta) return;
+
+                const questions = testMeta.questions;
+                const totalQ = questions.length || result.totalQuestions || 0;
+                const maxScore = totalQ * 4;
+
+                // Parse answers
+                let answers: Record<string, number> = {};
+                try {
+                    answers = typeof result.answers === 'string' ? JSON.parse(result.answers) : (result.answers || {});
+                } catch (e) { answers = {}; }
+
+                const answeredCount = Object.keys(answers).length;
+                const correctCount = Math.max(0, Math.round((result.score + answeredCount) / 5));
+                const incorrectCount = answeredCount - correctCount;
+                const unattempted = totalQ - answeredCount;
+                const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
+                // Get rank for this test
+                const rankInfo = testRanks.get(result.testId)?.get(userId);
+
+                testPerformances.push({
+                    testId: result.testId,
+                    testTitle: testMeta.title,
+                    subject: testMeta.subject,
+                    score: result.score || 0,
+                    maxScore,
+                    rank: rankInfo?.rank || 0,
+                    totalAttemptees: rankInfo?.total || 0,
+                    accuracy,
+                    timeTaken: extractNumber(result.timeTaken),
+                    completedAt: result.completedAt || 0,
+                    correctCount,
+                    incorrectCount,
+                    unattempted,
+                });
+
+                // Section-wise: use test subject as the section
+                const section = testMeta.subject || 'General';
+                const existing = sectionStats.get(section) || { total: 0, correct: 0 };
+                existing.total += totalQ;
+                existing.correct += correctCount;
+                sectionStats.set(section, existing);
+            });
+
+            // Sort test performances by date (newest first)
+            testPerformances.sort((a, b) => b.completedAt - a.completedAt);
+
+            // Build section-wise array
+            const sectionWise: StudentPerformanceData['sectionWise'] = [];
+            sectionStats.forEach((stats, section) => {
+                sectionWise.push({
+                    section,
+                    totalQuestions: stats.total,
+                    correctCount: stats.correct,
+                    accuracy: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+                });
+            });
+            sectionWise.sort((a, b) => a.accuracy - b.accuracy);
+
+            // Identify weak sections (accuracy < 50%)
+            const weakSections = sectionWise
+                .filter(s => s.accuracy < 50)
+                .map(s => s.section);
+
+            // Overall stats
+            const overallScore = testPerformances.reduce((sum, t) => sum + t.score, 0);
+            const avgAccuracy = testPerformances.length > 0
+                ? Math.round(testPerformances.reduce((sum, t) => sum + t.accuracy, 0) / testPerformances.length)
+                : 0;
+
+            studentPerformances.push({
+                userId,
+                userName: user.displayName || user.name || 'Student',
+                email: user.email || '',
+                testsAttempted: testPerformances.length,
+                overallScore,
+                averageAccuracy: avgAccuracy,
+                testPerformances,
+                sectionWise,
+                weakSections,
+            });
+        });
+
+        // Sort: most tests attempted first
+        studentPerformances.sort((a, b) => b.testsAttempted - a.testsAttempted);
+
+        return studentPerformances;
+
+    } catch (error) {
+        console.error("Error fetching admin student performance:", error);
+        return [];
+    }
+};
+
 // --- Streak & Daily Goal ---
 
 export const getDailyProgress = async (userId: string): Promise<{ streak: number; lastActiveDate: string; dailyGoal: string; dailyProgress: number; dailyGoalTarget: number }> => {

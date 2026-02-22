@@ -11,6 +11,7 @@ export const AdminSidebar = () => {
         { label: "Dashboard", href: "/admin" },
         { label: "User Analytics", href: "/admin/analytics" },
         { label: "Test Analytics", href: "/admin/test-analytics" },
+        { label: "Student Performance", href: "/admin/student-performance" },
         { label: "Books / Notes", href: "/admin/books" },
         { label: "Formula Cards", href: "/admin/formula-cards" },
         { label: "Video Classes", href: "/admin/videos" },
