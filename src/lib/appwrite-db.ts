@@ -1,8 +1,66 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query, Models } from "appwrite";
-import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics, ForumPost, ForumComment, ForumCategory } from "@/types";
+import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics, ForumPost, ForumComment, ForumCategory, CarouselBanner } from "@/types";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
+
+// --- Carousel Banners ---
+export const getBanners = async (): Promise<CarouselBanner[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'banners', [
+            Query.orderAsc('order')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as CarouselBanner[];
+    } catch (error) {
+        console.error("Error fetching banners:", error);
+        return [];
+    }
+};
+
+export const getActiveBanners = async (): Promise<CarouselBanner[]> => {
+    if (!isAppwriteConfigured()) return [];
+    try {
+        const response = await databases.listDocuments(DB_ID, 'banners', [
+            Query.equal('isActive', true),
+            Query.orderAsc('order')
+        ]);
+        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as CarouselBanner[];
+    } catch (error) {
+        console.error("Error fetching active banners:", error);
+        return [];
+    }
+};
+
+export const createBanner = async (banner: Omit<CarouselBanner, "id">) => {
+    try {
+        await databases.createDocument(DB_ID, 'banners', ID.unique(), {
+            ...banner,
+            createdAt: banner.createdAt || Math.floor(Date.now() / 1000)
+        });
+    } catch (error) {
+        console.error("Error creating banner:", error);
+        throw error;
+    }
+};
+
+export const updateBanner = async (id: string, data: Partial<CarouselBanner>) => {
+    try {
+        await databases.updateDocument(DB_ID, 'banners', id, data);
+    } catch (error) {
+        console.error("Error updating banner:", error);
+        throw error;
+    }
+};
+
+export const deleteBanner = async (id: string) => {
+    try {
+        await databases.deleteDocument(DB_ID, 'banners', id);
+    } catch (error) {
+        console.error("Error deleting banner:", error);
+        throw error;
+    }
+};
 
 // --- Tests ---
 export const getTests = async (): Promise<Test[]> => {

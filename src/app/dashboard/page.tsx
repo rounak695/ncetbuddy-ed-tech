@@ -5,6 +5,7 @@ import Header from '@/components/dashboard/Header';
 import Section from '@/components/dashboard/Section';
 import Link from 'next/link';
 import { FormulaCard, BookCard, TestCard } from '@/components/dashboard/Cards';
+import BannerCarousel from '@/components/dashboard/BannerCarousel';
 import { useEffect, useState } from 'react';
 import { getBooks, getFormulaCards, getTests } from '@/lib/appwrite-db';
 import { Test } from '@/types';
@@ -34,6 +35,8 @@ export default function DashboardPage() {
 
             <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
 
+                {/* Promotional Carousel */}
+                <BannerCarousel />
 
                 <Section title="Mock Tests & Practice">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

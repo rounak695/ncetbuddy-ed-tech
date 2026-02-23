@@ -277,3 +277,13 @@ export interface ForumComment {
     content: string;
     createdAt: number;
 }
+
+export interface CarouselBanner {
+    id?: string;
+    title: string;
+    imageUrl: string;
+    linkUrl?: string; // Optional click destination
+    isActive: boolean;
+    order: number;
+    createdAt: number;
+}
