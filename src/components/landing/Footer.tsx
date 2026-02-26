@@ -10,7 +10,7 @@ export const Footer = () => {
                     <div className="col-span-2 md:col-span-1">
                         <Link href="/" className="flex items-center gap-2 mb-8">
                             <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
-                                <img src="/LOGO.png" alt="NCETBuddy" className="w-full h-full object-cover" />
+                                <img src="/logo.png" alt="NCETBuddy" className="w-full h-full object-cover" />
                             </div>
                             <span className="text-xl font-bold tracking-tighter text-white">
                                 NCET<span className="text-[#E11D48]">Buddy</span>
