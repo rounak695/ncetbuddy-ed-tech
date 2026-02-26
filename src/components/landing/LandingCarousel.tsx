@@ -38,6 +38,14 @@ export const LandingCarousel = () => {
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                         </Link>
                         <Link
+                            href="/priority-order.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto px-12 py-6 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-white hover:text-black transition-all text-lg flex items-center justify-center"
+                        >
+                            Priority Order ⬇️
+                        </Link>
+                        <Link
                             href="/educator/login"
                             className="w-full sm:w-auto px-12 py-6 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-white hover:text-black transition-all text-lg"
                         >
@@ -146,6 +154,7 @@ export const LandingCarousel = () => {
                     </div>
                 ))}
             </div>
+
 
             {/* Pagination Indicators */}
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4 z-40">
