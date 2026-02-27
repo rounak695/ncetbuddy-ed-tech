@@ -331,7 +331,7 @@ export const ResourceLibrary = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex items-center gap-2 px-4 md:px-6 py-4 text-[10px] md:text-xs font-black uppercase tracking-tight transition-all relative whitespace-nowrap flex-shrink-0
+                                    flex items-center gap-2 px-4 md:px-6 py-4 text-[10px] md:text-xs font-black uppercase tracking-tight transition-all relative whitespace-nowrap flex-shrink-0 focus:outline-none
                                     ${activeTab === tab.id ? 'text-rose-500' : 'text-slate-400 hover:text-slate-600'}
                                 `}
                             >
