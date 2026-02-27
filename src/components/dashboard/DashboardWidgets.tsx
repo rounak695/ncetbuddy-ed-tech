@@ -203,7 +203,34 @@ export const AISmartPlanner = ({ target, progress }: { target: string, progress:
 };
 
 // --- Performance Analytics Section ---
-export const PerformanceAnalytics = ({ score, trend }: { score: number, trend: number }) => {
+export const PerformanceAnalytics = ({ score, trend, history = [] }: { score: number, trend: number, history?: number[] }) => {
+    // Dynamically generate smooth SVG path based on history
+    const getPath = (data: number[]) => {
+        if (!data || data.length < 2) return "M0 80 Q 50 75, 100 80 T 200 60 T 300 55 T 400 30 T 500 35";
+
+        const max = Math.max(...data, 640);
+
+        const points = data.map((val, i) => {
+            const x = (i / (data.length - 1)) * 500;
+            // Map to Y: 90 is bottom, 10 is top
+            const y = 90 - ((val / max) * 80);
+            return { x, y };
+        });
+
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const cpX = (prev.x + curr.x) / 2;
+            d += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
+        }
+        return d;
+    };
+
+    const fallBackHistory = [400, 420, 480, score || 642];
+    const dataPoints = history.length > 1 ? history : fallBackHistory;
+    const pathString = getPath(dataPoints);
+    const fillPathString = `${pathString} L 500 100 L 0 100 Z`;
     return (
         <Card className="bg-white border-slate-100 shadow-sm p-6 rounded-3xl flex flex-col">
             <div className="flex justify-between items-center mb-6 md:mb-8">
@@ -232,12 +259,12 @@ export const PerformanceAnalytics = ({ score, trend }: { score: number, trend: n
                             preserveAspectRatio="none"
                         >
                             <path
-                                d="M0 80 Q 50 75, 100 80 T 200 60 T 300 55 T 400 30 T 500 35 L 500 100 L 0 100 Z"
+                                d={fillPathString}
                                 fill="url(#gradient-fixed)"
                                 fillOpacity="0.1"
                             />
                             <path
-                                d="M0 80 Q 50 75, 100 80 T 200 60 T 300 55 T 400 30 T 500 35"
+                                d={pathString}
                                 fill="none"
                                 stroke="#E11D48"
                                 strokeWidth="3"

@@ -3,7 +3,7 @@
 import React from 'react';
 import BannerCarousel from '@/components/dashboard/BannerCarousel';
 import { useEffect, useState } from 'react';
-import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress } from '@/lib/appwrite-db';
+import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress, getUserTestResults } from '@/lib/appwrite-db';
 import { Test, ForumPost } from '@/types';
 import {
     MockTestEngine,
@@ -65,7 +65,8 @@ export default function DashboardPage() {
     const { user } = useAuth();
     const [tests, setTests] = useState<Test[]>([]);
     const [posts, setPosts] = useState<any[]>([]);
-    const [plannerData, setPlannerData] = useState({ target: "2 Mock Tests & 1 Physics Chapter", progress: 65 });
+    const [plannerData, setPlannerData] = useState({ target: "Loading target...", progress: 0 });
+    const [analyticsData, setAnalyticsData] = useState({ score: 0, trend: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -99,11 +100,55 @@ export default function DashboardPage() {
                 if (user?.$id) {
                     const progress = await getDailyProgress(user.$id);
                     if (progress) {
-                        const percent = Math.round((progress.dailyProgress / progress.dailyGoalTarget) * 100);
+                        let percent = Math.round((progress.dailyProgress / progress.dailyGoalTarget) * 100);
+                        // Cap at 100% for the UI progress bar to accurately reflect completion without overflowing
+                        if (percent > 100) percent = 100;
                         setPlannerData({
                             target: `Complete ${progress.dailyGoalTarget} Daily Questions`,
                             progress: percent
                         });
+                    }
+
+                    // Fetch Performance Analytics
+                    try {
+                        const testResults = await getUserTestResults(user.$id);
+                        if (testResults && testResults.length > 0) {
+                            // Calculate projected score based on recent performance
+                            // Total NCET score is 640
+                            const latestTests = testResults.slice(0, 5); // Average of last 5 tests
+                            let totalScore = 0;
+                            let totalMaxScore = 0;
+
+                            latestTests.forEach(tr => {
+                                totalScore += tr.score || 0;
+                                totalMaxScore += tr.totalQuestions ? tr.totalQuestions * 4 : 400; // Roughly assuming 4 marks per question
+                            });
+
+                            const avgPercentage = totalMaxScore > 0 ? totalScore / totalMaxScore : 0;
+                            const projectedScore = Math.round(avgPercentage * 640);
+
+                            // Calculate trend vs previous set of tests
+                            const prevTests = testResults.slice(5, 10);
+                            let trend = 0;
+                            if (prevTests.length > 0) {
+                                let previousScore = 0;
+                                let previousMaxScore = 0;
+                                prevTests.forEach(tr => {
+                                    previousScore += tr.score || 0;
+                                    previousMaxScore += tr.totalQuestions ? tr.totalQuestions * 4 : 400;
+                                });
+                                const prevAvg = previousMaxScore > 0 ? previousScore / previousMaxScore : 0;
+                                const prevProjected = Math.round(prevAvg * 640);
+
+                                if (prevProjected > 0) {
+                                    trend = Math.round(((projectedScore - prevProjected) / prevProjected) * 100);
+                                }
+                            }
+
+                            setAnalyticsData({ score: projectedScore, trend });
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch test results for analytics:", err);
                     }
                 }
 
@@ -144,7 +189,7 @@ export default function DashboardPage() {
                         <CommunityDiscussion posts={posts} />
 
                         {/* Performance Analytics */}
-                        <PerformanceAnalytics score={642} trend={12} />
+                        <PerformanceAnalytics score={analyticsData.score} trend={analyticsData.trend} />
                     </div>
                 </div>
 
