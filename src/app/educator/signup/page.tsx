@@ -17,10 +17,11 @@ export default function EducatorSignupPage() {
             // Force logout if a stale session exists to prevent 401
             await account.deleteSession("current").catch(() => { });
 
+            const origin = window.location.origin.replace('https://www.', 'https://');
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/educator/dashboard`,
-                `${window.location.origin}/educator/signup`
+                `${origin}/educator/dashboard`,
+                `${origin}/educator/signup`
             );
         } catch (err) {
             console.error(err);

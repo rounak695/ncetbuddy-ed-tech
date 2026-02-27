@@ -17,10 +17,11 @@ export default function SignupPage() {
 
     const handleGoogleSignup = () => {
         try {
+            const origin = window.location.origin.replace('https://www.', 'https://');
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/dashboard`,
-                `${window.location.origin}/signup`
+                `${origin}/dashboard`,
+                `${origin}/signup`
             );
         } catch (err: any) {
             console.error("Google signup failed:", err);

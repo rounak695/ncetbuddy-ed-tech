@@ -91,10 +91,11 @@ function EducatorLoginContent() {
             await account.deleteSession("current").catch(() => { });
 
             // Start OAuth with custom callback URL
+            const origin = window.location.origin.replace('https://www.', 'https://');
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/educator/oauth-callback`,
-                `${window.location.origin}/educator/login?error=oauth_failed`
+                `${origin}/educator/oauth-callback`,
+                `${origin}/educator/login?error=oauth_failed`
             );
         } catch (err) {
             console.error('OAuth error:', err);

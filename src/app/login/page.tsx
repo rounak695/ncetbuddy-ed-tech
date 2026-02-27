@@ -22,10 +22,11 @@ export default function LoginPage() {
     const handleGoogleLogin = () => {
         trackEvent('login', '/login', 'method:google_init');
         try {
+            const origin = window.location.origin.replace('https://www.', 'https://');
             account.createOAuth2Session(
                 OAuthProvider.Google,
-                `${window.location.origin}/dashboard`,
-                `${window.location.origin}/login`
+                `${origin}/dashboard`,
+                `${origin}/login`
             );
         } catch (err: any) {
             console.error("Google login failed:", err);
