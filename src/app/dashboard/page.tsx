@@ -3,7 +3,7 @@
 import React from 'react';
 import BannerCarousel from '@/components/dashboard/BannerCarousel';
 import { useEffect, useState } from 'react';
-import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress, getUserTestResults, getDynamicPlannerTask, PlannerTask, getAllEducatorVideos } from '@/lib/appwrite-db';
+import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress, getUserTestResults, getDynamicPlannerTask, PlannerTask, getVideoClasses } from '@/lib/appwrite-db';
 import { Test, ForumPost, Book, FormulaCard, VideoClass } from '@/types';
 import {
     MockTestEngine,
@@ -159,7 +159,7 @@ export default function DashboardPage() {
                 const [booksData, formulaData, videosData] = await Promise.all([
                     getBooks(),
                     getFormulaCards(),
-                    getAllEducatorVideos()
+                    getVideoClasses()
                 ]);
 
                 setBooks(booksData);
@@ -168,12 +168,12 @@ export default function DashboardPage() {
                 // Map local EducatorVideos to match the VideoClass interface expected by ResourceLibrary if needed, 
                 // but getAllEducatorVideos actually returns `EducatorVideo` which is mostly compatible.
                 // We'll safely map it to match UI expectations.
-                const mappedVideos = videosData.map((v: any) => ({
+                const mappedVideos = videosData.map((v) => ({
                     id: v.id,
                     title: v.title,
                     url: v.url,
-                    thumbnailUrl: `https://img.youtube.com/vi/${v.url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`,
-                    subject: 'Lectures'
+                    thumbnailUrl: v.thumbnailUrl || `https://img.youtube.com/vi/${v.url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`,
+                    subject: v.subject || 'Lectures'
                 }));
                 setVideos(mappedVideos);
 
