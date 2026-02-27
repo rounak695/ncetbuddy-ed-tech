@@ -91,7 +91,7 @@ function EducatorLoginContent() {
             await account.deleteSession("current").catch(() => { });
 
             // Start OAuth with custom callback URL
-            const origin = window.location.origin.replace('https://www.', 'https://');
+            const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
             account.createOAuth2Session(
                 OAuthProvider.Google,
                 `${origin}/educator/oauth-callback`,

@@ -17,7 +17,7 @@ export default function SignupPage() {
 
     const handleGoogleSignup = () => {
         try {
-            const origin = window.location.origin.replace('https://www.', 'https://');
+            const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
             account.createOAuth2Session(
                 OAuthProvider.Google,
                 `${origin}/dashboard`,

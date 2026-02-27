@@ -17,7 +17,7 @@ export default function EducatorSignupPage() {
             // Force logout if a stale session exists to prevent 401
             await account.deleteSession("current").catch(() => { });
 
-            const origin = window.location.origin.replace('https://www.', 'https://');
+            const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
             account.createOAuth2Session(
                 OAuthProvider.Google,
                 `${origin}/educator/dashboard`,
