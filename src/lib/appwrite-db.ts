@@ -1789,7 +1789,19 @@ export const getAdminStudentPerformance = async (): Promise<StudentPerformanceDa
             const testPerformances: StudentPerformanceData['testPerformances'] = [];
             const sectionStats = new Map<string, { total: number; correct: number }>();
 
-            userResults.forEach((result: any) => {
+            const bestAttempts = new Map<string, any>();
+            userResults.forEach((r: any) => {
+                const existing = bestAttempts.get(r.testId);
+                if (!existing || r.score > existing.score) {
+                    bestAttempts.set(r.testId, r);
+                } else if (r.score === existing.score) {
+                    const t1 = extractNumber(r.timeTaken);
+                    const t2 = extractNumber(existing.timeTaken);
+                    if (t1 > 0 && t2 > 0 && t1 < t2) bestAttempts.set(r.testId, r);
+                }
+            });
+
+            Array.from(bestAttempts.values()).forEach((result: any) => {
                 const testMeta = testsMap.get(result.testId);
                 if (!testMeta) return;
 
