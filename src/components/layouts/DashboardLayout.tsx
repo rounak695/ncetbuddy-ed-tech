@@ -9,6 +9,7 @@ import {
     Trophy, MessageCircle, UserCircle, Menu, X, Search, Bell, Settings, LogOut, BookOpen, MessageSquare
 } from "lucide-react";
 import Image from "next/image";
+import NotificationBell from "@/components/dashboard/NotificationBell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
@@ -132,10 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-6">
-                        <button className="p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl relative transition-colors">
-                            <Bell size={20} />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-                        </button>
+                        <NotificationBell />
 
                         <div className="h-10 w-[1px] bg-slate-200 hidden md:block" />
 
