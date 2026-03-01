@@ -6,12 +6,10 @@ const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
 // --- Carousel Banners ---
 export const getBanners = async (): Promise<CarouselBanner[]> => {
-    if (!isAppwriteConfigured()) return [];
     try {
-        const response = await databases.listDocuments(DB_ID, 'banners', [
-            Query.orderAsc('order')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as CarouselBanner[];
+        const response = await fetch('/api/admin/banners');
+        if (!response.ok) throw new Error("Failed to fetch banners");
+        return await response.json();
     } catch (error) {
         console.error("Error fetching banners:", error);
         return [];
@@ -19,13 +17,9 @@ export const getBanners = async (): Promise<CarouselBanner[]> => {
 };
 
 export const getActiveBanners = async (): Promise<CarouselBanner[]> => {
-    if (!isAppwriteConfigured()) return [];
     try {
-        const response = await databases.listDocuments(DB_ID, 'banners', [
-            Query.equal('isActive', true),
-            Query.orderAsc('order')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as CarouselBanner[];
+        const banners = await getBanners();
+        return banners.filter(b => b.isActive).sort((a, b) => a.order - b.order);
     } catch (error) {
         console.error("Error fetching active banners:", error);
         return [];
@@ -34,10 +28,15 @@ export const getActiveBanners = async (): Promise<CarouselBanner[]> => {
 
 export const createBanner = async (banner: Omit<CarouselBanner, "id">) => {
     try {
-        await databases.createDocument(DB_ID, 'banners', ID.unique(), {
-            ...banner,
-            createdAt: banner.createdAt || Math.floor(Date.now() / 1000)
+        const response = await fetch('/api/admin/banners', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(banner)
         });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to create banner");
+        }
     } catch (error) {
         console.error("Error creating banner:", error);
         throw error;
@@ -46,7 +45,12 @@ export const createBanner = async (banner: Omit<CarouselBanner, "id">) => {
 
 export const updateBanner = async (id: string, data: Partial<CarouselBanner>) => {
     try {
-        await databases.updateDocument(DB_ID, 'banners', id, data);
+        const response = await fetch('/api/admin/banners', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...data })
+        });
+        if (!response.ok) throw new Error("Failed to update banner");
     } catch (error) {
         console.error("Error updating banner:", error);
         throw error;
@@ -55,7 +59,10 @@ export const updateBanner = async (id: string, data: Partial<CarouselBanner>) =>
 
 export const deleteBanner = async (id: string) => {
     try {
-        await databases.deleteDocument(DB_ID, 'banners', id);
+        const response = await fetch(`/api/admin/banners?id=${id}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error("Failed to delete banner");
     } catch (error) {
         console.error("Error deleting banner:", error);
         throw error;
