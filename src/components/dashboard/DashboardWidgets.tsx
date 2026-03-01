@@ -110,8 +110,9 @@ export const CommunityDiscussion = ({ posts }: { posts: any[] }) => {
         <Card className="bg-white border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-50">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-500">
-                        <MessageSquare size={18} />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center overflow-hidden border border-indigo-100 relative">
+                        {/* Using the forum community illustration in a small version */}
+                        <Image src="/images/forum-community.jpg" alt="Forum" fill className="object-cover" />
                     </div>
                     <h2 className="text-lg font-black text-slate-900 tracking-tight">Community Discussion</h2>
                 </div>

@@ -7,6 +7,7 @@ import { getForumPosts, getForumComments, createForumComment } from "@/lib/appwr
 import { ForumPost, ForumComment } from "@/types";
 import { CreatePostModal } from "@/components/forum/CreatePostModal";
 import { Plus, Search, Flame, Smile, Paperclip, Mic, MessageCircle, Lock, ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 // Extended type for UI specific fields if needed
 interface UIForumPost extends ForumPost {
@@ -327,11 +328,14 @@ export default function ForumPage() {
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-8 z-10">
-                        <div className="w-64 h-64 mb-8 opacity-90">
-                            {/* Placeholder Image using an emoji or simple SVG */}
-                            <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center shadow-inner">
-                                <MessageCircle size={120} className="text-gray-300" />
-                            </div>
+                        <div className="w-64 h-64 mb-8 opacity-90 relative">
+                            {/* Replaced placeholder icon with provided forum image */}
+                            <Image
+                                src="/images/forum-community.jpg"
+                                alt="Forum Community"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                         <h2 className="text-3xl text-gray-800 font-light mb-4">NCET Buddy Web</h2>
                         <p className="text-gray-500 text-sm max-w-md">
