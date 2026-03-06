@@ -79,10 +79,6 @@ function TestReviewContent() {
             }
 
             try {
-                // Fetch test details
-                const testData = await getTestById(testId);
-                if (testData) setTest(testData);
-
                 // Get user answers from sessionStorage
                 const storedAnswers = sessionStorage.getItem(`test_answers_${testId}`);
                 const storedTimes = sessionStorage.getItem(`test_questionTimes_${testId}`);
@@ -106,12 +102,15 @@ function TestReviewContent() {
                     sessionStorage.removeItem(`test_timeTaken_${testId}`);
                 }
 
-                // Fetch performance summary (includes rank, percentile, leaderboard)
-                const perfData = await getTestPerformanceSummary(testId, user.$id);
-                if (perfData) setPerformance(perfData);
+                // Fetch data concurrently for performance
+                const [testData, perfData, analysis] = await Promise.all([
+                    getTestById(testId),
+                    getTestPerformanceSummary(testId, user.$id),
+                    getQuestionLevelAnalysis(testId, parsedAnswers, parsedQuestionTimes)
+                ]);
 
-                // Fetch question-level analysis
-                const analysis = await getQuestionLevelAnalysis(testId, parsedAnswers, parsedQuestionTimes);
+                if (testData) setTest(testData);
+                if (perfData) setPerformance(perfData);
                 setQuestionAnalysis(analysis);
 
             } catch (error) {

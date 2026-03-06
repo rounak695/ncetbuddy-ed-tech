@@ -1554,6 +1554,10 @@ export const getTestPerformanceSummary = async (testId: string, currentUserId: s
 };
 
 
+// Simple in-memory cache for global stats to improve performance
+const globalStatsCache = new Map<string, { analysis: any[], timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Get question-level analysis for a specific test attempt
  * Computes global success rates by analyzing all submissions
@@ -1561,47 +1565,78 @@ export const getTestPerformanceSummary = async (testId: string, currentUserId: s
 export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Record<number, number>, questionTimes?: Record<number, number>): Promise<QuestionAnalysis[]> => {
     if (!isAppwriteConfigured()) return [];
     try {
-        // Get test data
+        // Check cache first
+        const cached = globalStatsCache.get(testId);
+        let globalCorrectPercents: Record<number, number> = {};
+
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+            cached.analysis.forEach(item => {
+                globalCorrectPercents[item.questionIndex] = item.globalCorrectPercent;
+            });
+        } else {
+            // Get test data
+            const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
+            let questions = testDoc.questions;
+            try {
+                while (typeof questions === 'string') questions = JSON.parse(questions);
+            } catch (e) { questions = []; }
+            if (!Array.isArray(questions)) questions = [];
+
+            // Fetch results for global stats (limit to 1000 for performance)
+            const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+                Query.equal('testId', testId),
+                Query.limit(1000),
+                Query.select(['answers']) // Only fetch what we need
+            ]);
+
+            // Calculate per-question success rates
+            const questionStats = new Map<number, { correct: number, total: number }>();
+            resultsResponse.documents.forEach((doc: any) => {
+                let ans: Record<string, number> = {};
+                try {
+                    ans = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
+                } catch (e) { return; }
+
+                questions.forEach((_: any, qIdx: number) => {
+                    const stats = questionStats.get(qIdx) || { correct: 0, total: 0 };
+                    if (ans[qIdx.toString()] !== undefined || ans[qIdx] !== undefined) {
+                        stats.total++;
+                        const userAns = ans[qIdx.toString()] ?? ans[qIdx];
+                        if (userAns === questions[qIdx].correctAnswer) {
+                            stats.correct++;
+                        }
+                    }
+                    questionStats.set(qIdx, stats);
+                });
+            });
+
+            // Prepare global percents for cache and final return
+            questions.forEach((_: any, idx: number) => {
+                const stats = questionStats.get(idx) || { correct: 0, total: 0 };
+                globalCorrectPercents[idx] = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+            });
+
+            // Store in cache (simplified analysis)
+            const cacheData = questions.map((q: any, idx: number) => ({
+                questionIndex: idx,
+                globalCorrectPercent: globalCorrectPercents[idx],
+                questionText: q.text || '',
+                correctAnswer: q.correctAnswer
+            }));
+            globalStatsCache.set(testId, { analysis: cacheData, timestamp: Date.now() });
+        }
+
+        // Fetch test data again for fresh return if not in cache (or just use cached logic)
         const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
         let questions = testDoc.questions;
         try {
             while (typeof questions === 'string') questions = JSON.parse(questions);
         } catch (e) { questions = []; }
-        if (!Array.isArray(questions)) questions = [];
 
-        // Fetch all results for global stats
-        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
-            Query.equal('testId', testId),
-            Query.limit(5000)
-        ]);
-
-        // Calculate per-question success rates
-        const questionStats = new Map<number, { correct: number, total: number }>();
-        resultsResponse.documents.forEach((doc: any) => {
-            let ans: Record<string, number> = {};
-            try {
-                ans = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
-            } catch (e) { return; }
-
-            questions.forEach((_: any, qIdx: number) => {
-                const stats = questionStats.get(qIdx) || { correct: 0, total: 0 };
-                if (ans[qIdx.toString()] !== undefined || ans[qIdx] !== undefined) {
-                    stats.total++;
-                    const userAns = ans[qIdx.toString()] ?? ans[qIdx];
-                    if (userAns === questions[qIdx].correctAnswer) {
-                        stats.correct++;
-                    }
-                }
-                questionStats.set(qIdx, stats);
-            });
-        });
-
-        // Build analysis
-        return questions.map((q: any, idx: number) => {
+        // Build final analysis with user-specific data
+        return (questions as any[]).map((q: any, idx: number) => {
             const userAnswer = userAnswers[idx];
             const correctAnswer = q.correctAnswer;
-            const stats = questionStats.get(idx) || { correct: 0, total: 0 };
-
             let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
             if (userAnswer !== undefined) {
                 status = userAnswer === correctAnswer ? 'correct' : 'incorrect';
@@ -1614,7 +1649,7 @@ export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Reco
                 correctAnswer,
                 status,
                 timeSpent: questionTimes?.[idx] || 0,
-                globalCorrectPercent: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+                globalCorrectPercent: globalCorrectPercents[idx] || 0,
             };
         });
     } catch (error) {
