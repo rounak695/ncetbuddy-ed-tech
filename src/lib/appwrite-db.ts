@@ -1470,13 +1470,8 @@ export const getTestLeaderboard = async (testId: string, currentUserId?: string)
             const incorrectCount = answeredCount - correctCount;
             const unattempted = totalQ - answeredCount;
 
-            // Competition ranking: same score & time gets same rank
-            if (i > 0) {
-                const prev = sortedResults[i - 1];
-                if (doc.score !== prev.score || extractNumber(doc.timeTaken) !== extractNumber(prev.timeTaken)) {
-                    currentRank = i + 1;
-                }
-            }
+            // Consecutive ranking: strictly incremental (1, 2, 3...)
+            currentRank = i + 1;
 
             // Percentile: % of students who scored LESS than this user
             const studentsBelow = sortedResults.filter(r => r.score < doc.score).length;

@@ -51,10 +51,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { href: "/logout", label: "Logout", icon: <LogOut size={20} /> },
     ];
 
-    const isAttemptPage = pathname === "/dashboard/tests/attempt";
+    const isAttemptPage = pathname === "/dashboard/tests/attempt" || (pathname.startsWith("/dashboard/tests/") && !pathname.endsWith("/review") && pathname.split('/').length === 4);
 
     if (isAttemptPage) {
-        return <div className="min-h-screen bg-background">{children}</div>;
+        return <div className="min-h-screen bg-white">{children}</div>;
     }
 
     return (
