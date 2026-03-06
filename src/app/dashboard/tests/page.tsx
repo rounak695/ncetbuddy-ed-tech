@@ -109,6 +109,14 @@ function EducatorTestsList() {
 
             if (data.success && data.paymentUrl) {
                 window.location.href = data.paymentUrl; // Redirect to Instamojo
+            } else if (data.success && data.isFree) {
+                alert("Success! You have enrolled in this free test.");
+                // Refresh purchases
+                if (user) {
+                    const userPurchases = await getUserPurchases(user.$id);
+                    setPurchases(userPurchases);
+                }
+                setPurchasingId(null);
             } else {
                 console.error("Payment Error Data:", data);
                 // TEMPORARY DEBUGGING: Show full error details in alert
@@ -153,8 +161,8 @@ function EducatorTestsList() {
                         <div className="flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
                                 <GraduationCap size={40} className="text-primary" />
-                                <span className="px-3 py-1 text-xs font-bold text-white bg-green-600 rounded-full">
-                                    ₹{test.price || 'PAID'}
+                                <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${(!test.price || test.price <= 0) ? 'bg-blue-600' : 'bg-green-600'}`}>
+                                    {(!test.price || test.price <= 0) ? 'FREE' : `₹${test.price}`}
                                 </span>
                             </div>
 
@@ -176,9 +184,12 @@ function EducatorTestsList() {
                                     <button
                                         onClick={() => handleBuyNow(test)}
                                         disabled={purchasingId === test.id}
-                                        className="w-full py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                                        className={`w-full py-2 font-bold rounded-lg transition-colors disabled:opacity-50 ${(!test.price || test.price <= 0)
+                                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                            : 'bg-black hover:bg-gray-800 text-white'
+                                            }`}
                                     >
-                                        {purchasingId === test.id ? 'Processing...' : 'Buy Now'}
+                                        {purchasingId === test.id ? 'Processing...' : ((!test.price || test.price <= 0) ? 'Enroll Now' : 'Buy Now')}
                                     </button>
                                 )}
                             </div>

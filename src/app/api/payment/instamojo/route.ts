@@ -34,7 +34,25 @@ export async function POST(request: NextRequest) {
         }
 
         if (!test.price || test.price <= 0) {
-            return NextResponse.json({ error: "This test is free, no payment needed." }, { status: 400 });
+            // AUTOMATIC ENROLLMENT FOR FREE TESTS
+            try {
+                await databases.createDocument(DB_ID, 'purchases', ID.unique(), {
+                    userId,
+                    testId,
+                    amount: 0,
+                    status: 'completed',
+                    createdAt: Math.floor(Date.now() / 1000)
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    isFree: true,
+                    message: "Test is free, access granted automatically."
+                });
+            } catch (dbError) {
+                console.error("Failed to create free purchase record:", dbError);
+                return NextResponse.json({ error: "Database error during auto-enrollment" }, { status: 500 });
+            }
         }
 
         // 2. Validate Instamojo Config
