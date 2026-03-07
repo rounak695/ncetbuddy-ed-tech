@@ -39,12 +39,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     const navItems = [
-        { href: "/dashboard", label: "Dashboard", icon: <Home size={20} /> },
-        { href: "/dashboard/pyqs", label: "PYQs", icon: <PenLine size={20} /> },
-        { href: "/dashboard/tests", label: "Mock Tests", icon: <PlayCircle size={20} /> },
-        { href: "/dashboard/notes", label: "Resources", icon: <BookOpen size={20} /> },
-        { href: "/dashboard/forum", label: "Forum", icon: <MessageSquare size={20} /> },
-        { href: "/dashboard/affiliate", label: "Refer & Earn", icon: <IndianRupee size={20} /> },
+        { href: "/dashboard", label: "Dashboard", icon: <Home size={18} /> },
+        { href: "/dashboard/pyqs", label: "PYQs", icon: <PenLine size={18} /> },
+        { href: "/dashboard/tests", label: "Mock Tests", icon: <PlayCircle size={18} /> },
+        { href: "/dashboard/notes", label: "Resources", icon: <BookOpen size={18} /> },
+        { href: "/dashboard/forum", label: "Forum", icon: <MessageSquare size={18} /> },
+        { href: "/dashboard/referral", label: "Refer & Earn", icon: <IndianRupee size={18} /> },
     ];
 
     const bottomItems = [
@@ -158,17 +158,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </main>
 
                 {/* Mobile Bottom Navigation */}
-                <nav className="md:hidden sticky bottom-0 z-50 bg-white border-t border-slate-200 px-6 py-3 flex justify-between items-center shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+                <nav className="md:hidden sticky bottom-0 z-50 bg-white border-t border-slate-200 px-2 py-3 flex justify-around items-center shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex flex-col items-center gap-1 transition-colors ${isActive ? "text-rose-500" : "text-slate-400"}`}
+                                className={`flex flex-1 flex-col items-center gap-1 transition-colors ${isActive ? "text-rose-500" : "text-slate-400"}`}
                             >
-                                {item.icon}
-                                <span className="text-[10px] font-bold uppercase tracking-tight">{item.label}</span>
+                                <div className={`${isActive ? "text-rose-500" : "text-slate-400"}`}>
+                                    {item.icon}
+                                </div>
+                                <span className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tighter text-center leading-none ${isActive ? "text-rose-500" : "text-slate-500"}`}>
+                                    {item.label}
+                                </span>
                             </Link>
                         );
                     })}
