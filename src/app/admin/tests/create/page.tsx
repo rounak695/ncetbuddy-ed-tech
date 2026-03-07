@@ -28,7 +28,8 @@ export default function CreateTestPage() {
         price: 0, // Default free
         status: 'Published', // Default published
         isFullSyllabus: false,
-        subjectAllocations: []
+        subjectAllocations: [],
+        series: "" // Series bundle this test belongs to
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([
         { text: "", options: ["", "", "", ""], correctAnswer: 0, subject: "General" }
@@ -138,7 +139,8 @@ export default function CreateTestPage() {
             price: testData.price || 0,
             status: testData.status || 'Published',
             isFullSyllabus: testData.isFullSyllabus || false,
-            subjectAllocations: testData.isFullSyllabus ? testData.subjectAllocations : undefined
+            subjectAllocations: testData.isFullSyllabus ? testData.subjectAllocations : undefined,
+            series: testData.series ? testData.series : undefined
         } as any);
 
         if (testId) {
@@ -169,6 +171,15 @@ export default function CreateTestPage() {
                     value={testData.duration}
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                 />
+                <Input
+                    label="Series Bundle Name (Optional)"
+                    placeholder="e.g., NCET Ready Test"
+                    value={testData.series || ""}
+                    onChange={(e) => setTestData({ ...testData, series: e.target.value })}
+                />
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem", marginBottom: "1rem" }}>
+                    If this is part of a series pack, enter the series name exactly. Buying one series unlocks all tests with this identical name.
+                </p>
 
                 {/* Test Type Selection */}
                 <div style={{ marginTop: "1rem" }}>

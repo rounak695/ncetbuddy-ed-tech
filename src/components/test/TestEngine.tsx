@@ -50,7 +50,9 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
                 // Payment check logic
                 if (data.price && data.price > 0) {
-                    const hasPaid = await hasUserPaidForProduct(user.$id, "NCET Ready Test");
+                    // Check if they own the specific Series Bundle, falling back to the individual test name if not part of a series
+                    const productNameToCheck = data.series ? data.series : data.title;
+                    const hasPaid = await hasUserPaidForProduct(user.$id, productNameToCheck);
                     setHasAccess(hasPaid);
                 } else {
                     // Free tests (or PYQs) are always accessible
@@ -359,7 +361,7 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
                     <Lock className="w-16 h-16 mx-auto text-primary" />
                     <h2 className="text-2xl font-bold text-foreground">Premium Test</h2>
                     <p className="text-foreground/70">
-                        This is an official educator mock test. You need to purchase the <strong>NCET Ready Test</strong> pass to access this.
+                        This is an official educator mock test. You need to purchase the <strong>{test.series || test.title}</strong> pass to access this.
                     </p>
                     <Button
                         onClick={() => router.push('/dashboard/tests')}

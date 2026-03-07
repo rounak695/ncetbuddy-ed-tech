@@ -6,7 +6,7 @@ const INSTAMOJO_BASE_URL = "https://www.instamojo.com/api/1.1";
 
 export async function POST(request: NextRequest) {
     try {
-        const { testId, userId, amount, userName, userEmail, userPhone, affiliateId, clientOrigin } = await request.json();
+        const { testId, seriesName, userId, amount, userName, userEmail, userPhone, affiliateId, clientOrigin } = await request.json();
 
         if (!testId || !userId || amount === undefined || amount === null) {
             return NextResponse.json({ error: "Missing required fields: testId, userId, or amount" }, { status: 400 });
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        const purposeString = affiliateId ? `NCET Ready Test|${userId}|${affiliateId}` : `NCET Ready Test|${userId}`;
+        const effectiveProductName = seriesName || "NCET Ready Test";
+        const purposeString = affiliateId ? `${effectiveProductName}|${userId}|${affiliateId}` : `${effectiveProductName}|${userId}`;
         const payload = new URLSearchParams();
         payload.append('purpose', purposeString);
         payload.append('amount', amount.toString());

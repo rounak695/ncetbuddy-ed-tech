@@ -23,6 +23,7 @@ export default function EditTestPage() {
         title: "",
         subject: "General",
         duration: 60,
+        series: "",
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([]);
 
@@ -36,6 +37,7 @@ export default function EditTestPage() {
                         title: test.title,
                         subject: test.subject || "General",
                         duration: test.duration,
+                        series: test.series || "",
                     });
                     setQuestions(test.questions.map(q => ({
                         text: q.text,
@@ -79,6 +81,7 @@ export default function EditTestPage() {
                 title: testData.title,
                 subject: testData.subject || "General",
                 duration: testData.duration || 60,
+                series: testData.series || undefined,
                 questions: JSON.stringify(questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })))
             });
             alert("Test updated successfully!");
@@ -135,6 +138,15 @@ export default function EditTestPage() {
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                     style={{ marginTop: "1rem" }}
                 />
+                <Input
+                    label="Series Bundle Name (Optional)"
+                    placeholder="e.g., NCET Ready Test"
+                    value={testData.series || ""}
+                    onChange={(e) => setTestData({ ...testData, series: e.target.value })}
+                />
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                    If this is part of a series pack, enter the identical series name exactly.
+                </p>
             </Card>
 
             <h3 style={{ marginBottom: "1rem" }}>Questions ({questions.length})</h3>

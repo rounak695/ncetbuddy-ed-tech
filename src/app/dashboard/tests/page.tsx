@@ -38,7 +38,7 @@ const PYQ_SUBJECTS: { id: PYQSubject; label: string; icon: React.ReactNode; desc
 function EducatorTestsList() {
     const { user } = useAuth();
     const [tests, setTests] = useState<Test[]>([]);
-    const [hasPaid, setHasPaid] = useState<boolean>(false);
+    const [purchasedTests, setPurchasedTests] = useState<Record<string, boolean>>({});
     const [loading, setLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
     const router = useRouter();
@@ -55,8 +55,14 @@ function EducatorTestsList() {
                 setTests(premiumTests);
 
                 if (user) {
-                    const isPaidForPremium = await hasUserPaidForProduct(user.$id, "NCET Ready Test");
-                    setHasPaid(isPaidForPremium);
+                    const purchasedMap: Record<string, boolean> = {};
+                    // Check payment status for each premium test individually
+                    await Promise.all(premiumTests.map(async (test) => {
+                        const productNameToCheck = test.series ? test.series : test.title;
+                        const hasPaidForThis = await hasUserPaidForProduct(user.$id, productNameToCheck);
+                        purchasedMap[test.id] = hasPaidForThis;
+                    }));
+                    setPurchasedTests(purchasedMap);
                 }
             } catch (error) {
                 console.error("Failed to fetch aggregator data", error);
@@ -75,13 +81,13 @@ function EducatorTestsList() {
             alert("Payment Successful! You can now access the test.");
             // Remove params
             router.replace('/dashboard/tests');
-            // Refresh purchases
-            if (user) hasUserPaidForProduct(user.$id, "NCET Ready Test").then(setHasPaid);
+            // Hard refresh to reload state instead of manual map update for simplicity
+            window.location.reload();
         } else if (success === 'false') {
             alert("Payment Failed. Please try again.");
             router.replace('/dashboard/tests');
         }
-    }, [searchParams, user, router]);
+    }, [searchParams, router]);
 
 
     const handleBuyNow = async (test: Test) => {
@@ -120,6 +126,7 @@ function EducatorTestsList() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     testId: test.id,
+                    seriesName: test.series || test.title,
                     userId: user.$id,
                     amount: test.price || 0,
                     userEmail: user.email,
@@ -175,7 +182,7 @@ function EducatorTestsList() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tests.map(test => {
-                const isPurchased = hasPaid;
+                const isPurchased = purchasedTests[test.id] || false;
 
                 return (
                     <Card key={test.id} className="group hover:border-primary/50 transition-all duration-300 shadow-lg h-full flex flex-col">

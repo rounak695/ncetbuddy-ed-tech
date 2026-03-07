@@ -24,6 +24,7 @@ export interface Test {
     testType?: 'pyq' | 'educator'; // PYQ = platform-owned free content, Educator = educator-owned premium content
     pyqSubject?: 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain'; // For PYQ categorization
     price?: number; // Cost of the test in INR (0 for free)
+    series?: string; // Series bundle this test belongs to, unlocking it if purchased
 
     // Full Syllabus feature
     isFullSyllabus?: boolean;
