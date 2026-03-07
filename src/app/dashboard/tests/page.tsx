@@ -92,6 +92,13 @@ function EducatorTestsList() {
 
         setPurchasingId(test.id);
 
+        // FREE TEST: Skip payment, go directly to test
+        if (!test.price || test.price <= 0) {
+            router.push(`/dashboard/tests/${test.id}`);
+            setPurchasingId(null);
+            return;
+        }
+
         let affiliateId = undefined;
         try {
             const stored = localStorage.getItem('affiliate_ref');
@@ -128,12 +135,8 @@ function EducatorTestsList() {
                 window.location.href = data.paymentUrl; // Redirect to Instamojo
             } else if (data.success && data.isFree) {
                 alert("Success! You have enrolled in this free test.");
-                // Refresh purchases
-                if (user) {
-                    const userPurchases = await getUserPurchases(user.$id);
-                    setPurchases(userPurchases);
-                }
                 setPurchasingId(null);
+                router.push(`/dashboard/tests`);
             } else {
                 console.error("Payment Error Data:", data);
                 // TEMPORARY DEBUGGING: Show full error details in alert
