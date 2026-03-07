@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         destination: '/dashboard/videos',
         permanent: false,
       },
+      {
+        source: '/dashboard/referral',
+        destination: '/dashboard/affiliate',
+        permanent: true,
+      },
     ]
   },
   images: {
