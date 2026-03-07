@@ -102,6 +102,21 @@ export async function POST(request: NextRequest) {
                     console.error("Failed to record affiliate commission:", e);
                 }
             }
+
+            // 5. INSTANT ACCESS PROXY: Automatically upgrade user profile premium status universally
+            try {
+                await databases.updateDocument(DB_ID, 'user_profiles', userId, {
+                    premiumStatus: true
+                });
+                console.log(`Upgraded premiumStatus to true for user ${userId}`);
+            } catch (e) {
+                // Ignore fallback to legacy 'users'
+                try {
+                    await databases.updateDocument(DB_ID, 'users', userId, {
+                        premiumStatus: true
+                    });
+                } catch (err) { }
+            }
         }
 
         return NextResponse.json({ success: true });

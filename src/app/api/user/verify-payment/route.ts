@@ -25,6 +25,22 @@ export async function POST(request: Request) {
             }
         );
 
+        // INSTANT ACCESS PROXY: If payment is successful, upgrade their premiumStatus everywhere
+        if (body.status === 'Credit') {
+            try {
+                await databases.updateDocument(DB_ID, 'user_profiles', body.userId, {
+                    premiumStatus: true
+                });
+            } catch (e) {
+                // Ignore fallback to legacy 'users'
+                try {
+                    await databases.updateDocument(DB_ID, 'users', body.userId, {
+                        premiumStatus: true
+                    });
+                } catch (err) { }
+            }
+        }
+
         return NextResponse.json({ success: true, id: response.$id });
     } catch (error: any) {
         console.error("API Error (Verify Payment):", error);
