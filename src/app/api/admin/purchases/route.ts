@@ -16,17 +16,23 @@ export async function GET(request: NextRequest) {
             Query.limit(3000)
         ]);
 
-        // Fetch users to map emails
-        const usersResponse = await databases.listDocuments(DB_ID, 'users', [Query.limit(5000)]);
-        const userProfilesResponse = await databases.listDocuments(DB_ID, 'user_profiles', [Query.limit(5000)]);
-
+        // Fetch users to map emails - Wrap in try/catch to prevent API crash if collections are missing
         const userMap: Record<string, string> = {};
-        usersResponse.documents.forEach(doc => {
-            if (doc.email) userMap[doc.$id] = doc.email;
-        });
-        userProfilesResponse.documents.forEach(doc => {
-            if (doc.email) userMap[doc.$id] = doc.email;
-        });
+        try {
+            const [usersResponse, userProfilesResponse] = await Promise.all([
+                databases.listDocuments(DB_ID, 'users', [Query.limit(1000)]).catch(() => ({ documents: [] })),
+                databases.listDocuments(DB_ID, 'user_profiles', [Query.limit(1000)]).catch(() => ({ documents: [] }))
+            ]);
+
+            usersResponse.documents.forEach((doc: any) => {
+                if (doc.email) userMap[doc.$id] = doc.email;
+            });
+            userProfilesResponse.documents.forEach((doc: any) => {
+                if (doc.email) userMap[doc.$id] = doc.email;
+            });
+        } catch (e) {
+            console.error("Non-critical: Failed to fetch user emails for admin dashboard", e);
+        }
 
         // Normalize legacy purchases
         const formattedPurchases = purchasesResponse.documents.map(doc => ({
