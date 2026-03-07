@@ -1056,6 +1056,13 @@ export const hasUserPurchasedTest = async (userId: string, testId: string): Prom
 export const hasCompletedAnyPurchase = async (userId: string): Promise<boolean> => {
     if (!isAppwriteConfigured()) return false;
     try {
+        try {
+            const profile = await getUserProfile(userId);
+            if (profile?.premiumStatus) return true;
+        } catch (e) {
+            console.error("Failed to check premium status", e);
+        }
+
         const response = await databases.listDocuments(DB_ID, 'purchases', [
             Query.equal('userId', userId),
             Query.equal('status', 'completed'),

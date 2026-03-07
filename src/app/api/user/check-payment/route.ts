@@ -12,6 +12,26 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
         }
 
+        // 1. Check if user is granted premium access directly
+        try {
+            const profileDoc = await databases.getDocument(DB_ID, 'user_profiles', userId);
+            if (profileDoc.premiumStatus === true) {
+                return NextResponse.json({ hasAccess: true, source: 'admin_grant' });
+            }
+        } catch (e) {
+            // Fallback to legacy 'users' collection
+            try {
+                const legacyDoc = await databases.getDocument(DB_ID, 'users', userId);
+                if (legacyDoc.premiumStatus === true) {
+                    return NextResponse.json({ hasAccess: true, source: 'admin_grant' });
+                }
+            } catch (e2) {
+                // Ignore and proceed
+            }
+        }
+
+        // 2. Fallback: check actual payment records
+
         const response = await databases.listDocuments(DB_ID, 'payments', [
             Query.equal('userId', userId),
             Query.equal('productName', productName),
