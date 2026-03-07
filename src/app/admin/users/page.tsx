@@ -59,14 +59,20 @@ export default function UsersManagerPage() {
         if (!confirm(`Are you sure you want to grant "NCET Ready Test" access to ${user.email}?`)) return;
 
         try {
-            // Import the new function dynamically or at the top.
-            // Assuming it's exported from appwrite-db
-            const { grantManualTestAccess } = await import("@/lib/appwrite-db");
-            const success = await grantManualTestAccess(user.uid);
-            if (success) {
-                alert(`Successfully granted test access to ${user.email}`);
+            const response = await fetch('/api/admin/grant-access', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: user.uid })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert(data.message || `Successfully granted test access to ${user.email}`);
             } else {
-                alert("Failed to grant access. They might already have it, or an error occurred.");
+                alert(`Failed to grant access: ${data.error || "Unknown error"}`);
             }
         } catch (error) {
             console.error("Error granting test access:", error);
