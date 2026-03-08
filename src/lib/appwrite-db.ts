@@ -188,10 +188,55 @@ export const updateTest = async (testId: string, data: Partial<Test>): Promise<b
     }
 };
 
+// --- Helper to parse packed result data from answers ---
+const parsePackedResult = (doc: any) => {
+    let answers: Record<string, any> = {};
+    let questionTimes: Record<string, number> = {};
+    let timeTaken = extractNumber(doc.timeTaken);
+
+    try {
+        const rawAnswers = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
+
+        // Check if this is a packed format: { _isPacked: true, answers: {...}, questionTimes: {...}, timeTaken: 123 }
+        if (rawAnswers && rawAnswers._isPacked) {
+            answers = rawAnswers.answers || {};
+            questionTimes = rawAnswers.questionTimes || {};
+            // If main timeTaken is zero, use the packed one
+            if (timeTaken <= 0 && rawAnswers.timeTaken) {
+                timeTaken = extractNumber(rawAnswers.timeTaken);
+            }
+        } else {
+            answers = rawAnswers;
+            // Fallback: parse direct questionTimes field if it exists
+            try {
+                questionTimes = typeof doc.questionTimes === 'string' ? JSON.parse(doc.questionTimes) : (doc.questionTimes || {});
+            } catch (e) { questionTimes = {}; }
+        }
+    } catch (e) {
+        answers = {};
+    }
+
+    // Final fallback for timeTaken if still zero
+    if (timeTaken <= 0 && Object.keys(questionTimes).length > 0) {
+        timeTaken = Object.values(questionTimes).reduce((sum: number, t: any) => sum + (extractNumber(t) || 0), 0);
+    }
+
+    return { answers, questionTimes, timeTaken };
+};
+
+
 export const saveTestResult = async (result: Partial<TestResult> & { correctCount?: number, incorrectCount?: number }) => {
     try {
         // 1. Prepare data
         const { correctCount, incorrectCount, ...dataToSave } = result; // Omit these two fields
+
+        // Pack analytics into answers field to bypass schema limitations
+        const packedAnswers = JSON.stringify({
+            _isPacked: true,
+            answers: dataToSave.answers,
+            questionTimes: dataToSave.questionTimes,
+            timeTaken: dataToSave.timeTaken
+        });
 
         // Base data compliant with potentially outdated schema
         const baseDocData: any = {
@@ -199,7 +244,7 @@ export const saveTestResult = async (result: Partial<TestResult> & { correctCoun
             testId: dataToSave.testId,
             score: dataToSave.score,
             totalQuestions: dataToSave.totalQuestions,
-            answers: JSON.stringify(dataToSave.answers),
+            answers: packedAnswers,
             completedAt: dataToSave.completedAt,
         };
 
@@ -493,12 +538,16 @@ export const getUserTestResults = async (userId: string): Promise<TestResult[]> 
             Query.equal('userId', userId),
             Query.orderDesc('completedAt')
         ]);
-        const results = response.documents.map(doc => ({
-            id: doc.$id,
-            ...doc,
-            answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers,
-            questionTimes: typeof doc.questionTimes === 'string' ? JSON.parse(doc.questionTimes) : doc.questionTimes
-        })) as unknown as TestResult[];
+        const results = response.documents.map(doc => {
+            const { answers, questionTimes, timeTaken } = parsePackedResult(doc);
+            return {
+                id: doc.$id,
+                ...doc,
+                answers,
+                questionTimes,
+                timeTaken
+            };
+        }) as unknown as TestResult[];
 
         // Deduplicate: same testId, score, and minute window
         const seenKeys = new Set<string>();
@@ -1509,28 +1558,8 @@ export const getTestLeaderboard = async (testId: string, currentUserId?: string)
             const totalQ = doc.totalQuestions || totalQuestionsFromTest;
             const maxScore = totalQ * 4;
 
-            // Time calculation with fallback
-            let timeTaken = extractNumber(doc.timeTaken);
-            if (timeTaken <= 0 && doc.questionTimes) {
-                try {
-                    const qTimes = typeof doc.questionTimes === 'string'
-                        ? JSON.parse(doc.questionTimes)
-                        : doc.questionTimes;
-                    if (qTimes && typeof qTimes === 'object') {
-                        timeTaken = Object.values(qTimes).reduce((sum: number, t: any) => sum + (extractNumber(t) || 0), 0);
-                    }
-                } catch (e) { /* ignore */ }
-            }
-
-            // Parse answers and questionTimes
-            let answers: Record<string, number> = {};
-            let questionTimes: Record<string, number> = {};
-            try {
-                answers = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
-            } catch (e) { answers = {}; }
-            try {
-                questionTimes = typeof doc.questionTimes === 'string' ? JSON.parse(doc.questionTimes) : (doc.questionTimes || {});
-            } catch (e) { questionTimes = {}; }
+            // Extract data using packed-result helper
+            const { answers, questionTimes, timeTaken } = parsePackedResult(doc);
 
             const answeredCount = Object.keys(answers).length;
             // Score = correct*4 - incorrect*1, so: correct = (score + incorrect) / 4 and incorrect = answered - correct
@@ -1667,10 +1696,7 @@ export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Reco
             // Calculate per-question success rates
             const questionStats = new Map<number, { correct: number, total: number }>();
             resultsResponse.documents.forEach((doc: any) => {
-                let ans: Record<string, number> = {};
-                try {
-                    ans = typeof doc.answers === 'string' ? JSON.parse(doc.answers) : (doc.answers || {});
-                } catch (e) { return; }
+                const { answers: ans } = parsePackedResult(doc);
 
                 questions.forEach((_: any, qIdx: number) => {
                     const stats = questionStats.get(qIdx) || { correct: 0, total: 0 };
