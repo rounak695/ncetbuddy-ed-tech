@@ -30,7 +30,13 @@ export default function TestHistoryCard({ result, test, index }: TestHistoryCard
     const formattedDate = date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
     const formattedTime = date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
-    const totalTimeSecs = result.timeTaken || 0;
+    let totalTimeSecs = result.timeTaken || 0;
+
+    // Fallback: If timeTaken is 0 but questionTimes exists, calculate it
+    if (totalTimeSecs === 0 && result.questionTimes) {
+        totalTimeSecs = Object.values(result.questionTimes).reduce((sum, time) => sum + (time || 0), 0);
+    }
+
     const totalTimeMins = Math.floor(totalTimeSecs / 60);
     const totalTimeRemainingSecs = totalTimeSecs % 60;
 

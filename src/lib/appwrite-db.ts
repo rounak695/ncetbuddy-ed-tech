@@ -496,7 +496,8 @@ export const getUserTestResults = async (userId: string): Promise<TestResult[]> 
         const results = response.documents.map(doc => ({
             id: doc.$id,
             ...doc,
-            answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers
+            answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers,
+            questionTimes: typeof doc.questionTimes === 'string' ? JSON.parse(doc.questionTimes) : doc.questionTimes
         })) as unknown as TestResult[];
 
         // Deduplicate: same testId, score, and minute window
@@ -1762,7 +1763,16 @@ export const getAdminTestAnalytics = async (testId: string): Promise<AdminTestAn
             : scores[Math.floor(scores.length / 2)];
 
         // Time stats
-        const times = docs.map((d: any) => extractNumber(d.timeTaken)).filter((t: number) => t > 0);
+        const times = docs.map((d: any) => {
+            let time = extractNumber(d.timeTaken);
+            if (time === 0 && d.questionTimes) {
+                try {
+                    const qTimes = typeof d.questionTimes === 'string' ? JSON.parse(d.questionTimes) : d.questionTimes;
+                    time = Object.values(qTimes).reduce((sum: number, t: any) => sum + (extractNumber(t)), 0);
+                } catch (e) { /* ignore */ }
+            }
+            return time;
+        }).filter((t: number) => t > 0);
         const avgTime = times.length > 0 ? Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length) : 0;
 
         // Score distribution (buckets)
@@ -1852,6 +1862,7 @@ export const getAllTestResults = async (): Promise<TestResult[]> => {
             id: doc.$id,
             ...doc,
             answers: typeof doc.answers === 'string' ? JSON.parse(doc.answers) : doc.answers,
+            questionTimes: typeof doc.questionTimes === 'string' ? JSON.parse(doc.questionTimes) : doc.questionTimes,
             timeTaken: extractNumber(doc.timeTaken),
         })) as unknown as TestResult[];
     } catch (error) {
