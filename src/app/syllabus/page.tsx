@@ -72,9 +72,14 @@ export default function SyllabusPage() {
                                     <h3 className="text-2xl font-bold text-[#0F172A] mb-2">Download Detailed PDF</h3>
                                     <p className="text-zinc-500">Get the full chapter-wise syllabus PDF including Domain Subjects and Language choices.</p>
                                 </div>
-                                <button className="md:ml-auto whitespace-nowrap bg-[#E11D48] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#BE123C] transition-colors">
+                                <a 
+                                    href="https://exams.nta.nic.in/ncet-2026-syllabus/" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="md:ml-auto whitespace-nowrap bg-[#E11D48] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#BE123C] transition-colors"
+                                >
                                     Download Now
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
