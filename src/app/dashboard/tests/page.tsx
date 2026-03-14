@@ -294,33 +294,29 @@ function EducatorTestsList() {
                         if (!selectedDomain) return false;
 
                         const isPurchased = purchasedTests[test.id] || false;
-                        const lowerTitle = test.title.toLowerCase();
+                        const lowerDomain = selectedDomain.toLowerCase();
                         const lowerSeries = (test.series || "").toLowerCase();
 
-                        // Global tests (NRT or Full Syllabus) should be visible to all streams
-                        const isGlobalTest = test.isFullSyllabus ||
-                            lowerTitle.includes('nrt') ||
-                            lowerSeries.includes('nrt');
+                        // 1. Purchased tests are ALWAYS visible
+                        if (isPurchased) return true;
 
-                        if (isGlobalTest || isPurchased) return true;
+                        // 2. Full Syllabus mock tests are visible to everyone
+                        if (test.isFullSyllabus) return true;
 
-                        // Strict Filtering for domain-specific tests:
-                        const lowerDomain = selectedDomain.toLowerCase();
-                        const checkStr = `${test.series || ''} ${test.title}`.toLowerCase();
-
-                        // It must contain the selected domain.
-                        if (!checkStr.includes(lowerDomain)) {
-                            return false;
+                        // 3. Strict Domain/Stream filtering
+                        // Test must belong to the selected series/domain
+                        if (lowerSeries === lowerDomain) {
+                            return true;
                         }
 
-                        // Ensure it doesn't accidentally belong to a different domain 
-                        // (e.g. if a test was somehow named "Science and Commerce")
+                        // Fallback: If no series is set, and it's a legacy test, check title keywords
+                        // But strictly only if it doesn't belong to another domain's series
                         const otherDomains = DOMAIN_OPTIONS.map(d => d.id.toLowerCase()).filter(d => d !== lowerDomain);
-                        const hasOtherDomain = otherDomains.some(d => checkStr.includes(d));
+                        const belongsToOtherSeries = otherDomains.some(d => lowerSeries === d);
+                        
+                        if (belongsToOtherSeries) return false;
 
-                        if (hasOtherDomain) return false;
-
-                        return true;
+                        return false;
                     })
                     .map(test => {
                         const isPurchased = purchasedTests[test.id] || false;

@@ -47,7 +47,8 @@ export default function AdminTestsPage() {
         try {
             const success = await updateTest(editingTest.id, {
                 price: editingTest.price,
-                status: editingTest.status
+                status: editingTest.status,
+                series: editingTest.series // Enable editing stream
             });
 
             if (success) {
@@ -137,6 +138,20 @@ export default function AdminTestsPage() {
                                     onChange={(e) => setEditingTest({ ...editingTest, price: Number(e.target.value) })}
                                     style={{ width: "100%", padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #d1d5db" }}
                                 />
+                            </div>
+
+                            <div>
+                                <label style={{ display: "block", marginBottom: "0.5rem" }}>Stream / Domain</label>
+                                <select
+                                    value={editingTest.series || ''}
+                                    onChange={(e) => setEditingTest({ ...editingTest, series: e.target.value })}
+                                    style={{ width: "100%", padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #d1d5db" }}
+                                >
+                                    <option value="">None / General</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Humanities">Humanities</option>
+                                    <option value="Commerce">Commerce</option>
+                                </select>
                             </div>
 
                             <div>
