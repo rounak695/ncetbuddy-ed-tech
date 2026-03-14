@@ -5,6 +5,7 @@ import { AnalyticsProvider } from "@/context/AnalyticsContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { Suspense } from "react";
 import RefTracker from "@/components/RefTracker";
+import { AskConceptsAI } from "@/components/ui/AskConceptsAI";
 
 const inter = Inter({ subsets: ["latin"] });
 const dancingScript = Dancing_Script({ subsets: ["latin"] });
@@ -28,6 +29,7 @@ export default function RootLayout({
               <RefTracker />
             </Suspense>
             {children}
+            <AskConceptsAI />
           </AnalyticsProvider>
         </AuthProvider>
       </body>
