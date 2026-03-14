@@ -171,15 +171,45 @@ export default function CreateTestPage() {
                     value={testData.duration}
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                 />
-                <Input
-                    label="Series Bundle Name (Optional)"
-                    placeholder="e.g., NCET Ready Test"
-                    value={testData.series || ""}
-                    onChange={(e) => setTestData({ ...testData, series: e.target.value })}
-                />
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem", marginBottom: "1rem" }}>
-                    If this is part of a series pack, enter the series name exactly. Buying one series unlocks all tests with this identical name.
-                </p>
+                {/* Series/Domain Selection */}
+                {testData.testType === 'educator' ? (
+                    <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>NRT Target Domain (Series Bundle)</label>
+                        <select
+                            value={testData.series || ""}
+                            onChange={(e) => setTestData({ ...testData, series: e.target.value })}
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "8px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-secondary)",
+                                color: "var(--text-primary)",
+                                fontSize: "1rem"
+                            }}
+                        >
+                            <option value="">None / General Mock</option>
+                            <option value="Science">Science Domain</option>
+                            <option value="Humanities">Humanities Domain</option>
+                            <option value="Commerce">Commerce Domain</option>
+                        </select>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                            Select the target domain to group this test. Paying for one test in this domain unlocks all others.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <Input
+                            label="Series Bundle Name (Optional)"
+                            placeholder="e.g., NCET Ready Test"
+                            value={testData.series || ""}
+                            onChange={(e) => setTestData({ ...testData, series: e.target.value })}
+                        />
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem", marginBottom: "1rem" }}>
+                            If this is part of a series pack, enter the series name exactly. Buying one series unlocks all tests with this identical name.
+                        </p>
+                    </>
+                )}
 
                 {/* Test Type Selection */}
                 <div style={{ marginTop: "1rem" }}>

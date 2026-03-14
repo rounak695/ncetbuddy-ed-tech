@@ -16,12 +16,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [streamName, setStreamName] = useState("Science");
 
     useEffect(() => {
         if (!loading && !user) {
             router.push("/login");
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const domain = localStorage.getItem('selected_nrt_domain');
+            if (domain) {
+                setStreamName(domain);
+            }
+        };
+
+        handleStorageChange(); // Initial check
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Custom event for same-window updates
+        window.addEventListener('domainChanged', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('domainChanged', handleStorageChange);
+        };
+    }, []);
 
     if (loading) {
         return (
@@ -142,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="flex items-center gap-3 pl-4 cursor-pointer group">
                             <div className="text-right hidden sm:block">
                                 <div className="text-sm font-black text-slate-900 group-hover:text-rose-500 transition-colors">{user.name || "Arjun Mehta"}</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Science Stream</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{streamName} Stream</div>
                             </div>
                             <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-white shadow-md ring-1 ring-slate-100 group-hover:scale-105 transition-transform">
                                 <Image src="/student.png" alt="User" width={44} height={44} className="w-full h-full object-cover" />

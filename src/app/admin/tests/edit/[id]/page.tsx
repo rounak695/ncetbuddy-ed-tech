@@ -138,15 +138,34 @@ export default function EditTestPage() {
                     onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
                     style={{ marginTop: "1rem" }}
                 />
-                <Input
-                    label="Series Bundle Name (Optional)"
-                    placeholder="e.g., NCET Ready Test"
-                    value={testData.series || ""}
-                    onChange={(e) => setTestData({ ...testData, series: e.target.value })}
-                />
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-                    If this is part of a series pack, enter the identical series name exactly.
-                </p>
+                <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>NRT Target Domain (Series Bundle)</label>
+                    <select
+                        value={testData.series || ""}
+                        onChange={(e) => setTestData({ ...testData, series: e.target.value })}
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            fontSize: "1rem"
+                        }}
+                    >
+                        {/* Preserve custom series name if it exists and isn't one of the defaults */}
+                        {testData.series && !["", "Science", "Humanities", "Commerce"].includes(testData.series) && (
+                            <option value={testData.series}>{testData.series} (Custom/Legacy)</option>
+                        )}
+                        <option value="">None / General Mock</option>
+                        <option value="Science">Science Domain</option>
+                        <option value="Humanities">Humanities Domain</option>
+                        <option value="Commerce">Commerce Domain</option>
+                    </select>
+                    <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                        Select the target domain to group this test. Paying for one test in this domain unlocks all others.
+                    </p>
+                </div>
             </Card>
 
             <h3 style={{ marginBottom: "1rem" }}>Questions ({questions.length})</h3>

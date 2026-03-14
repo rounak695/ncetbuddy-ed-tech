@@ -76,6 +76,7 @@ function EducatorTestsList() {
         localStorage.setItem('selected_nrt_domain', tempDomain);
         setSelectedDomain(tempDomain);
         setShowDomainModal(false);
+        window.dispatchEvent(new Event('domainChanged'));
     };
 
     const handleResetDomain = () => {
@@ -83,6 +84,7 @@ function EducatorTestsList() {
         setSelectedDomain(null);
         setTempDomain("");
         setShowDomainModal(true);
+        window.dispatchEvent(new Event('domainChanged'));
     };
 
     useEffect(() => {
@@ -279,7 +281,7 @@ function EducatorTestsList() {
                         <span className="text-sm text-foreground/70">Selected Domain:</span>
                         <span className="font-bold text-primary ml-2">{selectedDomain}</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleResetDomain}>
+                    <Button variant="outline" onClick={handleResetDomain}>
                         Change Domain
                     </Button>
                 </div>
@@ -289,19 +291,27 @@ function EducatorTestsList() {
                 {tests
                     .filter(test => {
                         // Filter tests based on selected domain
-                        // We check if the test series contains the domain name or test title contains it
                         if (!selectedDomain) return false;
+                        
+                        // Strict Filtering:
+                        // Only show the test if it explicitly mentions the selected domain
+                        // in its series name or title. 
                         const lowerDomain = selectedDomain.toLowerCase();
                         const checkStr = `${test.series || ''} ${test.title}`.toLowerCase();
                         
-                        // If it's explicitly labeled with another domain, hide it
+                        // It must contain the selected domain.
+                        if (!checkStr.includes(lowerDomain)) {
+                            return false;
+                        }
+
+                        // Ensure it doesn't accidentally belong to a different domain 
+                        // (e.g. if a test was somehow named "Science and Commerce")
                         const otherDomains = DOMAIN_OPTIONS.map(d => d.id.toLowerCase()).filter(d => d !== lowerDomain);
                         const hasOtherDomain = otherDomains.some(d => checkStr.includes(d));
                         
                         if (hasOtherDomain) return false;
                         
-                        // Show if it matches domain OR is a general test (no specific domain mentioned)
-                        return checkStr.includes(lowerDomain) || !DOMAIN_OPTIONS.some(d => checkStr.includes(d.id.toLowerCase()));
+                        return true;
                     })
                     .map(test => {
                         const isPurchased = purchasedTests[test.id] || false;
