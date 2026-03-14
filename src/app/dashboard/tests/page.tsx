@@ -294,23 +294,33 @@ function EducatorTestsList() {
                         if (!selectedDomain) return false;
 
                         const isPurchased = purchasedTests[test.id] || false;
+                        const lowerTitle = test.title.toLowerCase();
                         const lowerDomain = selectedDomain.toLowerCase();
                         const lowerSeries = (test.series || "").toLowerCase();
 
-                        // 1. Purchased tests are ALWAYS visible
+                        // 1. Specific science-only rule for NRT1 and NRT Demo (User request)
+                        const isNRT1orDemo = lowerTitle.includes('nrt1') || 
+                                           lowerTitle.includes('nrt 1') || 
+                                           lowerTitle.includes('nrt demo');
+                        
+                        if (isNRT1orDemo) {
+                            // Strictly Science only (unless purchased)
+                            return lowerDomain === 'science' || isPurchased;
+                        }
+
+                        // 2. Purchased tests are ALWAYS visible
                         if (isPurchased) return true;
 
-                        // 2. Full Syllabus mock tests are visible to everyone
+                        // 3. Full Syllabus mock tests are visible to everyone
                         if (test.isFullSyllabus) return true;
 
-                        // 3. Strict Domain/Stream filtering
+                        // 4. Strict Domain/Stream filtering
                         // Test must belong to the selected series/domain
                         if (lowerSeries === lowerDomain) {
                             return true;
                         }
 
-                        // Fallback: If no series is set, and it's a legacy test, check title keywords
-                        // But strictly only if it doesn't belong to another domain's series
+                        // Fallback: strictly exclude if it belongs to another domain's series
                         const otherDomains = DOMAIN_OPTIONS.map(d => d.id.toLowerCase()).filter(d => d !== lowerDomain);
                         const belongsToOtherSeries = otherDomains.some(d => lowerSeries === d);
                         
