@@ -26,6 +26,8 @@ import { getTests, hasUserPaidForProduct } from "@/lib/appwrite-db";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PenLine, BookOpen, Microscope, Briefcase, Target, GraduationCap, Users } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { Button } from "@/components/ui/Button";
 
 const PYQ_SUBJECTS: { id: PYQSubject; label: string; icon: React.ReactNode; description: string }[] = [
     { id: 'languages', label: 'Languages', icon: <PenLine size={36} />, description: 'English, Hindi & Regional' },
@@ -33,6 +35,12 @@ const PYQ_SUBJECTS: { id: PYQSubject; label: string; icon: React.ReactNode; desc
     { id: 'science', label: 'Science', icon: <Microscope size={36} />, description: 'Physics, Chemistry, Biology, Maths' },
     { id: 'commerce', label: 'Commerce', icon: <Briefcase size={36} />, description: 'Economics, Accounts & Business' },
     { id: 'non-domain', label: 'Non-Domain', icon: <Target size={36} />, description: 'General Knowledge & Aptitude' }
+];
+
+const DOMAIN_OPTIONS = [
+    { id: 'Science', label: 'Science', description: 'Physics, Chemistry, Biology, Maths' },
+    { id: 'Humanities', label: 'Humanities', description: 'History, Geography, Political Science' },
+    { id: 'Commerce', label: 'Commerce', description: 'Economics, Accounts, Business Studies' }
 ];
 
 function EducatorTestsList() {
@@ -43,6 +51,39 @@ function EducatorTestsList() {
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+    const [showDomainModal, setShowDomainModal] = useState(false);
+    const [tempDomain, setTempDomain] = useState<string>("");
+
+    useEffect(() => {
+        // Only run on client
+        if (typeof window !== 'undefined') {
+            const storedDomain = localStorage.getItem('selected_nrt_domain');
+            if (storedDomain) {
+                setSelectedDomain(storedDomain);
+            } else {
+                setShowDomainModal(true);
+            }
+        }
+    }, []);
+
+    const handleDomainSubmit = () => {
+        if (!tempDomain) {
+            alert("Please select a domain to continue");
+            return;
+        }
+        localStorage.setItem('selected_nrt_domain', tempDomain);
+        setSelectedDomain(tempDomain);
+        setShowDomainModal(false);
+    };
+
+    const handleResetDomain = () => {
+        localStorage.removeItem('selected_nrt_domain');
+        setSelectedDomain(null);
+        setTempDomain("");
+        setShowDomainModal(true);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -58,7 +99,12 @@ function EducatorTestsList() {
                     const purchasedMap: Record<string, boolean> = {};
                     // Check payment status for each premium test individually
                     await Promise.all(premiumTests.map(async (test) => {
-                        const productNameToCheck = test.series ? test.series : test.title;
+                        // For domain tests, if bought the series, unlock all
+                        const storedDomain = localStorage.getItem('selected_nrt_domain');
+                        let productNameToCheck = test.series ? test.series : test.title;
+                        
+                        // If test has no explicit series but we are in a domain view, we could check domain bundle
+                        // For now we check the assigned series first
                         const hasPaidForThis = await hasUserPaidForProduct(user.$id, productNameToCheck);
                         purchasedMap[test.id] = hasPaidForThis;
                     }));
@@ -180,9 +226,85 @@ function EducatorTestsList() {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tests.map(test => {
-                const isPurchased = purchasedTests[test.id] || false;
+        <div className="space-y-6">
+            <Dialog open={showDomainModal} onOpenChange={(open) => {
+                // Prevent closing by clicking outside if no domain is selected
+                if (!open && !selectedDomain) return;
+                setShowDomainModal(open);
+            }}>
+                <DialogContent className="sm:max-w-md" hideCloseButton>
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-center">Select Your Domain</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-center text-foreground/70 mb-6">
+                            Choose your domain to see the most relevant Mock Tests. This will lock other domain tests.
+                        </p>
+                        <div className="space-y-4">
+                            {DOMAIN_OPTIONS.map((domain) => (
+                                <div
+                                    key={domain.id}
+                                    onClick={() => setTempDomain(domain.id)}
+                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${tempDomain === domain.id
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border hover:border-primary/50'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempDomain === domain.id ? 'border-primary' : 'border-slate-300'}`}>
+                                            {tempDomain === domain.id && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold">{domain.label}</h4>
+                                            <p className="text-xs text-foreground/70">{domain.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <Button
+                            className="w-full mt-6 py-6 text-lg"
+                            onClick={handleDomainSubmit}
+                            disabled={!tempDomain}
+                        >
+                            Continue
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {selectedDomain && (
+                <div className="flex justify-between items-center bg-primary/10 p-4 rounded-xl border border-primary/20">
+                    <div>
+                        <span className="text-sm text-foreground/70">Selected Domain:</span>
+                        <span className="font-bold text-primary ml-2">{selectedDomain}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleResetDomain}>
+                        Change Domain
+                    </Button>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tests
+                    .filter(test => {
+                        // Filter tests based on selected domain
+                        // We check if the test series contains the domain name or test title contains it
+                        if (!selectedDomain) return false;
+                        const lowerDomain = selectedDomain.toLowerCase();
+                        const checkStr = `${test.series || ''} ${test.title}`.toLowerCase();
+                        
+                        // If it's explicitly labeled with another domain, hide it
+                        const otherDomains = DOMAIN_OPTIONS.map(d => d.id.toLowerCase()).filter(d => d !== lowerDomain);
+                        const hasOtherDomain = otherDomains.some(d => checkStr.includes(d));
+                        
+                        if (hasOtherDomain) return false;
+                        
+                        // Show if it matches domain OR is a general test (no specific domain mentioned)
+                        return checkStr.includes(lowerDomain) || !DOMAIN_OPTIONS.some(d => checkStr.includes(d.id.toLowerCase()));
+                    })
+                    .map(test => {
+                        const isPurchased = purchasedTests[test.id] || false;
 
                 return (
                     <Card key={test.id} className="group hover:border-primary/50 transition-all duration-300 shadow-lg h-full flex flex-col">
@@ -225,6 +347,7 @@ function EducatorTestsList() {
                     </Card>
                 );
             })}
+            </div>
         </div>
     );
 }
