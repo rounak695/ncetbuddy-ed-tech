@@ -292,13 +292,22 @@ function EducatorTestsList() {
                     .filter(test => {
                         // Filter tests based on selected domain
                         if (!selectedDomain) return false;
-                        
-                        // Strict Filtering:
-                        // Only show the test if it explicitly mentions the selected domain
-                        // in its series name or title. 
+
+                        const isPurchased = purchasedTests[test.id] || false;
+                        const lowerTitle = test.title.toLowerCase();
+                        const lowerSeries = (test.series || "").toLowerCase();
+
+                        // Global tests (NRT or Full Syllabus) should be visible to all streams
+                        const isGlobalTest = test.isFullSyllabus ||
+                            lowerTitle.includes('nrt') ||
+                            lowerSeries.includes('nrt');
+
+                        if (isGlobalTest || isPurchased) return true;
+
+                        // Strict Filtering for domain-specific tests:
                         const lowerDomain = selectedDomain.toLowerCase();
                         const checkStr = `${test.series || ''} ${test.title}`.toLowerCase();
-                        
+
                         // It must contain the selected domain.
                         if (!checkStr.includes(lowerDomain)) {
                             return false;
@@ -308,9 +317,9 @@ function EducatorTestsList() {
                         // (e.g. if a test was somehow named "Science and Commerce")
                         const otherDomains = DOMAIN_OPTIONS.map(d => d.id.toLowerCase()).filter(d => d !== lowerDomain);
                         const hasOtherDomain = otherDomains.some(d => checkStr.includes(d));
-                        
+
                         if (hasOtherDomain) return false;
-                        
+
                         return true;
                     })
                     .map(test => {
