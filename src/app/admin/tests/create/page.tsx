@@ -127,7 +127,7 @@ export default function CreateTestPage() {
         }
 
         setLoading(true);
-        const testId = await createTest({
+        const result = await createTest({
             title: testData.title,
             subject: testData.subject || "General",
             duration: testData.duration || 60,
@@ -144,11 +144,11 @@ export default function CreateTestPage() {
             maxSubjectChoices: testData.maxSubjectChoices
         } as any);
 
-        if (testId) {
+        if (result.id) {
             alert("Test published successfully!");
             router.push(testData.testType === 'pyq' ? "/admin/pyqs" : "/admin/tests");
         } else {
-            alert("Failed to publish test.");
+            alert("Failed to publish test: " + (result.error || "Unknown Error"));
         }
         setLoading(false);
     };

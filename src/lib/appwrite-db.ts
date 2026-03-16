@@ -149,56 +149,61 @@ export const getTestById = async (id: string): Promise<Test | null> => {
     }
 };
 
-export const createTest = async (test: Omit<Test, "id">): Promise<string | null> => {
-    if (!isAppwriteConfigured()) return null;
+export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string, error?: string }> => {
+    if (!isAppwriteConfigured()) return { error: "Appwrite not configured" };
     try {
-        const { questions, subjectAllocations, maxSubjectChoices, ...restOfTest } = test;
+        const { questions, subjectAllocations, maxSubjectChoices, isFullSyllabus, isVisible, ...restOfTest } = test;
         
         const docData: any = {
             ...restOfTest,
             questions: JSON.stringify(questions),
-            subjectAllocations: subjectAllocations ? JSON.stringify(subjectAllocations) : undefined,
             createdAt: Math.floor(Date.now() / 1000),
-            isVisible: test.isVisible !== undefined ? test.isVisible : true
         };
 
-        // Only add if explicitly provided to avoid schema issues
-        if (maxSubjectChoices !== undefined) {
-            docData.maxSubjectChoices = maxSubjectChoices;
-        }
+        // Add optional/new fields if provided
+        if (subjectAllocations) docData.subjectAllocations = JSON.stringify(subjectAllocations);
+        if (maxSubjectChoices !== undefined) docData.maxSubjectChoices = maxSubjectChoices;
+        if (isFullSyllabus !== undefined) docData.isFullSyllabus = isFullSyllabus;
+        if (isVisible !== undefined) docData.isVisible = isVisible;
 
         try {
+            console.log("Attempting to create test with data:", docData);
             const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), docData);
-            return response.$id;
+            return { id: response.$id };
         } catch (initialError: any) {
-            console.error("Initial createTest failed:", initialError);
+            console.error("Initial createTest failed detailed:", initialError);
             
-            // Fallback strategy: try removing newer or non-essential fields
-            const possibleProblemFields = ['maxSubjectChoices', 'isVisible', 'subjectAllocations'];
-            let attemptedFallback = false;
-            
-            for (const field of possibleProblemFields) {
-                if (field in docData && (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found'))) {
-                    console.warn(`Field '${field}' likely missing in schema, retrying without it...`);
-                    delete docData[field];
-                    attemptedFallback = true;
-                }
-            }
+            // Fallback strategy: try removing newer or non-essential fields one by one
+            const newerFields = ['maxSubjectChoices', 'isVisible', 'subjectAllocations', 'isFullSyllabus'];
+            let fallbackData = { ...docData };
+            let attemptedFields = [];
 
-            if (attemptedFallback) {
-                try {
-                    const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), docData);
-                    return response.$id;
-                } catch (retryError: any) {
-                    console.error("Fallback createTest also failed:", retryError);
-                    throw retryError;
+            // If it's a schema error, try stripping everything but the core fields
+            if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found') || initialError.message?.toLowerCase().includes('invalid document structure')) {
+                for (const field of newerFields) {
+                    if (field in fallbackData) {
+                        console.warn(`Stripping field '${field}' and retrying...`);
+                        delete fallbackData[field];
+                        attemptedFields.push(field);
+                    }
+                }
+
+                if (attemptedFields.length > 0) {
+                    try {
+                        const response = await databases.createDocument(DB_ID, 'tests', ID.unique(), fallbackData);
+                        return { id: response.$id };
+                    } catch (retryError: any) {
+                        console.error("Fallback createTest failed too:", retryError);
+                        return { error: retryError.message || "Fallback creation failed" };
+                    }
                 }
             }
-            throw initialError;
+            
+            return { error: initialError.message || "Creation failed" };
         }
-    } catch (error) {
-        console.error("Error creating test:", error);
-        return null;
+    } catch (error: any) {
+        console.error("Error in createTest wrapper:", error);
+        return { error: error.message || "Unknown error in createTest" };
     }
 };
 
