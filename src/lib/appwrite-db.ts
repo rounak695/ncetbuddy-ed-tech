@@ -174,7 +174,17 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
             console.error("Initial createTest failed detailed:", initialError);
             
             // Fallback strategy: try removing newer or non-essential fields one by one
-            const newerFields = ['maxSubjectChoices', 'isVisible', 'subjectAllocations', 'isFullSyllabus'];
+            const newerFields = [
+                'maxSubjectChoices', 
+                'isVisible', 
+                'subjectAllocations', 
+                'isFullSyllabus',
+                'series',
+                'price',
+                'status',
+                'testType',
+                'pyqSubject'
+            ];
             let fallbackData = { ...docData };
             let attemptedFields = [];
 
@@ -225,28 +235,40 @@ export const updateTest = async (testId: string, data: Partial<Test>): Promise<b
             await databases.updateDocument(DB_ID, 'tests', testId, updateData);
             return true;
         } catch (initialError: any) {
-            console.error("Initial updateTest failed:", initialError);
+            console.error("Initial updateTest failed detailed:", initialError);
             
-            // Fallback strategy: try removing newer or non-essential fields
-            const possibleProblemFields = ['maxSubjectChoices', 'isVisible', 'subjectAllocations'];
+            // Fallback strategy: try removing newer or non-essential fields one by one
+            const newerFields = [
+                'maxSubjectChoices', 
+                'isVisible', 
+                'subjectAllocations', 
+                'isFullSyllabus',
+                'series',
+                'price',
+                'status',
+                'testType',
+                'pyqSubject'
+            ];
+            let fallbackData = { ...updateData };
             let attemptedFallback = false;
-            const fallbackData = { ...updateData };
             
-            for (const field of possibleProblemFields) {
-                if (field in fallbackData && (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found'))) {
-                    console.warn(`Field '${field}' likely missing in schema during update, retrying without it...`);
-                    delete (fallbackData as any)[field];
-                    attemptedFallback = true;
+            if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found') || initialError.message?.toLowerCase().includes('invalid document structure')) {
+                for (const field of newerFields) {
+                    if (field in fallbackData) {
+                        console.warn(`Field '${field}' likely missing in schema during update, retrying without it...`);
+                        delete (fallbackData as any)[field];
+                        attemptedFallback = true;
+                    }
                 }
-            }
 
-            if (attemptedFallback) {
-                try {
-                    await databases.updateDocument(DB_ID, 'tests', testId, fallbackData);
-                    return true;
-                } catch (retryError: any) {
-                    console.error("Fallback updateTest also failed:", retryError);
-                    throw retryError;
+                if (attemptedFallback) {
+                    try {
+                        await databases.updateDocument(DB_ID, 'tests', testId, fallbackData);
+                        return true;
+                    } catch (retryError: any) {
+                        console.error("Fallback updateTest also failed:", retryError);
+                        throw retryError;
+                    }
                 }
             }
             throw initialError;
