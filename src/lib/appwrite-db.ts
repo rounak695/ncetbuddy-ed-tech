@@ -160,11 +160,13 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
             createdAt: Math.floor(Date.now() / 1000),
         };
 
+        // Explicitly set default fields
+        docData.isVisible = isVisible !== undefined ? isVisible : true;
+
         // Add optional/new fields if provided
         if (subjectAllocations) docData.subjectAllocations = JSON.stringify(subjectAllocations);
         if (maxSubjectChoices !== undefined) docData.maxSubjectChoices = maxSubjectChoices;
         if (isFullSyllabus !== undefined) docData.isFullSyllabus = isFullSyllabus;
-        if (isVisible !== undefined) docData.isVisible = isVisible;
 
         try {
             console.log("Attempting to create test with data:", docData);
@@ -188,13 +190,19 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
             let fallbackData = { ...docData };
             let attemptedFields = [];
 
-            // If it's a schema error, try stripping everything but the core fields
+            // If it's a schema error, try stripping specific problematic fields
             if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found') || initialError.message?.toLowerCase().includes('invalid document structure')) {
+                const errorMessage = initialError.message?.toLowerCase() || "";
+                
                 for (const field of newerFields) {
                     if (field in fallbackData) {
-                        console.warn(`Stripping field '${field}' and retrying...`);
-                        delete fallbackData[field];
-                        attemptedFields.push(field);
+                        // Only strip if it's an "Attribute not found" error OR if it's a generic "invalid structure" error
+                        // But NEVER strip if the error specifically says that field is REQUIRED
+                        if (errorMessage.includes("attribute not found") || (errorMessage.includes("invalid document structure") && !errorMessage.includes(`missing required attribute *${field.toLowerCase()}*`))) {
+                            console.warn(`Stripping field '${field}' and retrying...`);
+                            delete fallbackData[field];
+                            attemptedFields.push(field);
+                        }
                     }
                 }
 
@@ -253,11 +261,16 @@ export const updateTest = async (testId: string, data: Partial<Test>): Promise<b
             let attemptedFallback = false;
             
             if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found') || initialError.message?.toLowerCase().includes('invalid document structure')) {
+                const errorMessage = initialError.message?.toLowerCase() || "";
+                
                 for (const field of newerFields) {
                     if (field in fallbackData) {
-                        console.warn(`Field '${field}' likely missing in schema during update, retrying without it...`);
-                        delete (fallbackData as any)[field];
-                        attemptedFallback = true;
+                        // Only strip if it's an "Attribute not found" error OR if it's a generic "invalid structure" error
+                        if (errorMessage.includes("attribute not found") || (errorMessage.includes("invalid document structure") && !errorMessage.includes(`missing required attribute *${field.toLowerCase()}*`))) {
+                            console.warn(`Field '${field}' likely missing in schema during update, retrying without it...`);
+                            delete (fallbackData as any)[field];
+                            attemptedFallback = true;
+                        }
                     }
                 }
 
