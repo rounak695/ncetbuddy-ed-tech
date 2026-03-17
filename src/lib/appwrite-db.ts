@@ -912,15 +912,39 @@ export const getUsers = async (): Promise<UserProfile[]> => {
 
 export const updateUser = async (uid: string, data: Partial<UserProfile>) => {
     try {
-        // Update 'users' collection (Legacy/Primary)
-        await databases.updateDocument(DB_ID, 'users', uid, data);
+        // Build update data
+        const updateData = { ...data };
+        
+        try {
+            // Update 'users' collection (Legacy/Primary)
+            await databases.updateDocument(DB_ID, 'users', uid, updateData);
+        } catch (initialError: any) {
+            // Fallback if phoneNumber is missing in schema
+            if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found')) {
+                console.warn("phoneNumber attribute likely missing in users schema, retrying without it");
+                const fallbackData = { ...updateData };
+                delete (fallbackData as any).phoneNumber;
+                await databases.updateDocument(DB_ID, 'users', uid, fallbackData);
+            } else {
+                throw initialError;
+            }
+        }
 
         // Try updating 'user_profiles' as well (New/Preferred)
         try {
-            await databases.updateDocument(DB_ID, 'user_profiles', uid, data);
+            await databases.updateDocument(DB_ID, 'user_profiles', uid, updateData);
         } catch (e: any) {
-            // Ignore if document not found in user_profiles
-            if (e.code !== 404) {
+            // Fallback if phoneNumber is missing in user_profiles schema
+            if (e.code === 400 || e.message?.toLowerCase().includes('attribute not found')) {
+                console.warn("phoneNumber attribute likely missing in user_profiles schema, retrying without it");
+                const fallbackData = { ...updateData };
+                delete (fallbackData as any).phoneNumber;
+                try {
+                    await databases.updateDocument(DB_ID, 'user_profiles', uid, fallbackData);
+                } catch (innerError: any) {
+                    if (innerError.code !== 404) throw innerError;
+                }
+            } else if (e.code !== 404) {
                 console.warn("Failed to update user_profiles mirror:", e);
             }
         }

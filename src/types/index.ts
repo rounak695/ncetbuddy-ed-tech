@@ -158,6 +158,7 @@ export interface UserProfile {
     role: 'user' | 'admin';
     premiumStatus: boolean;
     isBanned?: boolean;
+    phoneNumber?: string; // For 1:1 mentorship and WhatsApp groups
     enrolledEducatorId?: string;
     totalScore?: number;
     testsAttempted?: number;

@@ -3,8 +3,9 @@
 import React from 'react';
 import BannerCarousel from '@/components/dashboard/BannerCarousel';
 import { useEffect, useState } from 'react';
-import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress, getUserTestResults, getDynamicPlannerTask, PlannerTask, getVideoClasses, markTaskDone } from '@/lib/appwrite-db';
-import { Test, ForumPost, Book, FormulaCard, VideoClass } from '@/types';
+import { getBooks, getFormulaCards, getTests, getForumPosts, getDailyProgress, getUserTestResults, getDynamicPlannerTask, PlannerTask, getVideoClasses, markTaskDone, getUserProfile } from '@/lib/appwrite-db';
+import { Test, ForumPost, Book, FormulaCard, VideoClass, UserProfile } from '@/types';
+import MentorshipModal from '@/components/mentorship/MentorshipModal';
 import {
     MockTestEngine,
     CommunityDiscussion,
@@ -74,6 +75,8 @@ export default function DashboardPage() {
     });
     const [analyticsData, setAnalyticsData] = useState({ score: 0, trend: 0 });
     const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [showMentorshipModal, setShowMentorshipModal] = useState(false);
 
     // Resource Library States
     const [books, setBooks] = useState<Book[]>([]);
@@ -83,6 +86,19 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Fetch User Profile
+                if (user?.$id) {
+                    const userProfile = await getUserProfile(user.$id);
+                    if (userProfile) {
+                        setProfile(userProfile);
+                        // Show mentorship modal if phone number is missing
+                        if (!userProfile.phoneNumber) {
+                            // Small delay for better UX
+                            setTimeout(() => setShowMentorshipModal(true), 2000);
+                        }
+                    }
+                }
+
                 // Fetch Tests
                 const fetchedTests = await getTests();
                 const processedTests = (fetchedTests.length > 0 ? fetchedTests : MOCK_TESTS).map(t => ({
@@ -239,6 +255,18 @@ export default function DashboardPage() {
 
                 {/* Bottom Section removed duplicate library */}
             </div>
+
+            {/* Mentorship Integration */}
+            {showMentorshipModal && profile && (
+                <MentorshipModal 
+                    userProfile={profile}
+                    onClose={() => setShowMentorshipModal(false)}
+                    onUpdate={(updated) => {
+                        setProfile(updated);
+                        setShowMentorshipModal(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
