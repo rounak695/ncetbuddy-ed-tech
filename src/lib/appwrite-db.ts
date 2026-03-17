@@ -910,47 +910,67 @@ export const getUsers = async (): Promise<UserProfile[]> => {
     }
 };
 
-export const updateUser = async (uid: string, data: Partial<UserProfile>) => {
+export const updateUser = async (uid: string, data: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
+    if (!isAppwriteConfigured()) return { success: false, error: "Appwrite not configured" };
+    
     try {
-        // Build update data
         const updateData = { ...data };
+        const keys = Object.keys(updateData).join(', ');
         
         try {
-            // Update 'users' collection (Legacy/Primary)
             await databases.updateDocument(DB_ID, 'users', uid, updateData);
+            
+            // Try updating 'user_profiles' as well (New/Preferred)
+            try {
+                await databases.updateDocument(DB_ID, 'user_profiles', uid, updateData);
+            } catch (e: any) {
+                // Ignore if document not found in user_profiles
+                if (e.code !== 404) console.warn("Sync update to user_profiles failed:", e.message);
+            }
+            
+            return { success: true };
         } catch (initialError: any) {
-            // Fallback if phoneNumber is missing in schema
-            if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found')) {
-                console.warn("phoneNumber attribute likely missing in users schema, retrying without it");
+            console.error("Initial updateUser failed:", initialError);
+            
+            // Fallback strategy: if it's a schema error, try stripping newer fields
+            if (initialError.code === 400 || initialError.message?.toLowerCase().includes('attribute not found') || initialError.message?.toLowerCase().includes('invalid document structure')) {
+                const errorMessage = initialError.message?.toLowerCase() || "";
                 const fallbackData = { ...updateData };
-                delete (fallbackData as any).phoneNumber;
-                await databases.updateDocument(DB_ID, 'users', uid, fallbackData);
-            } else {
-                throw initialError;
-            }
-        }
-
-        // Try updating 'user_profiles' as well (New/Preferred)
-        try {
-            await databases.updateDocument(DB_ID, 'user_profiles', uid, updateData);
-        } catch (e: any) {
-            // Fallback if phoneNumber is missing in user_profiles schema
-            if (e.code === 400 || e.message?.toLowerCase().includes('attribute not found')) {
-                console.warn("phoneNumber attribute likely missing in user_profiles schema, retrying without it");
-                const fallbackData = { ...updateData };
-                delete (fallbackData as any).phoneNumber;
-                try {
-                    await databases.updateDocument(DB_ID, 'user_profiles', uid, fallbackData);
-                } catch (innerError: any) {
-                    if (innerError.code !== 404) throw innerError;
+                
+                // Fields that might be missing in older schemas
+                const possibleProblemFields = ['phoneNumber', 'premiumStatus', 'isBanned', 'enrolledEducatorId', 'totalScore', 'testsAttempted', 'streak', 'lastActiveDate'];
+                
+                let strippedAny = false;
+                for (const field of possibleProblemFields) {
+                    if (field in fallbackData) {
+                        // Strip if not found or if generic error (but don't strip if specifically required)
+                        if (errorMessage.includes("attribute not found") || (errorMessage.includes("invalid document structure") && !errorMessage.includes(`missing required attribute *${field.toLowerCase()}*`))) {
+                            delete (fallbackData as any)[field];
+                            strippedAny = true;
+                        }
+                    }
                 }
-            } else if (e.code !== 404) {
-                console.warn("Failed to update user_profiles mirror:", e);
+
+                if (strippedAny) {
+                    // Check if we have anything left to update
+                    if (Object.keys(fallbackData).length === 0) {
+                        return { success: false, error: "Schema mismatch: Attribute '" + Object.keys(updateData)[0] + "' not found in database. Please update Appwrite schema." };
+                    }
+
+                    try {
+                        await databases.updateDocument(DB_ID, 'users', uid, fallbackData);
+                        return { success: true };
+                    } catch (retryError: any) {
+                        return { success: false, error: (retryError.message || "Retry failed") + " | Keys: " + Object.keys(fallbackData).join(', ') };
+                    }
+                }
             }
+            
+            return { success: false, error: (initialError.message || "Update failed") + " | Keys: " + keys };
         }
-    } catch (error) {
-        console.error("Error updating user:", error);
-        throw error;
+    } catch (error: any) {
+        console.error("Error in updateUser wrapper:", error);
+        return { success: false, error: error.message || "Unknown error" };
     }
 };
 

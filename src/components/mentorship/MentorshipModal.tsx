@@ -29,12 +29,17 @@ export default function MentorshipModal({ userProfile, onClose, onUpdate }: Ment
         setError('');
 
         try {
-            await updateUser(userProfile.uid, { phoneNumber: cleanPhone });
-            onUpdate({ ...userProfile, phoneNumber: cleanPhone });
-            onClose();
+            const result = await updateUser(userProfile.uid, { phoneNumber: cleanPhone });
+            if (result.success) {
+                onUpdate({ ...userProfile, phoneNumber: cleanPhone });
+                onClose();
+            } else {
+                console.error("Failed to update phone number:", result.error);
+                setError(result.error || 'Something went wrong. Please try again.');
+            }
         } catch (err: any) {
             console.error("Failed to update phone number:", err);
-            setError('Something went wrong. Please try again.');
+            setError(err.message || 'Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
