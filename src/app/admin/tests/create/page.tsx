@@ -141,7 +141,8 @@ export default function CreateTestPage() {
             isFullSyllabus: testData.isFullSyllabus || false,
             subjectAllocations: testData.isFullSyllabus ? testData.subjectAllocations : undefined,
             series: testData.series ? testData.series : undefined,
-            maxSubjectChoices: testData.maxSubjectChoices
+            maxSubjectChoices: testData.maxSubjectChoices,
+            isVisible: true
         } as any);
 
         if (result.id) {

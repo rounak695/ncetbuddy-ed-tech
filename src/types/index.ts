@@ -25,8 +25,7 @@ export interface Test {
     pyqSubject?: 'languages' | 'humanities' | 'science' | 'commerce' | 'non-domain'; // For PYQ categorization
     price?: number; // Cost of the test in INR (0 for free)
     series?: string; // Series bundle this test belongs to, unlocking it if purchased
-
-    // Full Syllabus feature
+        // Full Syllabus feature
     isFullSyllabus?: boolean;
     maxSubjectChoices?: number; // e.g., for Humanities: 3
     subjectAllocations?: { subject: string; count: number }[];

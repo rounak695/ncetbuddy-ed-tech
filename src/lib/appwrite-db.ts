@@ -176,7 +176,7 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
         if (subjectAllocations) docData.subjectAllocations = JSON.stringify(subjectAllocations);
 
         // If isVisible was explicitly passed, use it, otherwise stay with forced true
-        if (isVisible !== undefined) docData.isVisible = isVisible;
+        docData.isVisible = isVisible !== undefined ? isVisible : true;
 
         try {
             console.log("Final docData keys:", Object.keys(docData));
@@ -207,8 +207,9 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
                 for (const field of newerFields) {
                     if (field in fallbackData) {
                         // Only strip if it's an "Attribute not found" error OR if it's a generic "invalid structure" error
-                        // But NEVER strip if the error specifically says that field is REQUIRED
-                        if (errorMessage.includes("attribute not found") || (errorMessage.includes("invalid document structure") && !errorMessage.includes(`missing required attribute *${field.toLowerCase()}*`))) {
+                        // But NEVER strip REQUIRED core fields
+                        const isCoreField = ['title', 'questions', 'isVisible', 'createdBy', 'createdAt', 'duration'].includes(field);
+                        if (!isCoreField && (errorMessage.includes("attribute not found") || (errorMessage.includes("invalid document structure") && !errorMessage.includes(`missing required attribute *${field.toLowerCase()}*`)))) {
                             console.warn(`Stripping field '${field}' and retrying...`);
                             delete fallbackData[field];
                             attemptedFields.push(field);
