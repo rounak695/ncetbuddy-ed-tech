@@ -24,6 +24,8 @@ export default function EditTestPage() {
         subject: "General",
         duration: 60,
         series: "",
+        testType: "pyq",
+        pyqSubject: "non-domain"
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([]);
 
@@ -38,6 +40,8 @@ export default function EditTestPage() {
                         subject: test.subject || "General",
                         duration: test.duration,
                         series: test.series || "",
+                        testType: test.testType || "pyq",
+                        pyqSubject: test.pyqSubject || "non-domain"
                     });
                     setQuestions(test.questions.map(q => ({
                         text: q.text,
@@ -82,6 +86,8 @@ export default function EditTestPage() {
                 subject: testData.subject || "General",
                 duration: testData.duration || 60,
                 series: testData.series || undefined,
+                testType: testData.testType || 'pyq',
+                pyqSubject: testData.pyqSubject || 'non-domain',
                 questions: JSON.stringify(questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })))
             });
             alert("Test updated successfully!");
@@ -166,6 +172,54 @@ export default function EditTestPage() {
                         Select the target domain to group this test. Paying for one test in this domain unlocks all others.
                     </p>
                 </div>
+
+                <div style={{ marginTop: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Test Type (Categorization)</label>
+                    <select
+                        value={testData.testType || "pyq"}
+                        onChange={(e) => setTestData({ ...testData, testType: e.target.value as 'pyq' | 'educator' })}
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem",
+                            borderRadius: "8px",
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            fontSize: "1rem"
+                        }}
+                    >
+                        <option value="pyq">PYQ (Platform Owned - Free)</option>
+                        <option value="educator">Educator (Premium - Paid)</option>
+                    </select>
+                    <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                        <strong>Educator</strong> tests show up in the premium Mock Tests section. <strong>PYQ</strong> tests show up in the free section.
+                    </p>
+                </div>
+
+                {testData.testType === 'pyq' && (
+                    <div style={{ marginTop: "1rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>PYQ Subject Category</label>
+                        <select
+                            value={testData.pyqSubject || "non-domain"}
+                            onChange={(e) => setTestData({ ...testData, pyqSubject: e.target.value as any })}
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "8px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-secondary)",
+                                color: "var(--text-primary)",
+                                fontSize: "1rem"
+                            }}
+                        >
+                            <option value="languages">Languages</option>
+                            <option value="humanities">Humanities</option>
+                            <option value="science">Science</option>
+                            <option value="commerce">Commerce</option>
+                            <option value="non-domain">Non-Domain (Aptitude/GK)</option>
+                        </select>
+                    </div>
+                )}
             </Card>
 
             <h3 style={{ marginBottom: "1rem" }}>Questions ({questions.length})</h3>

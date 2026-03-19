@@ -19,7 +19,12 @@ export default function AdminPYQsPage() {
         try {
             const data = await getTests();
             // Filter for tests with testType 'pyq' or undefined (legacy)
-            const filteredPYQs = data.filter(t => !t.testType || t.testType === 'pyq');
+            // AND strictly exclude any test with 'NRT' in the title (always paid)
+            const filteredPYQs = data.filter(t => {
+                const isPYQType = !t.testType || t.testType === 'pyq';
+                const isNRT = t.title.toUpperCase().includes('NRT');
+                return isPYQType && !isNRT;
+            });
             setPyqs(filteredPYQs);
         } catch (error) {
             console.error("Error fetching PYQs:", error);

@@ -32,8 +32,9 @@ export default function PYQSubjectPage() {
                 // For backward compatibility: tests without testType are treated as PYQ (non-domain)
                 const filteredTests = data.filter(t => {
                     const isPYQ = !t.testType || t.testType === 'pyq';
+                    const isNRT = t.title.toUpperCase().includes('NRT');
                     const matchesSubject = t.pyqSubject === subject || (!t.pyqSubject && subject === 'non-domain');
-                    return isPYQ && matchesSubject && t.isVisible !== false;
+                    return isPYQ && !isNRT && matchesSubject && t.isVisible !== false;
                 });
                 setTests(filteredTests);
             } catch (error) {

@@ -94,7 +94,11 @@ function EducatorTestsList() {
                 const allTests = await getTests();
                 // Filter for educator tests (assuming logic: price > 0 OR distinct type)
                 // For now, let's assume any test with price > 0 is premium or testType 'educator'
-                const premiumTests = allTests.filter(t => (t.price && t.price > 0) || t.testType === 'educator');
+                const premiumTests = allTests.filter(t => 
+                    (t.price && t.price > 0) || 
+                    t.testType === 'educator' || 
+                    t.title.toUpperCase().includes('NRT')
+                );
                 setTests(premiumTests);
 
                 if (user) {
