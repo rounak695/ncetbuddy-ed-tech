@@ -106,7 +106,9 @@ export default function DashboardPage() {
                     ...t,
                     duration: t.duration || 180,
                     questionsCount: t.questions?.length || 0,
-                    href: t.id.startsWith('demo-') ? `/dashboard/tests` : (t.testType === 'pyq' ? `/dashboard/tests/pyq/${t.pyqSubject || 'non-domain'}` : `/dashboard/tests/attempt?id=${t.id}`)
+                    href: t.id.startsWith('demo-') ? `/dashboard/tests` : 
+                          (t.title.toUpperCase().includes('NRT') ? `/dashboard/tests/attempt?id=${t.id}` : 
+                          (t.testType === 'pyq' ? `/dashboard/tests/pyq/${t.pyqSubject || 'non-domain'}` : `/dashboard/tests/attempt?id=${t.id}`))
                 }));
                 setTests(processedTests);
 

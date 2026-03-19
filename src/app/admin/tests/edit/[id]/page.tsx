@@ -25,7 +25,8 @@ export default function EditTestPage() {
         duration: 60,
         series: "",
         testType: "pyq",
-        pyqSubject: "non-domain"
+        pyqSubject: "non-domain",
+        price: 0
     });
     const [questions, setQuestions] = useState<Omit<Question, "id">[]>([]);
 
@@ -41,7 +42,8 @@ export default function EditTestPage() {
                         duration: test.duration,
                         series: test.series || "",
                         testType: test.testType || "pyq",
-                        pyqSubject: test.pyqSubject || "non-domain"
+                        pyqSubject: test.pyqSubject || "non-domain",
+                        price: test.price || 0
                     });
                     setQuestions(test.questions.map(q => ({
                         text: q.text,
@@ -88,6 +90,7 @@ export default function EditTestPage() {
                 series: testData.series || undefined,
                 testType: testData.testType || 'pyq',
                 pyqSubject: testData.pyqSubject || 'non-domain',
+                price: Number(testData.price) || 0,
                 questions: JSON.stringify(questions.map((q, i) => ({ ...q, id: `q-${i + 1}` })))
             });
             alert("Test updated successfully!");
@@ -115,35 +118,48 @@ export default function EditTestPage() {
                     value={testData.title}
                     onChange={(e) => setTestData({ ...testData, title: e.target.value })}
                 />
-                <div style={{ marginTop: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject</label>
-                    <select
-                        value={testData.subject || "General"}
-                        onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
-                        style={{
-                            width: "100%",
-                            padding: "0.75rem",
-                            borderRadius: "8px",
-                            border: "1px solid var(--border)",
-                            backgroundColor: "var(--bg-secondary)",
-                            color: "var(--text-primary)",
-                            fontSize: "1rem"
-                        }}
-                    >
-                        <option value="General">General</option>
-                        <option value="Physics">Physics</option>
-                        <option value="Chemistry">Chemistry</option>
-                        <option value="Maths">Mathematics</option>
-                        <option value="Full Mock">Full Mock Test</option>
-                    </select>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div style={{ marginTop: "1rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Subject</label>
+                        <select
+                            value={testData.subject || "General"}
+                            onChange={(e) => setTestData({ ...testData, subject: e.target.value })}
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "8px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-secondary)",
+                                color: "var(--text-primary)",
+                                fontSize: "1rem"
+                            }}
+                        >
+                            <option value="General">General</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Maths">Mathematics</option>
+                            <option value="Full Mock">Full Mock Test</option>
+                        </select>
+                    </div>
+                    <div style={{ marginTop: "1rem" }}>
+                        <Input
+                            label="Duration (minutes)"
+                            type="number"
+                            value={testData.duration}
+                            onChange={(e) => setTestData({ ...testData, duration: parseInt(e.target.value) })}
+                        />
+                    </div>
                 </div>
-                <Input
-                    label="Duration (minutes)"
-                    type="number"
-                    value={testData.duration}
-                    onChange={(e) => setTestData({ ...testData, duration: Number(e.target.value) })}
-                    style={{ marginTop: "1rem" }}
-                />
+
+                <div style={{ marginTop: "1rem" }}>
+                    <Input
+                        label="Price (₹)"
+                        type="number"
+                        value={testData.price}
+                        onChange={(e) => setTestData({ ...testData, price: parseInt(e.target.value) })}
+                        placeholder="Enter 0 for free"
+                    />
+                </div>
                 <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
                     <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>NRT Target Domain (Series Bundle)</label>
                     <select
