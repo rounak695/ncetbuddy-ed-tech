@@ -140,16 +140,15 @@ function EducatorTestsList() {
                                               isNRTDemoFree;
 
                         // Visibility rule:
-                        // 1. If not NRT, always show.
+                        // 1. If not NRT, pulse through (handled by next filter)
                         // 2. If NRT:
-                        //    - Show if it's NRT 1 (gateway).
-                        //    - Show if it's NRT DEMO AND user is Science stream.
-                        //    - Show if it's already purchased/unlocked.
-                        //    - Show if user is admin.
+                        //    - Include in 'tests' state if it matches a possible NRT test.
+                        //    - The RENDER filter below handles domain-specific visibility from localStorage.
                         if (!isNRT) return true;
                         
-                        const shouldShowDemo = isNRTDemo && isProfileScience;
-                        return isNRT1 || shouldShowDemo || purchasedMap[test.id] || isAdmin;
+                        // Include NRT 1, NRT DEMO, and anything purchased/admin in state
+                        // We filter strictly in render because selectedDomain is there.
+                        return isNRT1 || isNRTDemo || purchasedMap[test.id] || isAdmin;
                     });
 
                     setTests(filteredTests);
@@ -348,7 +347,15 @@ function EducatorTestsList() {
                         
                         if (isNRT1orDemo) {
                             // Strictly Science only (unless purchased)
-                            return lowerDomain === 'science' || isPurchased;
+                            const isVisible = lowerDomain === 'science' || isPurchased;
+                            
+                            // FORCE NRT DEMO as "purchased" (free) if it's visible in science
+                            if (isVisible && lowerTitle.includes('nrt demo')) {
+                                // Although purchasedTests came from fetchData effect, we want to ensure
+                                // that if it's displayed in "Science", it's marked as accessible.
+                                // It should be handled by price (being 0) anyway, but let's be safe.
+                            }
+                            return isVisible;
                         }
 
                         // 2. Purchased tests are ALWAYS visible
@@ -372,7 +379,12 @@ function EducatorTestsList() {
                         return false;
                     })
                     .map(test => {
-                        const isPurchased = purchasedTests[test.id] || false;
+                        // Recalculate isPurchased to ensure NRT DEMO is free in Science domain
+                        // even if the user profile stream doesn't match.
+                        let isPurchased = purchasedTests[test.id] || false;
+                        if (test.title.toUpperCase().includes('NRT DEMO') && selectedDomain?.toLowerCase() === 'science') {
+                            isPurchased = true;
+                        }
 
                 return (
                     <Card key={test.id} className="group hover:border-primary/50 transition-all duration-300 shadow-lg h-full flex flex-col">
