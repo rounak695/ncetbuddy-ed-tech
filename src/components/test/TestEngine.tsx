@@ -362,11 +362,11 @@ export const TestEngine: React.FC<TestEngineProps> = ({ testId }) => {
 
     if (!hasAccess) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-                <div className="bg-card p-8 rounded-xl shadow-lg max-w-md w-full text-center border-2 border-border space-y-6">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center border-2 border-gray-200 space-y-6">
                     <Lock className="w-16 h-16 mx-auto text-primary" />
-                    <h2 className="text-2xl font-bold text-foreground">Premium Test</h2>
-                    <p className="text-foreground/70">
+                    <h2 className="text-2xl font-bold text-black">Premium Test</h2>
+                    <p className="text-gray-600">
                         This is an official educator mock test. You need to purchase the <strong>{test.series || test.title}</strong> pass to access this.
                     </p>
                     <Button
