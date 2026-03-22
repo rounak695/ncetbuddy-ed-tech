@@ -21,7 +21,7 @@ import { Card } from '@/components/ui/Card';
 // --- Test Card Component ---
 export const TestEngineCard = ({ test, isPremium = false, isSectional = false }: any) => {
     return (
-        <Card className="bg-white border-slate-100 shadow-sm p-4 rounded-3xl relative overflow-hidden group hover:shadow-md transition-all">
+        <Card className="bg-card border-border shadow-sm p-4 rounded-3xl relative overflow-hidden group hover:shadow-md transition-all">
             <div className="flex justify-between items-start mb-4">
                 <div className="flex gap-2">
                     {isPremium && (
@@ -30,7 +30,7 @@ export const TestEngineCard = ({ test, isPremium = false, isSectional = false }:
                         </span>
                     )}
                     {isSectional && (
-                        <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                        <span className="bg-slate-100 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">
                             Sectional
                         </span>
                     )}
@@ -42,17 +42,17 @@ export const TestEngineCard = ({ test, isPremium = false, isSectional = false }:
                 )}
             </div>
 
-            <h3 className="text-sm md:text-base font-black text-slate-900 mb-2 leading-tight">
+            <h3 className="text-sm md:text-base font-black text-foreground mb-2 leading-tight">
                 {test.title}
             </h3>
 
-            <div className="flex items-center gap-4 text-[11px] font-bold text-slate-400 mb-6">
+            <div className="flex items-center gap-4 text-[11px] font-bold text-secondary/40 mb-6">
                 <div className="flex items-center gap-1">
-                    <Clock size={12} className="text-rose-500" />
+                    <Clock size={12} className="text-primary" />
                     {test.duration} Mins
                 </div>
                 <div className="flex items-center gap-1">
-                    <FileText size={12} className="text-rose-500" />
+                    <FileText size={12} className="text-primary" />
                     {test.questionsCount} Questions
                 </div>
             </div>
@@ -64,7 +64,7 @@ export const TestEngineCard = ({ test, isPremium = false, isSectional = false }:
             ) : null}
 
             <Link href={test.href || '#'}>
-                <Button className="w-full bg-rose-500 hover:bg-rose-600 text-white font-black rounded-xl py-5 shadow-lg shadow-rose-500/20 active:translate-y-0.5 transition-all text-sm uppercase tracking-tight">
+                <Button className="w-full bg-primary hover:bg-primary-hover text-white font-black rounded-xl py-5 shadow-lg shadow-rose-500/20 active:translate-y-0.5 transition-all text-sm uppercase tracking-tight">
                     Start Test
                 </Button>
             </Link>
@@ -78,13 +78,13 @@ export const MockTestEngine = ({ tests }: { tests: any[] }) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-500">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                         <FileText size={18} />
                     </div>
-                    <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Mock Test Engine</h2>
+                    <h2 className="text-lg md:text-xl font-black text-primary tracking-tight">Mock Test Engine</h2>
                 </div>
                 <Link href="/dashboard/tests" className="group">
-                    <Button variant="outline" className="text-xs font-black uppercase tracking-tight px-4 py-2 bg-rose-500 text-white border-none rounded-xl hover:bg-rose-600 shadow-md">
+                    <Button variant="outline" className="text-xs font-black uppercase tracking-tight px-4 py-2 bg-primary text-white border-none rounded-xl hover:bg-primary-hover shadow-md">
                         Go to Test Series <ChevronRight size={14} className="ml-1 group-hover:translate-x-0.5 transition-transform" />
                     </Button>
                 </Link>
@@ -107,37 +107,37 @@ export const MockTestEngine = ({ tests }: { tests: any[] }) => {
 // --- Community Discussion Section ---
 export const CommunityDiscussion = ({ posts }: { posts: any[] }) => {
     return (
-        <Card className="bg-white border-slate-100 shadow-sm rounded-3xl overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-50">
+        <Card className="bg-card border-border shadow-sm rounded-3xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-border">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center overflow-hidden border border-indigo-100 relative">
                         {/* Using the forum community illustration in a small version */}
                         <Image src="/images/forum-community.jpg" alt="Forum" fill className="object-cover" />
                     </div>
-                    <h2 className="text-lg font-black text-slate-900 tracking-tight">Community Discussion</h2>
+                    <h2 className="text-lg font-black text-primary tracking-tight">Community Discussion</h2>
                 </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
                 {posts.map((post, idx) => (
-                    <div key={idx} className={`p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer ${idx !== posts.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-slate-100 shadow-sm">
+                    <div key={idx} className={`p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer ${idx !== posts.length - 1 ? 'border-b border-border' : ''}`}>
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-border shadow-sm">
                             <Image src={post.authorAvatar || "/student.png"} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
                         </div>
                         <div className="space-y-1">
-                            <h4 className="text-sm font-black text-slate-900 leading-tight line-clamp-2">
+                            <h4 className="text-sm font-black text-foreground leading-tight line-clamp-2">
                                 {post.title}
                             </h4>
-                            <p className="text-[11px] text-slate-500 font-bold line-clamp-2 opacity-80 leading-relaxed">
+                            <p className="text-[11px] text-secondary font-bold line-clamp-2 opacity-80 leading-relaxed">
                                 {post.preview}
                             </p>
                             <div className="flex items-center gap-3 pt-1">
                                 {post.hasExpertReply && (
-                                    <span className="flex items-center gap-1 text-[9px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full uppercase">
+                                    <span className="flex items-center gap-1 text-[9px] font-black text-primary bg-rose-50 px-2 py-0.5 rounded-full uppercase">
                                         <CheckCircle2 size={10} /> Expert Reply
                                     </span>
                                 )}
-                                <span className="text-[9px] font-bold text-slate-400 uppercase">
+                                <span className="text-[9px] font-bold text-secondary/40 uppercase">
                                     {post.repliesCount} Replies
                                 </span>
                             </div>
@@ -146,9 +146,9 @@ export const CommunityDiscussion = ({ posts }: { posts: any[] }) => {
                 ))}
             </div>
 
-            <div className="p-4 border-t border-slate-50">
+            <div className="p-4 border-t border-border">
                 <Link href="/dashboard/forum">
-                    <Button variant="ghost" className="w-full text-sm font-black text-slate-500 hover:text-rose-500 transition-colors">
+                    <Button variant="ghost" className="w-full text-sm font-black text-secondary hover:text-primary transition-colors">
                         Join the Discussion
                     </Button>
                 </Link>
@@ -169,8 +169,8 @@ export const AISmartPlanner = ({ task, onComplete }: { task: PlannerTask, onComp
     };
 
     return (
-        <Card className="bg-white border-slate-100 shadow-sm p-6 rounded-3xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 text-rose-500/10 group-hover:scale-110 transition-transform">
+        <Card className="bg-card border-border shadow-sm p-6 rounded-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 text-primary/10 group-hover:scale-110 transition-transform">
                 <TrendingUp size={80} strokeWidth={4} />
             </div>
 
@@ -178,26 +178,26 @@ export const AISmartPlanner = ({ task, onComplete }: { task: PlannerTask, onComp
                 <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-500">
                     <TrendingUp size={18} />
                 </div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">AI Smart Planner</h2>
+                <h2 className="text-lg font-black text-primary tracking-tight">AI Smart Planner</h2>
             </div>
 
             <div className="flex items-center gap-6 relative z-10">
-                <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 shadow-inner">
+                <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-primary shadow-inner">
                     <Clock size={24} />
                 </div>
                 <div className="flex-1 space-y-4">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{task.subtitle}</p>
-                        <h3 className="text-base font-black text-slate-900 leading-tight">{task.title}</h3>
+                        <p className="text-[10px] font-bold text-secondary/40 uppercase tracking-widest">{task.subtitle}</p>
+                        <h3 className="text-base font-black text-foreground leading-tight">{task.title}</h3>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                            <span className="text-[10px] font-black text-slate-500 uppercase">Daily Goal: {task.progress}% Completed</span>
+                            <span className="text-[10px] font-black text-secondary uppercase">Daily Goal: {task.progress}% Completed</span>
                         </div>
                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-rose-500 rounded-full transition-all duration-1000 ease-out"
+                                className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
                                 style={{ width: `${task.progress}%` }}
                             />
                         </div>
@@ -205,7 +205,7 @@ export const AISmartPlanner = ({ task, onComplete }: { task: PlannerTask, onComp
                 </div>
 
                 <Link href={task.actionUrl} className="shrink-0" onClick={handleAction}>
-                    <Button className="bg-rose-500 hover:bg-rose-600 text-white font-black rounded-xl px-4 py-6 shadow-lg shadow-rose-500/20 active:translate-y-0.5 transition-all text-[11px] uppercase tracking-tighter flex items-center gap-2">
+                    <Button className="bg-primary hover:bg-primary-hover text-white font-black rounded-xl px-4 py-6 shadow-lg shadow-rose-500/20 active:translate-y-0.5 transition-all text-[11px] uppercase tracking-tighter flex items-center gap-2">
                         <CheckCircle2 size={14} /> {task.actionText}
                     </Button>
                 </Link>
@@ -245,21 +245,21 @@ export const PerformanceAnalytics = ({ score, trend, history = [] }: { score: nu
     const fillPathString = `${pathString} L 500 100 L 0 100 Z`;
     return (
         <Link href="/dashboard/analytics" className="block group">
-            <Card className="bg-white border-slate-100 shadow-sm p-6 rounded-3xl flex flex-col hover:shadow-md transition-all hover:border-rose-100">
+            <Card className="bg-card border-border shadow-sm p-6 rounded-3xl flex flex-col hover:shadow-md transition-all hover:border-rose-100">
                 <div className="flex justify-between items-center mb-6 md:mb-8">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-500">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                             <TrendingUp size={18} />
                         </div>
-                        <h2 className="text-lg font-black text-slate-900 tracking-tight">Analytics</h2>
+                        <h2 className="text-lg font-black text-primary tracking-tight">Analytics</h2>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-black text-slate-900">Score Trend</h3>
-                            <div className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                            <h3 className="text-sm font-black text-foreground">Score Trend</h3>
+                            <div className="text-[10px] font-bold text-secondary/40 bg-slate-50 px-2 py-1 rounded-md border border-border">
                                 Last 30 Days ▾
                             </div>
                         </div>
@@ -299,10 +299,10 @@ export const PerformanceAnalytics = ({ score, trend, history = [] }: { score: nu
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex justify-between items-center">
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-border flex justify-between items-center">
                         <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Projected NCET Score</p>
-                            <h4 className="text-2xl font-black text-slate-900">{score}</h4>
+                            <p className="text-[9px] font-black text-secondary/40 uppercase tracking-widest mb-1">Projected NCET Score</p>
+                            <h4 className="text-2xl font-black text-foreground">{score}</h4>
                         </div>
                         <div className="text-right">
                             <span className="text-[10px] font-black text-emerald-500">+{trend}%</span>
@@ -311,7 +311,7 @@ export const PerformanceAnalytics = ({ score, trend, history = [] }: { score: nu
 
                     {/* View Details CTA */}
                     <div className="text-center pt-2">
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest group-hover:underline transition-all">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest group-hover:underline transition-all">
                             View Detailed Analytics →
                         </span>
                     </div>
@@ -342,14 +342,14 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-500">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                     <BookOpen size={18} />
                 </div>
-                <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Resource Library</h2>
+                <h2 className="text-lg md:text-xl font-black text-primary tracking-tight">Resource Library</h2>
             </div>
 
-            <Card className="bg-white border-slate-100 shadow-sm rounded-3xl overflow-hidden">
-                <div className="flex border-b border-slate-100 px-4 md:px-6 overflow-x-auto no-scrollbar scroll-smooth">
+            <Card className="bg-card border-border shadow-sm rounded-3xl overflow-hidden">
+                <div className="flex border-b border-border px-4 md:px-6 overflow-x-auto no-scrollbar scroll-smooth">
                     <div className="flex flex-nowrap min-w-full">
                         {tabs.map((tab) => (
                             <button
@@ -357,14 +357,14 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
                                     flex items-center gap-2 px-4 md:px-6 py-4 text-[10px] md:text-xs font-black uppercase tracking-tight transition-all relative whitespace-nowrap flex-shrink-0 focus:outline-none
-                                    ${activeTab === tab.id ? 'text-rose-500' : 'text-slate-400 hover:text-slate-600'}
+                                    ${activeTab === tab.id ? 'text-primary' : 'text-secondary/40 hover:text-slate-600'}
                                 `}
                             >
                                 {tab.icon}
                                 <span className="hidden sm:inline-block">{tab.label}</span>
                                 <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                                 {activeTab === tab.id && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500 rounded-t-full" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full" />
                                 )}
                             </button>
                         ))}
@@ -378,7 +378,7 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
                             {videos && videos.length > 0 ? (
                                 videos.slice(0, 3).map((video, idx) => (
                                     <a key={idx} href={video.url} target="_blank" rel="noopener noreferrer" className="group block h-full">
-                                        <div className="bg-white border text-left border-slate-100 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-rose-100 transition-all h-full flex flex-col">
+                                        <div className="bg-card border text-left border-border p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-rose-100 transition-all h-full flex flex-col">
                                             <div className="aspect-video w-full bg-slate-100 rounded-xl mb-3 relative overflow-hidden flex-shrink-0">
                                                 {video.thumbnailUrl ? (
                                                     <Image src={video.thumbnailUrl} alt={video.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -388,21 +388,21 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
                                                     </div>
                                                 )}
                                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                                    <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-rose-500 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all">
+                                                    <div className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-primary opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all">
                                                         <Video size={16} className="ml-1" />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-tight flex-grow group-hover:text-rose-600 transition-colors">{video.title}</h4>
+                                            <h4 className="text-xs font-bold text-foreground line-clamp-2 leading-tight flex-grow group-hover:text-rose-600 transition-colors">{video.title}</h4>
                                             {video.subject && (
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 shrink-0">{video.subject}</p>
+                                                <p className="text-[10px] font-black text-secondary/40 uppercase tracking-widest mt-2 shrink-0">{video.subject}</p>
                                             )}
                                         </div>
                                     </a>
                                 ))
                             ) : (
                                 <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-slate-300">
-                                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                                    <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center mb-4 shadow-sm border border-border">
                                         <Video size={24} />
                                     </div>
                                     <p className="text-sm font-bold uppercase tracking-widest leading-relaxed">No Recent Videos</p>
@@ -416,19 +416,19 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {books && books.length > 0 ? (
                                 books.slice(0, 3).map((book, idx) => (
-                                    <a key={idx} href={book.url} target="_blank" rel="noopener noreferrer" className="bg-white text-left border border-slate-100 p-4 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 hover:bg-emerald-50/30 transition-all group flex items-start gap-4 h-full">
+                                    <a key={idx} href={book.url} target="_blank" rel="noopener noreferrer" className="bg-card text-left border border-border p-4 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 hover:bg-emerald-50/30 transition-all group flex items-start gap-4 h-full">
                                         <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-110 transition-transform">
                                             <FileText size={20} />
                                         </div>
                                         <div>
-                                            <h4 className="text-xs font-bold text-slate-800 line-clamp-2 mb-1 leading-tight group-hover:text-emerald-700">{book.title}</h4>
-                                            <p className="text-[10px] font-black text-slate-400 shrink-0 uppercase tracking-widest">{book.subject}</p>
+                                            <h4 className="text-xs font-bold text-foreground line-clamp-2 mb-1 leading-tight group-hover:text-emerald-700">{book.title}</h4>
+                                            <p className="text-[10px] font-black text-secondary/40 shrink-0 uppercase tracking-widest">{book.subject}</p>
                                         </div>
                                     </a>
                                 ))
                             ) : (
                                 <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-slate-300">
-                                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                                    <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center mb-4 shadow-sm border border-border">
                                         <FileText size={24} />
                                     </div>
                                     <p className="text-sm font-bold uppercase tracking-widest leading-relaxed">No Notes Available</p>
@@ -442,20 +442,20 @@ export const ResourceLibrary = ({ books, formulaCards, videos }: ResourceLibrary
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {formulaCards && formulaCards.length > 0 ? (
                                 formulaCards.slice(0, 3).map((card, idx) => (
-                                    <a key={idx} href={card.url || '#'} target="_blank" rel="noopener noreferrer" className="bg-white text-left border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-violet-100 hover:bg-violet-50/30 transition-all group flex flex-col h-full relative overflow-hidden">
+                                    <a key={idx} href={card.url || '#'} target="_blank" rel="noopener noreferrer" className="bg-card text-left border border-border p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-violet-100 hover:bg-violet-50/30 transition-all group flex flex-col h-full relative overflow-hidden">
                                         <div className="absolute -right-4 -top-4 w-16 h-16 bg-violet-50 rounded-full group-hover:scale-150 transition-transform duration-500" />
                                         <div className="flex items-center gap-3 mb-3 relative z-10">
                                             <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600 shrink-0">
                                                 <FileSignature size={14} />
                                             </div>
-                                            <p className="text-[10px] font-black text-slate-400 shrink-0 uppercase tracking-widest">{card.subject}</p>
+                                            <p className="text-[10px] font-black text-secondary/40 shrink-0 uppercase tracking-widest">{card.subject}</p>
                                         </div>
-                                        <h4 className="text-sm font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-violet-700 relative z-10 flex-grow">{card.title}</h4>
+                                        <h4 className="text-sm font-bold text-foreground line-clamp-2 leading-tight group-hover:text-violet-700 relative z-10 flex-grow">{card.title}</h4>
                                     </a>
                                 ))
                             ) : (
                                 <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-slate-300">
-                                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                                    <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center mb-4 shadow-sm border border-border">
                                         <FileSignature size={24} />
                                     </div>
                                     <p className="text-sm font-bold uppercase tracking-widest leading-relaxed">No Formula Sheets</p>
