@@ -157,7 +157,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-6">
-                        <NotificationBell />
+                        <div className="flex items-center gap-4">
+                            <NotificationBell />
+                            <Link href="/dashboard/settings" className="md:hidden text-secondary hover:text-primary transition-colors">
+                                <Settings size={20} />
+                            </Link>
+                        </div>
 
                         <div className="h-10 w-[1px] bg-border hidden md:block" />
 
