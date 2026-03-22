@@ -4,7 +4,7 @@
 
 :root {
   --background: #FFFFFF;
-  --foreground: #000000;
+  --foreground: #020617;
   --primary: #E11D48;
   --primary-hover: #BE123C;
   --card-bg: #FFFFFF;
@@ -17,10 +17,26 @@
   --urgency-math: #E11D48;
 }
 
+.dark {
+  --background: #020617; /* Slate 950 - Blackish */
+  --foreground: #F8FAFC; /* Slate 50 */
+  --primary: #38bdf8;    /* Sky 400 - Radiant Blue */
+  --primary-hover: #0ea5e9; /* Sky 500 */
+  --card-bg: #0f172a;    /* Slate 900 - Dark Navy */
+  --text-secondary: #94A3B8; /* Slate 400 */
+  --error: #F43F5E;
+  --success: #10B981;
+  --border: #1E293B;     /* Slate 800 */
+  --primary-math: #60a5fa;
+  --accent-math: #fbbf24;
+  --urgency-math: #fb7185;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom Scrollbar */
