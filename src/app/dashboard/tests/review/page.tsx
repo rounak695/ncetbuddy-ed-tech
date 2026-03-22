@@ -191,6 +191,8 @@ function TestReviewContent() {
     const correctCount = test.questions.filter((q, idx) => userAnswers[idx] === q.correctAnswer).length;
     const incorrectCount = Object.keys(userAnswers).length - correctCount;
     const unattempted = totalQuestions - Object.keys(userAnswers).length;
+    const attemptedCount = correctCount + incorrectCount;
+    const accuracy = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
 
     // Time Analysis Calculations
     const timeByStatus = {
@@ -422,7 +424,7 @@ function TestReviewContent() {
                         <ScoreCard
                             icon="🎯"
                             label="Accuracy"
-                            value={`${percentage}%`}
+                            value={`${accuracy}%`}
                             color="#3B82F6"
                             bgColor="#DBEAFE"
                             subtext={timeTaken > 0 ? formatTime(timeTaken) : '—'}
@@ -482,7 +484,7 @@ function TestReviewContent() {
                             <h3 className="text-sm font-black uppercase tracking-widest text-black/60 mb-4">Performance Metrics</h3>
                             <div className="space-y-4">
                                 <MetricBar label="Score" value={score} max={maxScore} color="#FFD02F" />
-                                <MetricBar label="Accuracy" value={percentage} max={100} color="#3B82F6" suffix="%" />
+                                <MetricBar label="Accuracy" value={accuracy} max={100} color="#3B82F6" suffix="%" />
                                 {performance && (
                                     <>
                                         <MetricBar label="Percentile" value={performance.percentile} max={100} color={getPercentileColor(performance.percentile)} suffix="%" />
@@ -585,7 +587,7 @@ function TestReviewContent() {
                         </div>
                         <div className="w-px h-8 bg-white/20 hidden md:block"></div>
                         <div>
-                            <div className="text-2xl font-black text-primary">{percentage}%</div>
+                            <div className="text-2xl font-black text-primary">{accuracy}%</div>
                             <div className="text-[10px] uppercase tracking-widest opacity-60">Accuracy</div>
                         </div>
                     </div>
