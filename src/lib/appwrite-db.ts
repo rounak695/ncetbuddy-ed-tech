@@ -689,9 +689,9 @@ export interface PlannerTask {
     progress: number;
 }
 
-export const getDynamicPlannerTask = async (userId: string, completedTasks: string[] = []): Promise<PlannerTask> => {
+export const getDynamicPlannerTask = async (userId: string, completedTasks: string[] = [], preFetchedResults?: TestResult[]): Promise<PlannerTask> => {
     try {
-        const results = await getUserTestResults(userId);
+        const results = preFetchedResults || await getUserTestResults(userId);
 
         // Base case: No tests taken yet
         if (!results || results.length === 0) {
