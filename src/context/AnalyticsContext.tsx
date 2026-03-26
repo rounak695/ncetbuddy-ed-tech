@@ -16,6 +16,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     const pathname = usePathname();
     const sessionIdRef = useRef<string | null>(null);
+    const pageVisitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Session Management
     useEffect(() => {
@@ -45,8 +46,6 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const handleUnload = () => {
             if (sessionIdRef.current) {
-                // Determine if we can rely on async or should do minimal beacon
-                // Appwrite SDK might not clear in time, but we try.
                 endUserSession(sessionIdRef.current);
             }
         };
@@ -55,18 +54,30 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('beforeunload', handleUnload);
     }, []);
 
-    // Track Page Visits
+    // Track Page Visits — debounced to reduce DB reads
+    // Only logs if user stays on the page for >= 2 seconds
     useEffect(() => {
         if (!user || loading) return;
 
-        // Log page view event
-        logUserEvent({
-            userId: user.$id,
-            eventType: 'page_visit',
-            pageName: pathname,
-            // metadata: JSON.stringify({ referrer: document.referrer }) // Optional
-        });
+        // Clear any pending page visit from previous route
+        if (pageVisitTimerRef.current) {
+            clearTimeout(pageVisitTimerRef.current);
+        }
 
+        // Debounce: only log after 2 seconds on the same page
+        pageVisitTimerRef.current = setTimeout(() => {
+            logUserEvent({
+                userId: user.$id,
+                eventType: 'page_visit',
+                pageName: pathname,
+            });
+        }, 2000);
+
+        return () => {
+            if (pageVisitTimerRef.current) {
+                clearTimeout(pageVisitTimerRef.current);
+            }
+        };
     }, [pathname, user, loading]);
 
     const trackEvent = async (eventType: UserEvent['eventType'], pageName?: string, metadata?: string) => {
@@ -94,3 +105,4 @@ export const useAnalytics = () => {
     }
     return context;
 };
+

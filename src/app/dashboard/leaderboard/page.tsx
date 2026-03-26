@@ -57,19 +57,22 @@ export default function LeaderboardPage() {
     useEffect(() => {
         fetchLeaderboardData();
 
-        // Subscribe to realtime updates for test results
+        // Subscribe to realtime updates for test results (throttled)
         let unsubscribe: (() => void) | undefined;
+        let lastRefreshTime = 0;
+        const THROTTLE_MS = 60 * 1000; // At most one refresh per 60 seconds
 
         try {
             const channel = `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db'}.collections.test-results.documents`;
-            console.log("Subscribing to Leaderboard updates on channel:", channel);
 
             unsubscribe = client.subscribe(channel, (response) => {
-                console.log("Leaderboard Realtime Event:", response);
                 const eventType = response.events[0];
                 if (eventType.includes('.create')) {
-                    console.log("Refreshing leaderboard due to new test result...");
-                    fetchLeaderboardData(true); // Background update
+                    const now = Date.now();
+                    if (now - lastRefreshTime > THROTTLE_MS) {
+                        lastRefreshTime = now;
+                        fetchLeaderboardData(true); // Background update
+                    }
                 }
             });
         } catch (error) {

@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { account, databases, isAppwriteConfigured } from "@/lib/appwrite-student";
 import { Models } from "appwrite";
 import { useRouter } from "next/navigation";
+import { clearAllCache } from "@/lib/appwrite-cache";
 
 // Define User Type based on Appwrite Account + Custom Preferences/Document
 interface AuthContextType {
@@ -95,6 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = async () => {
         try {
             await account.deleteSession('current');
+            clearAllCache();
             setUser(null);
             setRole(null);
             router.push("/login");

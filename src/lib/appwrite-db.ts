@@ -1,6 +1,7 @@
 import { databases, storage, isAppwriteConfigured } from "./appwrite-student";
 import { ID, Query, Models } from "appwrite";
 import { Test, Book, FormulaCard, Notification, PYQ, SiteSettings, UserProfile, TestResult, VideoClass, Educator, VideoProgress, Purchase, Payment, EducatorVideo, EducatorStats, UserEvent, UserAnalytics, TestRankEntry, TestPerformanceSummary, QuestionAnalysis, AdminTestAnalytics, ForumPost, ForumComment, ForumCategory, CarouselBanner } from "@/types";
+import { cachedFetch, invalidateCache, invalidateCacheByPrefix, CacheKeys, CACHE_TTL } from "./appwrite-cache";
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'ncet-buddy-db';
 
@@ -72,42 +73,44 @@ export const deleteBanner = async (id: string) => {
 // --- Tests ---
 export const getTests = async (): Promise<Test[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'tests', [
-            Query.limit(5000),
-            Query.orderDesc('createdAt')
-        ]);
-        return response.documents.map(doc => {
-            let questions = doc.questions;
-            try {
-                while (typeof questions === 'string') {
-                    questions = JSON.parse(questions);
+    return cachedFetch(CacheKeys.tests(), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'tests', [
+                Query.limit(5000),
+                Query.orderDesc('createdAt')
+            ]);
+            return response.documents.map(doc => {
+                let questions = doc.questions;
+                try {
+                    while (typeof questions === 'string') {
+                        questions = JSON.parse(questions);
+                    }
+                } catch (e) {
+                    console.error("Error parsing questions for test:", doc.$id, e);
+                    questions = [];
                 }
-            } catch (e) {
-                console.error("Error parsing questions for test:", doc.$id, e);
-                questions = [];
-            }
-            let subjectAllocations = doc.subjectAllocations;
-            try {
-                if (typeof subjectAllocations === 'string') {
-                    subjectAllocations = JSON.parse(subjectAllocations);
+                let subjectAllocations = doc.subjectAllocations;
+                try {
+                    if (typeof subjectAllocations === 'string') {
+                        subjectAllocations = JSON.parse(subjectAllocations);
+                    }
+                } catch (e) {
+                    console.error("Error parsing subjectAllocations for test:", doc.$id, e);
+                    subjectAllocations = [];
                 }
-            } catch (e) {
-                console.error("Error parsing subjectAllocations for test:", doc.$id, e);
-                subjectAllocations = [];
-            }
 
-            return {
-                id: doc.$id,
-                ...doc,
-                questions: Array.isArray(questions) ? questions : [],
-                subjectAllocations: Array.isArray(subjectAllocations) ? subjectAllocations : doc.isFullSyllabus ? subjectAllocations : undefined
-            };
-        }) as unknown as Test[];
-    } catch (error) {
-        console.error("Error fetching tests:", error);
-        return [];
-    }
+                return {
+                    id: doc.$id,
+                    ...doc,
+                    questions: Array.isArray(questions) ? questions : [],
+                    subjectAllocations: Array.isArray(subjectAllocations) ? subjectAllocations : doc.isFullSyllabus ? subjectAllocations : undefined
+                };
+            }) as unknown as Test[];
+        } catch (error) {
+            console.error("Error fetching tests:", error);
+            return [];
+        }
+    }, CACHE_TTL.STATIC);
 };
 
 export const getTestById = async (id: string): Promise<Test | null> => {
@@ -241,6 +244,7 @@ export const createTest = async (test: Omit<Test, "id">): Promise<{ id?: string,
 export const deleteTest = async (testId: string): Promise<boolean> => {
     try {
         await databases.deleteDocument(DB_ID, 'tests', testId);
+        invalidateCache(CacheKeys.tests());
         return true;
     } catch (error) {
         console.error("Error deleting test:", error);
@@ -251,9 +255,9 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
 export const updateTest = async (testId: string, data: Partial<Test>): Promise<boolean> => {
     try {
         const { id, ...updateData } = data; // Remove ID from payload if present
-        
         try {
             await databases.updateDocument(DB_ID, 'tests', testId, updateData);
+            invalidateCache(CacheKeys.tests());
             return true;
         } catch (initialError: any) {
             console.error("Initial updateTest failed detailed:", initialError);
@@ -290,6 +294,7 @@ export const updateTest = async (testId: string, data: Partial<Test>): Promise<b
                 if (attemptedFallback) {
                     try {
                         await databases.updateDocument(DB_ID, 'tests', testId, fallbackData);
+                        invalidateCache(CacheKeys.tests());
                         return true;
                     } catch (retryError: any) {
                         console.error("Fallback updateTest also failed:", retryError);
@@ -407,6 +412,12 @@ export const saveTestResult = async (result: Partial<TestResult> & { correctCoun
             const questionsAttempted = dataToSave.totalQuestions || 0;
             // Actually saveTestResult is called after test completion.
             await updateStreakAndDaily(dataToSave.userId, questionsAttempted);
+
+            // Invalidate caches that depend on test results
+            invalidateCache(CacheKeys.userTestResults(dataToSave.userId));
+            invalidateCache(CacheKeys.leaderboardSummary(dataToSave.userId));
+            invalidateCache(CacheKeys.leaderboard());
+            invalidateCache(CacheKeys.dailyProgress(dataToSave.userId));
         }
 
     } catch (error) {
@@ -417,53 +428,40 @@ export const saveTestResult = async (result: Partial<TestResult> & { correctCoun
 
 export const getLeaderboard = async (limit: number = 10): Promise<UserProfile[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        // 1. Fetch all users (needed for names)
-        // We fetch a larger limit to ensure we cover the active user base
-        const usersResponse = await databases.listDocuments(DB_ID, 'users', [
-            Query.limit(100)
-        ]);
-        const users = usersResponse.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+    return cachedFetch(CacheKeys.leaderboard(), async () => {
+        try {
+            const usersResponse = await databases.listDocuments(DB_ID, 'users', [
+                Query.limit(100)
+            ]);
+            const users = usersResponse.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
 
-        // 2. Fetch all test results
-        // We fetch a large number to ensure we have the full history for accurate scoring
-        const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
-            Query.limit(5000),
-            Query.select(['userId', 'score']) // Optimize fetch to only needed fields if possible
-        ]);
+            const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
+                Query.limit(5000),
+                Query.select(['userId', 'score'])
+            ]);
 
-        // 3. Aggregate scores in memory
-        const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
-
-        resultsResponse.documents.forEach((doc: any) => {
-            const uid = doc.userId;
-            const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
-            userStats.set(uid, {
-                totalScore: current.totalScore + (Number(doc.score) || 0),
-                testsAttempted: current.testsAttempted + 1
+            const userStats = new Map<string, { totalScore: number, testsAttempted: number }>();
+            resultsResponse.documents.forEach((doc: any) => {
+                const uid = doc.userId;
+                const current = userStats.get(uid) || { totalScore: 0, testsAttempted: 0 };
+                userStats.set(uid, {
+                    totalScore: current.totalScore + (Number(doc.score) || 0),
+                    testsAttempted: current.testsAttempted + 1
+                });
             });
-        });
 
-        // 4. Merge stats into users and sort
-        const leaderboard = users.map(user => {
-            const stats = userStats.get(user.uid) || { totalScore: 0, testsAttempted: 0 };
-            return {
-                ...user,
-                totalScore: stats.totalScore,
-                testsAttempted: stats.testsAttempted
-            };
-        });
+            const leaderboard = users.map(user => {
+                const stats = userStats.get(user.uid) || { totalScore: 0, testsAttempted: 0 };
+                return { ...user, totalScore: stats.totalScore, testsAttempted: stats.testsAttempted };
+            });
 
-        // 5. Sort by Total Score (Descending)
-        leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-
-        // 6. Return top N
-        return leaderboard.slice(0, limit);
-
-    } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-        return [];
-    }
+            leaderboard.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+            return leaderboard.slice(0, limit);
+        } catch (error) {
+            console.error("Error fetching leaderboard:", error);
+            return [];
+        }
+    }, CACHE_TTL.AGGREGATE);
 };
 
 /**
@@ -493,6 +491,7 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         return { topPerformer: null, userStanding: null, totalParticipants: 0 };
     }
 
+    return cachedFetch(CacheKeys.leaderboardSummary(currentUserId), async () => {
     try {
         // 1. Fetch all users
         const usersResponse = await databases.listDocuments(DB_ID, 'users', [
@@ -645,40 +644,43 @@ export const getLeaderboardSummary = async (currentUserId: string): Promise<{
         console.error("Error fetching leaderboard summary:", error);
         return { topPerformer: null, userStanding: null, totalParticipants: 0 };
     }
+    }, CACHE_TTL.AGGREGATE);
 };
 
 
 export const getUserTestResults = async (userId: string): Promise<TestResult[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'test-results', [
-            Query.equal('userId', userId),
-            Query.orderDesc('completedAt')
-        ]);
-        const results = response.documents.map(doc => {
-            const { answers, questionTimes, timeTaken } = parsePackedResult(doc);
-            return {
-                id: doc.$id,
-                ...doc,
-                answers,
-                questionTimes,
-                timeTaken
-            };
-        }) as unknown as TestResult[];
+    return cachedFetch(CacheKeys.userTestResults(userId), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'test-results', [
+                Query.equal('userId', userId),
+                Query.orderDesc('completedAt')
+            ]);
+            const results = response.documents.map(doc => {
+                const { answers, questionTimes, timeTaken } = parsePackedResult(doc);
+                return {
+                    id: doc.$id,
+                    ...doc,
+                    answers,
+                    questionTimes,
+                    timeTaken
+                };
+            }) as unknown as TestResult[];
 
-        // Deduplicate: same testId, score, and minute window
-        const seenKeys = new Set<string>();
-        return results.filter(r => {
-            const timeWindow = Math.floor(r.completedAt / 60);
-            const key = `${r.testId}-${timeWindow}-${r.score}`;
-            if (seenKeys.has(key)) return false;
-            seenKeys.add(key);
-            return true;
-        });
-    } catch (error) {
-        console.error("Error fetching user test results:", error);
-        return [];
-    }
+            // Deduplicate: same testId, score, and minute window
+            const seenKeys = new Set<string>();
+            return results.filter(r => {
+                const timeWindow = Math.floor(r.completedAt / 60);
+                const key = `${r.testId}-${timeWindow}-${r.score}`;
+                if (seenKeys.has(key)) return false;
+                seenKeys.add(key);
+                return true;
+            });
+        } catch (error) {
+            console.error("Error fetching user test results:", error);
+            return [];
+        }
+    }, CACHE_TTL.USER);
 };
 
 export interface PlannerTask {
@@ -781,21 +783,24 @@ export const markTaskDone = async (userId: string, taskTitle: string) => {
 // --- Books / Notes ---
 export const getBooks = async (): Promise<Book[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'books', [
-            Query.limit(5000),
-            Query.orderDesc('createdAt')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Book[];
-    } catch (error) {
-        console.error("Error fetching books:", error);
-        return [];
-    }
+    return cachedFetch(CacheKeys.books(), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'books', [
+                Query.limit(5000),
+                Query.orderDesc('createdAt')
+            ]);
+            return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Book[];
+        } catch (error) {
+            console.error("Error fetching books:", error);
+            return [];
+        }
+    }, CACHE_TTL.STATIC);
 };
 
 export const createBook = async (book: Omit<Book, "id">) => {
     try {
         await databases.createDocument(DB_ID, 'books', ID.unique(), book);
+        invalidateCache(CacheKeys.books());
     } catch (error) {
         console.error("Error creating book:", error);
         throw error;
@@ -805,6 +810,7 @@ export const createBook = async (book: Omit<Book, "id">) => {
 export const deleteBook = async (id: string) => {
     try {
         await databases.deleteDocument(DB_ID, 'books', id);
+        invalidateCache(CacheKeys.books());
     } catch (error) {
         console.error("Error deleting book:", error);
         throw error;
@@ -814,6 +820,7 @@ export const deleteBook = async (id: string) => {
 export const updateBook = async (id: string, data: Partial<Book>) => {
     try {
         await databases.updateDocument(DB_ID, 'books', id, data);
+        invalidateCache(CacheKeys.books());
     } catch (error) {
         console.error("Error updating book:", error);
         throw error;
@@ -823,21 +830,24 @@ export const updateBook = async (id: string, data: Partial<Book>) => {
 // --- Formula Cards ---
 export const getFormulaCards = async (): Promise<FormulaCard[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'formula_cards', [
-            Query.limit(5000),
-            Query.orderDesc('createdAt')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as FormulaCard[];
-    } catch (error) {
-        console.error("Error fetching formula cards:", error);
-        return [];
-    }
+    return cachedFetch(CacheKeys.formulaCards(), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'formula_cards', [
+                Query.limit(5000),
+                Query.orderDesc('createdAt')
+            ]);
+            return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as FormulaCard[];
+        } catch (error) {
+            console.error("Error fetching formula cards:", error);
+            return [];
+        }
+    }, CACHE_TTL.STATIC);
 };
 
 export const createFormulaCard = async (card: Omit<FormulaCard, "id">) => {
     try {
         await databases.createDocument(DB_ID, 'formula_cards', ID.unique(), card);
+        invalidateCache(CacheKeys.formulaCards());
     } catch (error) {
         console.error("Error creating formula card:", error);
         throw error;
@@ -847,6 +857,7 @@ export const createFormulaCard = async (card: Omit<FormulaCard, "id">) => {
 export const deleteFormulaCard = async (id: string) => {
     try {
         await databases.deleteDocument(DB_ID, 'formula_cards', id);
+        invalidateCache(CacheKeys.formulaCards());
     } catch (error) {
         console.error("Error deleting formula card:", error);
         throw error;
@@ -856,6 +867,7 @@ export const deleteFormulaCard = async (id: string) => {
 export const updateFormulaCard = async (id: string, data: Partial<FormulaCard>) => {
     try {
         await databases.updateDocument(DB_ID, 'formula_cards', id, data);
+        invalidateCache(CacheKeys.formulaCards());
     } catch (error) {
         console.error("Error updating formula card:", error);
         throw error;
@@ -865,16 +877,18 @@ export const updateFormulaCard = async (id: string, data: Partial<FormulaCard>) 
 // --- PYQs ---
 export const getPYQs = async (): Promise<PYQ[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'pyqs', [
-            Query.limit(5000),
-            Query.orderDesc('year')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as PYQ[];
-    } catch (error) {
-        console.error("Error fetching PYQs:", error);
-        return [];
-    }
+    return cachedFetch('pyqs_list', async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'pyqs', [
+                Query.limit(5000),
+                Query.orderDesc('year')
+            ]);
+            return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as PYQ[];
+        } catch (error) {
+            console.error("Error fetching PYQs:", error);
+            return [];
+        }
+    }, CACHE_TTL.STATIC);
 };
 
 export const createPYQ = async (pyq: Omit<PYQ, "id">) => {
@@ -898,16 +912,18 @@ export const deletePYQ = async (id: string) => {
 // --- Users ---
 export const getUsers = async (): Promise<UserProfile[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'users', [
-            Query.limit(5000),
-            Query.orderDesc('$createdAt')
-        ]);
-        return response.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
-    } catch (error) {
-        console.error("Error fetching users:", error);
-        return [];
-    }
+    return cachedFetch('users_list', async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'users', [
+                Query.limit(5000),
+                Query.orderDesc('$createdAt')
+            ]);
+            return response.documents.map(doc => ({ uid: doc.$id, ...doc })) as unknown as UserProfile[];
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            return [];
+        }
+    }, CACHE_TTL.USER);
 };
 
 export const updateUser = async (uid: string, data: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
@@ -977,16 +993,18 @@ export const updateUser = async (uid: string, data: Partial<UserProfile>): Promi
 // --- Notifications ---
 export const getNotifications = async (): Promise<Notification[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'notifications', [
-            Query.limit(5000),
-            Query.orderDesc('createdAt')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Notification[];
-    } catch (error) {
-        console.error("Error fetching notifications:", error);
-        return [];
-    }
+    return cachedFetch(CacheKeys.notifications(), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'notifications', [
+                Query.limit(5000),
+                Query.orderDesc('createdAt')
+            ]);
+            return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as Notification[];
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            return [];
+        }
+    }, CACHE_TTL.SOCIAL);
 };
 
 export const createNotification = async (notification: Omit<Notification, "id">) => {
@@ -1039,16 +1057,18 @@ export const saveSettings = async (settings: SiteSettings) => {
 // --- Video Classes ---
 export const getVideoClasses = async (): Promise<VideoClass[]> => {
     if (!isAppwriteConfigured()) return [];
-    try {
-        const response = await databases.listDocuments(DB_ID, 'videos', [
-            Query.limit(5000),
-            Query.orderDesc('createdAt')
-        ]);
-        return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as VideoClass[];
-    } catch (error) {
-        console.error("Error fetching video classes:", error);
-        return [];
-    }
+    return cachedFetch(CacheKeys.videoClasses(), async () => {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'videos', [
+                Query.limit(5000),
+                Query.orderDesc('createdAt')
+            ]);
+            return response.documents.map(doc => ({ id: doc.$id, ...doc })) as unknown as VideoClass[];
+        } catch (error) {
+            console.error("Error fetching video classes:", error);
+            return [];
+        }
+    }, CACHE_TTL.STATIC);
 };
 
 export const createVideoClass = async (video: Omit<VideoClass, "id">) => {
@@ -1122,20 +1142,22 @@ export const getAllEducators = async (): Promise<Educator[]> => {
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     if (!isAppwriteConfigured()) return null;
-    try {
-        // First try 'user_profiles' (preferred)
+    return cachedFetch(CacheKeys.userProfile(userId), async () => {
         try {
-            const doc = await databases.getDocument(DB_ID, 'user_profiles', userId);
-            return { uid: doc.$id, ...doc } as unknown as UserProfile;
-        } catch (e) {
-            // Fallback to 'users' if legacy or not migrated
-            const doc = await databases.getDocument(DB_ID, 'users', userId);
-            return { uid: doc.$id, ...doc } as unknown as UserProfile;
+            // First try 'user_profiles' (preferred)
+            try {
+                const doc = await databases.getDocument(DB_ID, 'user_profiles', userId);
+                return { uid: doc.$id, ...doc } as unknown as UserProfile;
+            } catch (e) {
+                // Fallback to 'users' if legacy or not migrated
+                const doc = await databases.getDocument(DB_ID, 'users', userId);
+                return { uid: doc.$id, ...doc } as unknown as UserProfile;
+            }
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+            return null;
         }
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        return null;
-    }
+    }, CACHE_TTL.USER);
 };
 
 export const getVideoProgress = async (studentId: string, educatorId: string): Promise<VideoProgress[]> => {
@@ -1820,8 +1842,8 @@ export const getTestPerformanceSummary = async (testId: string, currentUserId: s
 
 
 // Simple in-memory cache for global stats to improve performance
-const globalStatsCache = new Map<string, { analysis: any[], timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const globalStatsCache = new Map<string, { analysis: any[], questions: any[], timestamp: number }>();
+const GLOBAL_STATS_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Get question-level analysis for a specific test attempt
@@ -1833,19 +1855,23 @@ export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Reco
         // Check cache first
         const cached = globalStatsCache.get(testId);
         let globalCorrectPercents: Record<number, number> = {};
+        let questions: any[] = [];
 
-        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        if (cached && (Date.now() - cached.timestamp < GLOBAL_STATS_TTL)) {
+            // Use cached data — no database reads needed
             cached.analysis.forEach(item => {
                 globalCorrectPercents[item.questionIndex] = item.globalCorrectPercent;
             });
+            questions = cached.questions;
         } else {
-            // Get test data
+            // Get test data (single fetch — reused below)
             const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
-            let questions = testDoc.questions;
+            let parsedQuestions = testDoc.questions;
             try {
-                while (typeof questions === 'string') questions = JSON.parse(questions);
-            } catch (e) { questions = []; }
-            if (!Array.isArray(questions)) questions = [];
+                while (typeof parsedQuestions === 'string') parsedQuestions = JSON.parse(parsedQuestions);
+            } catch (e) { parsedQuestions = []; }
+            if (!Array.isArray(parsedQuestions)) parsedQuestions = [];
+            questions = parsedQuestions;
 
             // Fetch results for global stats (limit to 1000 for performance)
             const resultsResponse = await databases.listDocuments(DB_ID, 'test-results', [
@@ -1878,25 +1904,18 @@ export const getQuestionLevelAnalysis = async (testId: string, userAnswers: Reco
                 globalCorrectPercents[idx] = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
             });
 
-            // Store in cache (simplified analysis)
+            // Store in cache (including parsed questions to avoid re-fetch)
             const cacheData = questions.map((q: any, idx: number) => ({
                 questionIndex: idx,
                 globalCorrectPercent: globalCorrectPercents[idx],
                 questionText: q.text || '',
                 correctAnswer: q.correctAnswer
             }));
-            globalStatsCache.set(testId, { analysis: cacheData, timestamp: Date.now() });
+            globalStatsCache.set(testId, { analysis: cacheData, questions, timestamp: Date.now() });
         }
 
-        // Fetch test data again for fresh return if not in cache (or just use cached logic)
-        const testDoc = await databases.getDocument(DB_ID, 'tests', testId);
-        let questions = testDoc.questions;
-        try {
-            while (typeof questions === 'string') questions = JSON.parse(questions);
-        } catch (e) { questions = []; }
-
-        // Build final analysis with user-specific data
-        return (questions as any[]).map((q: any, idx: number) => {
+        // Build final analysis with user-specific data (using already-fetched questions)
+        return questions.map((q: any, idx: number) => {
             const userAnswer = userAnswers[idx];
             const correctAnswer = q.correctAnswer;
             let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
