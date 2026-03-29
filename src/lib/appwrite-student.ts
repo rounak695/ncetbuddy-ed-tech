@@ -10,6 +10,11 @@ const analyticsProjectId = process.env.NEXT_PUBLIC_APPWRITE_ANALYTICS_PROJECT_ID
 if (!projectId) {
     console.error("Appwrite Student Project ID is missing. Please check your .env.local file.");
 } else {
+    // Debug Appwrite Config (Safe for production as it only logs public IDs/endpoints)
+    if (typeof window !== 'undefined') {
+        console.log("[Appwrite Init] Endpoint:", endpoint);
+        console.log("[Appwrite Init] Project:", projectId);
+    }
     client
         .setEndpoint(endpoint)
         .setProject(projectId);
