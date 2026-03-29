@@ -23,6 +23,28 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_GITHUB_PAT>"
       }
+    },
+    "vercel-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@vercel/mcp-server"
+      ],
+      "env": {
+        "VERCEL_TOKEN": "<YOUR_VERCEL_TOKEN>"
+      }
+    },
+    "appwrite-api": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-appwrite",
+        "--users"
+      ],
+      "env": {
+        "APPWRITE_PROJECT_ID": "69c819fc000d6d37a423",
+        "APPWRITE_API_KEY": "<YOUR_APPWRITE_API_KEY>",
+        "APPWRITE_ENDPOINT": "https://fra.cloud.appwrite.io/v1"
+      }
     }
   }
 }

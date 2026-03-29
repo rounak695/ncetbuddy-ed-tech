@@ -1,7 +1,7 @@
 import { Client, Databases } from 'node-appwrite';
 
 const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1')
+    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '')
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID_EDUCATOR || '')
     .setKey(process.env.APPWRITE_API_KEY || '');
 
@@ -14,7 +14,7 @@ const databases = new Databases(client);
  */
 export async function getUserRole(userId: string): Promise<string | null> {
     try {
-        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7';
+        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 
         const response = await databases.getDocument(dbId, 'user_profiles', userId);
 
@@ -39,7 +39,7 @@ export async function upsertUserProfile(
     }
 ): Promise<void> {
     try {
-        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7';
+        const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 
         // Try to get existing profile
         try {

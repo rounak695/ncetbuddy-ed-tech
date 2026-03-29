@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
         // Verify session and check role
         try {
             const client = new Client()
-                .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1')
+                .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '')
                 .setProject(projectId)
                 .setSession(sessionCookie.value);
 
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
             const user = await account.get();
 
             // Check user role in user_profiles collection
-            const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7';
+            const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 
             let userProfile;
             try {

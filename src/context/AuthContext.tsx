@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Fetch User Role from Database (collection 'users')
             try {
                 const userDoc = await databases.getDocument(
-                    process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7',
+                    process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '',
                     'users',
                     session.$id
                 );
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 console.warn("User document not found. Attempting to heal (recreate)...");
                 try {
                     await databases.createDocument(
-                        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7',
+                        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '',
                         'users',
                         session.$id,
                         {

@@ -15,7 +15,7 @@ console.log("Appwrite Admin Config:", {
 
 const databases = new Databases(client);
 const storage = new Storage(client);
-const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '69c84948001622ba05f7';
+const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 const BANNER_BUCKET_ID = 'banners';
 
 export { client, databases, storage, DB_ID, BANNER_BUCKET_ID };
