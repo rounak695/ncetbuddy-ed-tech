@@ -39,7 +39,7 @@ export default function PaymentSuccessHandler() {
             // The Webhook handles the actual dynamic parsing of the purpose string.
             if (paymentStatus === 'Credit') {
                 try {
-                    // Try to save the payment record to Appwrite safely via the backend
+                    // Try to save the payment record safely via the backend
                     await fetch('/api/user/verify-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

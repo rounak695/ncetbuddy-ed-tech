@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getTests, getBooks, getUsers, getUserPurchases, getActiveUsersCount } from "@/lib/pocketbase-db";
-import { databases, DB_ID } from "@/lib/server/appwrite-admin";
 import { Purchase } from "@/types";
 import { BookOpen, ClipboardList, Users, Bell } from "lucide-react";
 
