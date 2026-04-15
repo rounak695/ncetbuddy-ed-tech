@@ -21,12 +21,26 @@ export default function LoginPage() {
     const handleGoogleLogin = async () => {
         trackEvent('login', '/login', 'method:google_init');
         try {
-            const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
-            // Successfully logged in via PocketBase - auth state is automatically synced globally
-            router.push('/dashboard');
+            // First, get the list of auth methods to find Google's auth URL
+            const methods = await pb.collection('users').listAuthMethods();
+            const googleProvider = methods.authProviders?.find((p: any) => p.name === 'google');
+            
+            if (!googleProvider) {
+                setError("Google login is not configured. Please contact admin.");
+                return;
+            }
+
+            // Store the provider data in localStorage so we can complete auth after redirect
+            localStorage.setItem('pb_oauth_provider', JSON.stringify(googleProvider));
+            localStorage.setItem('pb_oauth_redirect', '/dashboard');
+
+            // Redirect to Google's OAuth page with our callback URL
+            const redirectUrl = `${window.location.origin}/oauth-callback`;
+            const authUrl = googleProvider.authUrl + encodeURIComponent(redirectUrl);
+            window.location.href = authUrl;
         } catch (err: any) {
             console.error("Google login failed:", err);
-            setError("Failed to initialize Google login");
+            setError("Failed to initialize Google login. Please try again.");
         }
     };
     return (

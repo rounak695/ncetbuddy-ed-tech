@@ -16,11 +16,23 @@ export default function SignupPage() {
 
     const handleGoogleSignup = async () => {
         try {
-            const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
-            router.push('/dashboard');
+            const methods = await pb.collection('users').listAuthMethods();
+            const googleProvider = methods.authProviders?.find((p: any) => p.name === 'google');
+            
+            if (!googleProvider) {
+                setError("Google login is not configured. Please contact admin.");
+                return;
+            }
+
+            localStorage.setItem('pb_oauth_provider', JSON.stringify(googleProvider));
+            localStorage.setItem('pb_oauth_redirect', '/dashboard');
+
+            const redirectUrl = `${window.location.origin}/oauth-callback`;
+            const authUrl = googleProvider.authUrl + encodeURIComponent(redirectUrl);
+            window.location.href = authUrl;
         } catch (err: any) {
             console.error("Google signup failed:", err);
-            setError("Failed to initialize Google login");
+            setError("Failed to initialize Google login. Please try again.");
         }
     };
 
