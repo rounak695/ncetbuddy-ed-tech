@@ -822,8 +822,8 @@ We are actively collecting feedback on:
 
 ```bash
 # Clone the repository
-git clone https://github.com/rounak695/ncetbuddy-ed-tech.git
-cd ncetbuddy-ed-tech-5
+git clone https://github.com/Ncetbuddy/ncetbuddy-ed-tech.git
+cd ncetbuddy-ed-tech
 
 # Install dependencies
 npm install
@@ -850,11 +850,20 @@ npm run build
 npm run start
 ```
 
+## 🤝 Contributing (Organization-First Open Source)
+
+NCET Buddy is **open source**, and we encourage students and developers to come and add features by themselves! However, to maintain the quality and security of the platform, we have a specific contribution model:
+
+- **Limited Access:** We limit direct write access/Pull Requests from outside the organization.
+- **Become a Member:** To actively contribute code and submit PRs, you need to be an official member of the **Ncetbuddy GitHub organization**. 
+
+Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to learn how to request an invite, join our community, and start contributing to the codebase.
+
 ---
 
 ## 📄 License
 
-This project is proprietary and confidential. All rights reserved by Exam Buddy.
+This project is open-sourced under the [MIT License](LICENSE.md).
 
 ---
 
