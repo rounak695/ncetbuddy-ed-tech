@@ -5,8 +5,9 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { getTests } from "@/lib/pocketbase-db";
+import { getTests, getUserTestResults } from "@/lib/pocketbase-db";
 import { Test, PYQSubject } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 
 const SUBJECT_INFO: Record<PYQSubject, { label: string; icon: string; description: string }> = {
     'languages': { label: 'Languages', icon: '📝', description: 'English, Hindi & Regional Languages' },
@@ -18,8 +19,11 @@ const SUBJECT_INFO: Record<PYQSubject, { label: string; icon: string; descriptio
 
 export default function PYQSubjectPage() {
     const params = useParams();
-    const subject = params.subject as PYQSubject;
+    const paramSubject = params?.subject as string | undefined;
+    const subject = (paramSubject || 'non-domain') as PYQSubject;
+    const { user } = useAuth();
     const [tests, setTests] = useState<Test[]>([]);
+    const [completedTests, setCompletedTests] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
 
     const subjectInfo = SUBJECT_INFO[subject] || SUBJECT_INFO['non-domain'];
@@ -37,6 +41,19 @@ export default function PYQSubjectPage() {
                     return isPYQ && !isNRT && matchesSubject && t.isVisible !== false;
                 });
                 setTests(filteredTests);
+
+                if (user) {
+                    const results = await getUserTestResults(user.$id);
+                    const completedMap: Record<string, any> = {};
+                    if (results) {
+                        results.forEach(r => {
+                            if (!completedMap[r.testId] || r.score > completedMap[r.testId].score) {
+                                completedMap[r.testId] = r;
+                            }
+                        });
+                    }
+                    setCompletedTests(completedMap);
+                }
             } catch (error) {
                 console.error("Error fetching PYQ tests:", error);
             } finally {
@@ -44,7 +61,7 @@ export default function PYQSubjectPage() {
             }
         };
         fetchTests();
-    }, [subject]);
+    }, [subject, user]);
 
     if (loading) {
         return (
@@ -100,14 +117,31 @@ export default function PYQSubjectPage() {
                                 </div>
 
                                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-border">
-                                    <div className="text-sm text-foreground font-bold">
-                                        <span className="font-bold underline decoration-primary decoration-4">{test.questions.length}</span> Questions
+                                    <div className="text-sm text-foreground font-bold whitespace-nowrap hidden sm:block">
+                                        <span className="font-bold underline decoration-primary decoration-4">{test.questions.length}</span> Qs
                                     </div>
-                                    <Link href={`/dashboard/tests/attempt?id=${test.id}`}>
-                                        <Button className="bg-black text-white hover:bg-black/90 shadow-md">
-                                            Start Test
-                                        </Button>
-                                    </Link>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {completedTests[test.id] ? (
+                                            <>
+                                                <Link href={`/dashboard/tests/review?testId=${test.id}&score=${completedTests[test.id].score}&total=${completedTests[test.id].totalQuestions}`}>
+                                                    <Button variant="outline" className="text-xs uppercase tracking-wider font-bold shadow-sm">
+                                                        Result
+                                                    </Button>
+                                                </Link>
+                                                <Link href={`/dashboard/tests/${test.id}`}>
+                                                    <Button className="bg-black text-white hover:bg-black/90 shadow-md text-xs uppercase tracking-wider font-bold">
+                                                        Retake
+                                                    </Button>
+                                                </Link>
+                                            </>
+                                        ) : (
+                                            <Link href={`/dashboard/tests/${test.id}`}>
+                                                <Button className="bg-black text-white hover:bg-black/90 shadow-md w-full sm:w-auto">
+                                                    Start Test
+                                                </Button>
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </Card>

@@ -1,4 +1,59 @@
-"use client";
+import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+
+export const metadata: Metadata = {
+  title: "NCET Syllabus & Exam Pattern 2025-26 — Subject-wise Breakdown",
+  description:
+    "Complete NCET syllabus 2025-26: General Awareness, Teaching Aptitude, English Language, Logical Reasoning & Domain subjects. Exam pattern: 160 questions, 640 marks, 180 minutes.",
+  alternates: { canonical: "https://www.ncetbuddy.in/syllabus" },
+  openGraph: {
+    title: "NCET Syllabus & Exam Pattern 2025-26",
+    description:
+      "Full NCET syllabus breakdown with subject-wise topics, marks, and exam pattern for the 2025-26 cycle.",
+    url: "https://www.ncetbuddy.in/syllabus",
+  },
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is the NCET exam pattern?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "NCET has 160 multiple-choice questions for a total of 640 marks. The exam duration is 3 hours (180 minutes). There is a negative marking of 1 mark for each wrong answer.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What subjects are in the NCET syllabus?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "NCET syllabus includes: General Awareness (Current Affairs, History, Geography, General Science), Teaching Aptitude (Pedagogy, Child Development), English Language (Grammar, Comprehension), Logical Reasoning, and a Domain Subject chosen by the candidate.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How many questions are there in NCET?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "NCET has a total of 160 questions across all sections, carrying 4 marks each, totalling 640 marks.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is there negative marking in NCET?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, there is a negative marking of 1 mark for each incorrect answer in NCET.",
+      },
+    },
+  ],
+};
+
+
 
 import React from 'react';
 import { Navbar } from '@/components/landing/Navbar';
@@ -15,6 +70,7 @@ export default function SyllabusPage() {
 
     return (
         <main className="min-h-screen bg-white">
+            <JsonLd data={faqSchema} />
             <Navbar />
 
             <div className="pt-32 pb-24">

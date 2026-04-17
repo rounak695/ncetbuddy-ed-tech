@@ -22,7 +22,7 @@ import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { PYQSubject, Test, Purchase } from "@/types";
 import { useEffect, useState } from "react";
-import { getTests, hasUserPaidForProduct, getUserPayments, getUserProfile } from "@/lib/pocketbase-db";
+import { getTests, hasUserPaidForProduct, getUserPayments, getUserProfile, getUserTestResults } from "@/lib/pocketbase-db";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PenLine, BookOpen, Microscope, Briefcase, Target, GraduationCap, Users } from "lucide-react";
@@ -47,6 +47,7 @@ function EducatorTestsList() {
     const { user } = useAuth();
     const [tests, setTests] = useState<Test[]>([]);
     const [purchasedTests, setPurchasedTests] = useState<Record<string, boolean>>({});
+    const [completedTests, setCompletedTests] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
     const router = useRouter();
@@ -103,9 +104,10 @@ function EducatorTestsList() {
 
                 if (user) {
                     // Optimized: Fetch all payments once
-                    const [payments, profile] = await Promise.all([
+                    const [payments, profile, results] = await Promise.all([
                         getUserPayments(user.$id),
-                        getUserProfile(user.$id)
+                        getUserProfile(user.$id),
+                        getUserTestResults(user.$id)
                     ]);
                     
                     const successfulPayments = payments.filter((p: any) => p.status === 'Credit');
@@ -151,8 +153,18 @@ function EducatorTestsList() {
                         return isNRT1 || isNRTDemo || purchasedMap[test.id] || isAdmin;
                     });
 
+                    const completedMap: Record<string, any> = {};
+                    if (results) {
+                        results.forEach(r => {
+                            if (!completedMap[r.testId] || r.score > completedMap[r.testId].score) {
+                                completedMap[r.testId] = r;
+                            }
+                        });
+                    }
+
                     setTests(filteredTests);
                     setPurchasedTests(purchasedMap);
+                    setCompletedTests(completedMap);
                 }
             } catch (error) {
                 console.error("Failed to fetch aggregator data", error);
@@ -405,11 +417,26 @@ function EducatorTestsList() {
 
                             <div className="mt-auto pt-4 border-t border-border">
                                 {isPurchased ? (
-                                    <Link href={`/dashboard/tests/${test.id}`}>
-                                        <button className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-primary/90">
-                                            Start Test
-                                        </button>
-                                    </Link>
+                                    completedTests[test.id] ? (
+                                        <div className="flex gap-2">
+                                            <Link href={`/dashboard/tests/review?testId=${test.id}&score=${completedTests[test.id].score}&total=${completedTests[test.id].totalQuestions}`} className="flex-1">
+                                                <button className="w-full py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors line-clamp-1 text-sm md:text-base">
+                                                    View Result
+                                                </button>
+                                            </Link>
+                                            <Link href={`/dashboard/tests/${test.id}`} className="flex-1">
+                                                <button className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-primary/90 transition-colors line-clamp-1 text-sm md:text-base">
+                                                    Retake
+                                                </button>
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <Link href={`/dashboard/tests/${test.id}`}>
+                                            <button className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-primary/90">
+                                                Start Test
+                                            </button>
+                                        </Link>
+                                    )
                                 ) : (
                                     <button
                                         onClick={() => handleBuyNow(test)}

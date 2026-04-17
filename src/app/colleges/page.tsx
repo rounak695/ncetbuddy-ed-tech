@@ -1,4 +1,52 @@
-"use client";
+import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+
+export const metadata: Metadata = {
+  title: "NCET Participating Colleges 2025-26 — IITs, NITs, RIEs & Universities",
+  description:
+    "Complete list of colleges accepting NCET scores for ITEP admission: IIT Kharagpur, IIT Bhubaneswar, NIT Trichy, NIT Calicut, all RIEs, and 20+ Central & State Universities. Find your dream college.",
+  alternates: { canonical: "https://www.ncetbuddy.in/colleges" },
+  openGraph: {
+    title: "NCET Participating Colleges 2025-26 — IITs, NITs, RIEs",
+    description:
+      "Explore all colleges that accept NCET scores for the 4-year ITEP programme, including top IITs, NITs, and RIEs.",
+    url: "https://www.ncetbuddy.in/colleges",
+  },
+};
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "NCET Participating Colleges for ITEP 2025-26",
+  description:
+    "List of all colleges accepting NCET scores for the Integrated Teacher Education Programme (ITEP).",
+  numberOfItems: 21,
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "IIT Kharagpur" },
+    { "@type": "ListItem", position: 2, name: "IIT Bhubaneswar" },
+    { "@type": "ListItem", position: 3, name: "IIT Ropar" },
+    { "@type": "ListItem", position: 4, name: "IIT Jodhpur" },
+    { "@type": "ListItem", position: 5, name: "IIT (ISM) Dhanbad" },
+    { "@type": "ListItem", position: 6, name: "NIT Tiruchirappalli" },
+    { "@type": "ListItem", position: 7, name: "NIT Calicut" },
+    { "@type": "ListItem", position: 8, name: "NIT Jalandhar" },
+    { "@type": "ListItem", position: 9, name: "NIT Agartala" },
+    { "@type": "ListItem", position: 10, name: "NIT Puducherry" },
+    { "@type": "ListItem", position: 11, name: "RIE Bhopal" },
+    { "@type": "ListItem", position: 12, name: "RIE Ajmer" },
+    { "@type": "ListItem", position: 13, name: "RIE Bhubaneswar" },
+    { "@type": "ListItem", position: 14, name: "RIE Mysuru" },
+    { "@type": "ListItem", position: 15, name: "IGNOU" },
+    { "@type": "ListItem", position: 16, name: "Aligarh Muslim University" },
+    { "@type": "ListItem", position: 17, name: "Central University of Haryana" },
+    { "@type": "ListItem", position: 18, name: "HNB Garhwal University" },
+    { "@type": "ListItem", position: 19, name: "Gautam Buddha University" },
+    { "@type": "ListItem", position: 20, name: "Central University of Kashmir" },
+    { "@type": "ListItem", position: 21, name: "Guru Nanak Dev University" },
+  ],
+};
+
+
 
 import React from 'react';
 import { Navbar } from '@/components/landing/Navbar';
@@ -43,6 +91,7 @@ export default function CollegesPage() {
 
     return (
         <main className="min-h-screen bg-white">
+            <JsonLd data={itemListSchema} />
             <Navbar />
 
             <div className="pt-32 pb-24">

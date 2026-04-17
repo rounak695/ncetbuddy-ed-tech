@@ -1,4 +1,14 @@
-"use client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact Us — NCET Buddy Support",
+  description:
+    "Get in touch with the NCET Buddy team. Email us at connect@ncetbuddy.in. We respond within 24-48 hours. For institutional inquiries, visit our educator portal.",
+  alternates: { canonical: "https://www.ncetbuddy.in/contact" },
+  robots: { index: false, follow: false }, // Contact page shouldn't be a ranking target
+};
+
+
 
 import Link from "next/link";
 

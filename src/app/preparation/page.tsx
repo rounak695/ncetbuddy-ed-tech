@@ -1,4 +1,19 @@
-"use client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "NCET Preparation Strategy 2025-26 — Expert Tips & Study Plan",
+  description:
+    "Crack NCET 2025-26 with our proven preparation strategy: understand the exam blueprint, daily practice plan, mock test schedule, and expert tips on Teaching Aptitude and General Awareness.",
+  alternates: { canonical: "https://www.ncetbuddy.in/preparation" },
+  openGraph: {
+    title: "NCET Preparation Strategy 2025-26 — Expert Tips & Study Plan",
+    description:
+      "Step-by-step NCET preparation guide: from mastering PYQs to full-length mock tests. Expert tips to secure a seat in IIT/NIT ITEP.",
+    url: "https://www.ncetbuddy.in/preparation",
+  },
+};
+
+
 
 import React from 'react';
 import { Navbar } from '@/components/landing/Navbar';

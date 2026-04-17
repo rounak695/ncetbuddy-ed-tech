@@ -1,4 +1,67 @@
-"use client";
+import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+
+export const metadata: Metadata = {
+  title: "What is NCET? — About the National Common Entrance Test",
+  description:
+    "Learn everything about NCET (National Common Entrance Test) conducted by NTA. Understand the ITEP programme, eligibility criteria, benefits, and how NCET opens doors to IITs, NITs, and RIEs.",
+  alternates: { canonical: "https://www.ncetbuddy.in/about" },
+  openGraph: {
+    title: "What is NCET? — About the National Common Entrance Test",
+    description:
+      "Complete guide to NCET — conducted by NTA for admission to the 4-year ITEP in IITs, NITs, RIEs and top universities.",
+    url: "https://www.ncetbuddy.in/about",
+  },
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is NCET?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "The National Common Entrance Test (NCET) is a national-level examination conducted by the National Testing Agency (NTA) for admission to the 4-Year Integrated Teacher Education Programme (ITEP) in IITs, NITs, RIEs, and other top government colleges.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Who conducts NCET?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "NCET is conducted by the National Testing Agency (NTA) under the Ministry of Education, Government of India.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is ITEP?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "ITEP (Integrated Teacher Education Programme) is a 4-year dual-major degree (BA.BEd / BSc.BEd / BCom.BEd) introduced under NEP 2020 that replaces the traditional 3+2 year Graduation + B.Ed. path, saving one full year.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Who is eligible for NCET?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Candidates who have passed Class 12 or equivalent from a recognized board are eligible to apply for NCET. There is no age limit specified by NTA.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which colleges accept NCET scores?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "NCET scores are accepted by IITs, NITs, Regional Institutes of Education (RIEs), and several Central and State Universities across India.",
+      },
+    },
+  ],
+};
+
+
 
 import React from 'react';
 import { Navbar } from '@/components/landing/Navbar';
@@ -8,7 +71,9 @@ import { BookOpen, Target, Award, Users } from 'lucide-react';
 export default function AboutPage() {
     return (
         <main className="min-h-screen bg-white">
+            <JsonLd data={faqSchema} />
             <Navbar />
+
 
             <div className="pt-32 pb-24">
                 <div className="container mx-auto px-4">
