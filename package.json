@@ -18,7 +18,7 @@
     "katex": "^0.16.27",
     "lucide-react": "^0.575.0",
     "minimatch": "^10.2.5",
-    "next": "^16.2.3",
+    "next": "^16.2.6",
     "openai": "^6.29.0",
     "picomatch": "^4.0.4",
     "pocketbase": "^0.22.1",
